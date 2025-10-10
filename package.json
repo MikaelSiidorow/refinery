@@ -16,12 +16,15 @@
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"zero:generate": "drizzle-zero generate --format --output src/lib/zero/zero-schema.gen.ts",
+		"zero:start": "zero-cache-dev --schema-path src/lib/zero/schema.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
 		"@eslint/js": "^9.36.0",
 		"@lucide/svelte": "^0.545.0",
+		"@rocicorp/zero": "^0.23.2025090100",
 		"@sveltejs/adapter-auto": "^6.1.0",
 		"@sveltejs/kit": "^2.43.2",
 		"@sveltejs/vite-plugin-svelte": "^6.2.0",
@@ -30,6 +33,7 @@
 		"clsx": "^2.1.1",
 		"drizzle-kit": "^0.31.4",
 		"drizzle-orm": "^0.44.5",
+		"drizzle-zero": "^0.14.3",
 		"eslint": "^9.36.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.12.4",
@@ -46,14 +50,19 @@
 		"typescript": "^5.9.2",
 		"typescript-eslint": "^8.44.1",
 		"vite": "^7.1.7",
-		"vite-plugin-devtools-json": "^1.0.0"
+		"vite-plugin-devtools-json": "^1.0.0",
+		"zero-svelte": "^0.8.1"
 	},
 	"dependencies": {
 		"postgres": "^3.4.7"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
+			"@rocicorp/zero-sqlite3",
 			"esbuild"
+		],
+		"ignoredBuiltDependencies": [
+			"protobufjs"
 		]
 	}
 }

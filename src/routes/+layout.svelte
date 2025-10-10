@@ -2,7 +2,19 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 
+	import { PUBLIC_SERVER } from '$env/static/public';
+	import { Z } from 'zero-svelte';
+	import { schema, type Schema } from '$lib/zero/schema';
+
 	let { children } = $props();
+
+	new Z<Schema>({
+		userID: 'anon',
+		// userID: user_id, possibly from loader?
+		server: PUBLIC_SERVER,
+		schema
+		// auth: data.jwt, if you need it
+	});
 </script>
 
 <svelte:head>
