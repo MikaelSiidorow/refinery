@@ -3,7 +3,7 @@
 	import { get_z } from '$lib/z.svelte';
 	const z = get_z();
 
-	const ideas = new Query(z.query.contentIdeas);
+	const ideas = new Query(z.query.contentIdea);
 </script>
 
 <h1>Welcome to SvelteKit</h1>

@@ -2,6 +2,10 @@
 	import HouseIcon from '@lucide/svelte/icons/house';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { resolve } from '$app/paths';
+	import NavUser from './nav-user.svelte';
+	import type { User } from '$lib/server/db/schema';
+
+	let { user }: { user: Pick<User, 'username' | 'avatarUrl'> } = $props();
 
 	const items = [
 		{
@@ -34,4 +38,7 @@
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 	</Sidebar.Content>
+	<Sidebar.Footer>
+		<NavUser {user} />
+	</Sidebar.Footer>
 </Sidebar.Root>
