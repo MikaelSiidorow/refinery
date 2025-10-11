@@ -6,6 +6,7 @@
 </script>
 
 <svelte:head>
+	<title>Refinery - Your Content Bank</title>
 	<link rel="icon" href={favicon} />
 </svelte:head>
 

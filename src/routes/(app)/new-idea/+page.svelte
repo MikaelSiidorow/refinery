@@ -193,6 +193,10 @@
 	let hasError = $derived(inputError !== null || isOverLimit);
 </script>
 
+<svelte:head>
+	<title>Quick Capture - Refinery</title>
+</svelte:head>
+
 <div
 	class="mx-auto grid grid-cols-1 gap-8 p-4 sm:p-8 lg:grid-cols-[minmax(0,768px)_384px]"
 	style="max-width: 1200px;"
