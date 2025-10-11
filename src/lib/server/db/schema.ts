@@ -1,6 +1,6 @@
 import type { UuidV7 } from '$lib/utils';
 import { relations } from 'drizzle-orm';
-import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { integer, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
 const timestamps = {
 	createdAt: timestamp()
@@ -25,13 +25,22 @@ export const user = pgTable('user', {
 });
 
 export const session = pgTable('session', {
-	id: text().primaryKey(), // SHA256 hash of token, not UUID
+	id: varchar({ length: 64 }).primaryKey(), // SHA256 hash of token, not UUID
 	userId: uuid()
 		.notNull()
 		.references(() => user.id)
 		.$type<UuidV7>(),
 	expiresAt: timestamp({ withTimezone: true, mode: 'date' }).notNull()
 });
+
+export const ideaStatusEnum = pgEnum('idea_status', [
+	'inbox',
+	'developing',
+	'ready',
+	'published',
+	'archived',
+	'cancelled'
+]);
 
 export const contentIdea = pgTable('content_idea', {
 	id: uuid().primaryKey().$type<UuidV7>(),
@@ -40,6 +49,9 @@ export const contentIdea = pgTable('content_idea', {
 		.references(() => user.id)
 		.$type<UuidV7>(),
 	oneLiner: text().notNull(),
+	status: ideaStatusEnum().notNull().default('inbox'),
+	content: text().notNull().default(''),
+	notes: text().notNull().default(''),
 	...timestamps
 });
 

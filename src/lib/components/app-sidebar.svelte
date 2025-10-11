@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import NavUser from './nav-user.svelte';
 	import type { User } from '$lib/server/db/schema';
+	import { PlusIcon } from '@lucide/svelte';
 
 	let { user }: { user: Pick<User, 'username' | 'avatarUrl'> } = $props();
 
@@ -17,6 +18,20 @@
 </script>
 
 <Sidebar.Root>
+	<Sidebar.Header>
+		<Sidebar.Menu>
+			<Sidebar.MenuItem>
+				<Sidebar.MenuButton size="lg">
+					{#snippet child({ props })}
+						<a href={resolve('/new-idea')} {...props}>
+							<PlusIcon />
+							<span>New Idea</span>
+						</a>
+					{/snippet}
+				</Sidebar.MenuButton>
+			</Sidebar.MenuItem>
+		</Sidebar.Menu>
+	</Sidebar.Header>
 	<Sidebar.Content>
 		<Sidebar.Group>
 			<Sidebar.GroupLabel>Application</Sidebar.GroupLabel>
