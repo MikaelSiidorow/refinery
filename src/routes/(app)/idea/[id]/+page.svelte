@@ -19,6 +19,9 @@
 	const ideas = new Query(z.query.contentIdea.where('id', data.ideaId as UuidV7));
 	const idea = $derived(ideas.current[0]);
 
+	const settingsQuery = new Query(z.query.contentSettings.where('userId', data.user.id as UuidV7));
+	const settings = $derived(settingsQuery.current[0]);
+
 	let editedOneLiner = $state('');
 	let editedNotes = $state('');
 	let editedContent = $state('');
@@ -108,7 +111,40 @@
 	function copyPromptToClipboard() {
 		if (!idea) return;
 
-		const prompt = `You are a professional content writer. Based on the following idea and notes, write a complete, engaging blog post.
+		const hasSettings =
+			settings &&
+			(settings.targetAudience ||
+				settings.brandVoice ||
+				settings.contentPillars ||
+				settings.uniquePerspective);
+
+		let prompt: string;
+
+		if (hasSettings) {
+			prompt = `You are a professional content writer creating content for ${settings.targetAudience || 'your audience'}.
+
+Brand Voice: ${settings.brandVoice || 'Professional and engaging'}
+Content Focus Areas: ${settings.contentPillars || 'Your expertise areas'}
+Unique Value: ${settings.uniquePerspective || 'High-quality insights'}
+
+Based on the following idea and notes, write a complete, engaging piece that aligns with one or more of your content focus areas.
+
+Idea: ${editedOneLiner}
+
+Notes:
+${editedNotes || '(No notes yet)'}
+
+Write a well-structured piece with:
+- Compelling introduction that hooks the reader
+- Clear main points with supporting examples that relate to your focus areas
+- Practical takeaways
+- Strong conclusion
+
+Tone: Match the brand voice described above
+Focus: Ensure the content clearly connects to your stated content focus areas`;
+		} else {
+			// Fallback to simple prompt if no settings
+			prompt = `You are a professional content writer. Based on the following idea and notes, write a complete, engaging blog post.
 
 Idea: ${editedOneLiner}
 
@@ -120,6 +156,7 @@ Write a well-structured post with:
 - Clear main points with supporting examples
 - Practical takeaways
 - Strong conclusion`;
+		}
 
 		navigator.clipboard.writeText(prompt);
 		// TODO: Show success toast

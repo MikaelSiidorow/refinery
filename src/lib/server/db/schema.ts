@@ -62,8 +62,31 @@ export const contentIdeaRelations = relations(contentIdea, ({ one }) => ({
 	})
 }));
 
+export const contentSettings = pgTable('content_settings', {
+	id: uuid().primaryKey().$type<UuidV7>(),
+	userId: uuid()
+		.notNull()
+		.unique()
+		.references(() => user.id)
+		.$type<UuidV7>(),
+	targetAudience: text().notNull().default(''),
+	brandVoice: text().notNull().default(''),
+	contentPillars: text().notNull().default(''),
+	uniquePerspective: text().notNull().default(''),
+	...timestamps
+});
+
+export const contentSettingsRelations = relations(contentSettings, ({ one }) => ({
+	user: one(user, {
+		fields: [contentSettings.userId],
+		references: [user.id]
+	})
+}));
+
 export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
 
 export type ContentIdea = typeof contentIdea.$inferSelect;
+
+export type ContentSettings = typeof contentSettings.$inferSelect;

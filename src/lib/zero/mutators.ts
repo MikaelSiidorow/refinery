@@ -1,4 +1,4 @@
-import type { contentIdea } from '$lib/server/db/schema';
+import type { contentIdea, contentSettings } from '$lib/server/db/schema';
 import type { Transaction } from '@rocicorp/zero/server';
 import { assertIsSignedIn, assertIsCreator, type AuthData } from './auth';
 import type { Schema } from './schema';
@@ -15,6 +15,13 @@ export type UpdateContentIdeaArgs = {
 	status?: 'inbox' | 'developing' | 'ready' | 'published' | 'archived' | 'cancelled';
 	content?: string;
 	notes?: string;
+};
+
+export type UpsertContentSettingsArgs = {
+	targetAudience: string;
+	brandVoice: string;
+	contentPillars: string;
+	uniquePerspective: string;
 };
 
 export function createMutators(authData: AuthData | undefined) {
@@ -65,6 +72,47 @@ export function createMutators(authData: AuthData | undefined) {
 				if (notes !== undefined) updateData.notes = notes;
 
 				await tx.mutate.contentIdea.update(updateData);
+			}
+		},
+		contentSettings: {
+			async upsert(
+				tx: Transaction<Schema>,
+				{ targetAudience, brandVoice, contentPillars, uniquePerspective }: UpsertContentSettingsArgs
+			) {
+				assertIsSignedIn(authData);
+				const userId = authData.sub;
+
+				// Check if settings exist for this user
+				const existing = await tx.query.contentSettings
+					.where('userId', '=', userId)
+					.run();
+
+				const now = Date.now();
+
+				if (existing.length > 0) {
+					// Update existing settings
+					await tx.mutate.contentSettings.update({
+						id: existing[0].id,
+						targetAudience,
+						brandVoice,
+						contentPillars,
+						uniquePerspective,
+						updatedAt: now
+					});
+				} else {
+					// Insert new settings
+					const { v7: uuidv7 } = await import('uuid');
+					await tx.mutate.contentSettings.insert({
+						id: uuidv7() as UuidV7,
+						userId,
+						targetAudience,
+						brandVoice,
+						contentPillars,
+						uniquePerspective,
+						createdAt: now,
+						updatedAt: now
+					});
+				}
 			}
 		}
 	} as const;

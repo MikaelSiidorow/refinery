@@ -4,7 +4,7 @@
 	import { cmdOrCtrl } from '$lib/hooks/is-mac.svelte';
 	import { useSidebar } from '$lib/components/ui/sidebar';
 	import Fuse from 'fuse.js';
-	import { House, CirclePlus, LogOut, PanelLeft, type IconProps } from '@lucide/svelte';
+	import { House, CirclePlus, LogOut, PanelLeft, Settings, type IconProps } from '@lucide/svelte';
 	import type { Component } from 'svelte';
 	import * as Kbd from '$lib/components/ui/kbd';
 	import { resolve } from '$app/paths';
@@ -62,6 +62,18 @@
 			shortcut: {
 				type: 'single',
 				key: 'C'
+			},
+			isAction: false
+		},
+		{
+			id: 'settings',
+			title: 'Settings',
+			description: 'Configure your content settings',
+			url: '/settings',
+			icon: Settings,
+			shortcut: {
+				type: 'chain',
+				keys: ['G', 'S']
 			},
 			isAction: false
 		},

@@ -161,6 +161,10 @@ export function setupAppShortcuts() {
 		goto(resolve('/new-idea'));
 	});
 
+	shortcuts.registerSequence(['g', 's'], () => {
+		goto(resolve('/settings'));
+	});
+
 	// Sign out: Alt+Shift+Q
 	shortcuts.registerModifierKey('alt+shift+q', () => {
 		// Submit sign out form

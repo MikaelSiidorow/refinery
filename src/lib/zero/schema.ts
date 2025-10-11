@@ -20,6 +20,11 @@ export const permissions = definePermissions<AuthData, Schema>(schema, () => {
 	const allowIfOwner = (authData: AuthData, { cmp }: ExpressionBuilder<Schema, 'contentIdea'>) =>
 		cmp('userId', authData.sub);
 
+	const allowIfSettingsOwner = (
+		authData: AuthData,
+		{ cmp }: ExpressionBuilder<Schema, 'contentSettings'>
+	) => cmp('userId', authData.sub);
+
 	return {
 		contentIdea: {
 			row: {
@@ -30,6 +35,16 @@ export const permissions = definePermissions<AuthData, Schema>(schema, () => {
 					postMutation: [allowIfOwner]
 				},
 				delete: [allowIfOwner]
+			}
+		},
+		contentSettings: {
+			row: {
+				select: [allowIfSettingsOwner],
+				insert: [allowIfSettingsOwner],
+				update: {
+					preMutation: [allowIfSettingsOwner],
+					postMutation: [allowIfSettingsOwner]
+				}
 			}
 		},
 		user: {
