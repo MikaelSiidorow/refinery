@@ -35,7 +35,7 @@
 
 <Sidebar.Provider>
 	<AppSidebar user={data.user} />
-	<main>
+	<main class="flex flex-1 flex-col overflow-hidden">
 		<Sidebar.Trigger />
 		{@render children?.()}
 	</main>
