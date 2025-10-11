@@ -7,6 +7,8 @@
 	import { schema, type Schema } from '$lib/zero/schema';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import AppSidebar from '$lib/components/app-sidebar.svelte';
+	import CommandPalette from '$lib/components/command-palette.svelte';
+	import { setupAppShortcuts } from '$lib/hooks/use-keyboard-shortcuts.svelte';
 	import type { LayoutData } from './$types';
 
 	let { data, children }: WithChildren<{ data: LayoutData }> = $props();
@@ -22,7 +24,14 @@
 		schema,
 		mutators: createMutators(authData)
 	});
+
+	let commandPaletteOpen = $state(false);
+	const shortcuts = setupAppShortcuts();
 </script>
+
+<svelte:window onkeydown={shortcuts.handleKeydown} />
+
+<CommandPalette bind:open={commandPaletteOpen} />
 
 <Sidebar.Provider>
 	<AppSidebar user={data.user} />

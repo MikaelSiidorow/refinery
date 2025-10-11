@@ -216,6 +216,7 @@
 				<div class="relative">
 					<Input
 						bind:value={inputValue}
+						autofocus
 						placeholder="Quick capture an idea... (Press Enter to add)"
 						onkeydown={handleKeydown}
 						onpaste={handlePaste}
