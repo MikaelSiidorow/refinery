@@ -6,6 +6,9 @@
 	import { Z } from 'zero-svelte';
 	import { schema, type Schema } from '$lib/zero/schema';
 
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import AppSidebar from '$lib/components/app-sidebar.svelte';
+
 	let { children } = $props();
 
 	new Z<Schema>({
@@ -21,4 +24,10 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-{@render children?.()}
+<Sidebar.Provider>
+	<AppSidebar />
+	<main>
+		<Sidebar.Trigger />
+		{@render children?.()}
+	</main>
+</Sidebar.Provider>
