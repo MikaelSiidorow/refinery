@@ -251,6 +251,325 @@ For each section, provide:
 
 Target: 400-600 words for LinkedIn. Make it personal but professional.`;
 		}
+	},
+	{
+		id: 'linkedin-carousel',
+		name: 'LinkedIn Carousel',
+		description: 'Convert your content into a 5-8 slide visual breakdown',
+		category: 'adapt',
+		icon: '🎠',
+		requirements: {
+			needsMasterContent: true // MUST have content
+		},
+		producesArtifact: true,
+		artifactType: 'carousel',
+		generate: (idea, settings) => {
+			const contentSource = idea.content || idea.notes || idea.oneLiner;
+
+			return `Convert this content into a LinkedIn carousel (5-8 slides).
+
+${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}Original content:
+${contentSource}
+
+Requirements:
+- **Slide 1 (Cover)**: Eye-catching title + hook that stops the scroll
+  - Use a bold statement or question
+  - Include a benefit or outcome
+  - Keep it under 10 words
+
+- **Slides 2-6 (Main Content)**: One key point per slide
+  - Clear headline (5-8 words)
+  - 2-3 supporting sentences or bullet points
+  - Use simple language and short sentences
+  - Include examples or data when relevant
+
+- **Slide 7 (Recap)**: Quick summary of key takeaways
+  - List 3-4 main points as bullets
+  - Reinforce the value delivered
+
+- **Slide 8 (CTA)**: Clear call to action
+  - What should they do next?
+  - Could be: follow, save, comment, visit link
+  - Make it specific and actionable
+
+Design tips:
+- Each slide should work standalone but flow logically
+- Use consistent formatting throughout
+- Keep text minimal - this is visual content
+- Write for mobile (most LinkedIn users)
+
+Format each slide clearly:
+SLIDE 1:
+[Title]
+[Subtitle/Hook]
+
+SLIDE 2:
+[Headline]
+[Supporting points]
+...`;
+		}
+	},
+	{
+		id: 'short-linkedin-post',
+		name: 'Short LinkedIn Post',
+		description: 'Distill your content into a < 1300 character mobile-optimized post',
+		category: 'adapt',
+		icon: '📱',
+		requirements: {
+			needsMasterContent: true // MUST have content
+		},
+		producesArtifact: true,
+		artifactType: 'short-post',
+		generate: (idea, settings) => {
+			const contentSource = idea.content || idea.notes || idea.oneLiner;
+
+			return `Convert this content into a short, punchy LinkedIn post (under 1300 characters).
+
+${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}Original content:
+${contentSource}
+
+Requirements:
+- **Hook** (First 1-2 lines): Stop the scroll
+  - Use a question, bold statement, or surprising fact
+  - Make it relatable to your target audience
+  - No fluff - get straight to the point
+
+- **Body** (3-5 short paragraphs):
+  - ONE main idea or insight
+  - Use line breaks between paragraphs for readability
+  - Include a personal angle or example
+  - Keep paragraphs to 1-2 sentences each
+
+- **Call-to-Action**:
+  - Ask a question to drive comments
+  - OR invite them to share their experience
+  - OR simple "Follow for more on [topic]"
+
+Formatting tips:
+- Use emojis sparingly (1-2 max) if they fit the voice
+- NO hashtag spam - 2-3 relevant hashtags at most
+- Write for mobile - short lines, easy to scan
+- Front-load the value - assume they'll only read the first 3 lines
+
+Tone: ${settings?.brandVoice || 'Professional but conversational, like talking to a colleague'}
+
+Maximum length: 1300 characters (LinkedIn shows "see more" after this)
+Aim for: 800-1200 characters for optimal engagement`;
+		}
+	},
+	{
+		id: 'blog-post-expansion',
+		name: 'Blog Post Expansion',
+		description: 'Expand your idea into a comprehensive 800-1200 word blog post',
+		category: 'expand',
+		icon: '📰',
+		requirements: {
+			needsOneLiner: true,
+			needsMasterContent: false
+		},
+		producesArtifact: true,
+		artifactType: 'blog-post',
+		generate: (idea, settings) => {
+			return `Expand this idea into a comprehensive blog post (800-1200 words).
+
+Topic: ${idea.oneLiner}
+
+${idea.notes ? `Context and research:\n${idea.notes}\n\n` : ''}${settings?.targetAudience ? `Target Audience: ${settings.targetAudience}\n` : ''}${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}
+Structure:
+
+**Title** (SEO-optimized, 50-60 characters)
+- Include the main keyword
+- Make it compelling and benefit-driven
+- Example format: "How to [Achieve Benefit]: [Number] [Method/Tips]"
+
+**Introduction** (100-150 words)
+- Hook with a relatable problem or surprising stat
+- Establish why this matters to the reader
+- Preview what they'll learn
+- Keep paragraphs short (2-3 sentences)
+
+**Main Content** (500-800 words)
+Break into 3-4 main sections with H2 headings:
+
+1. **[Section 1]**: Foundation/Context
+   - Explain the core concept
+   - Why traditional approaches fall short
+   - Set up the solution
+
+2. **[Section 2]**: The Method/Framework
+   - Step-by-step explanation
+   - Include code examples, screenshots, or diagrams (note where they'd go)
+   - Real-world examples
+
+3. **[Section 3]**: Best Practices
+   - Tips for implementation
+   - Common mistakes to avoid
+   - Performance/security considerations
+
+4. **[Section 4]**: Advanced Topics (optional)
+   - Scaling considerations
+   - Edge cases
+   - Future trends
+
+**Conclusion** (100-150 words)
+- Recap the key takeaways (3-4 bullet points)
+- Reinforce the value/benefits
+- Clear next step or call-to-action
+
+**SEO Elements to include:**
+- Meta description (150-160 characters)
+- 3-5 relevant keywords naturally incorporated
+- Internal linking suggestions (link to related content)
+- External linking suggestions (authoritative sources)
+
+Writing guidelines:
+- Use active voice
+- Break long paragraphs (3-4 sentences max)
+- Include subheadings (H3) within main sections
+- Use bullet points and numbered lists for scannability
+- Write for a ${settings?.targetAudience || 'technical but accessible'} audience
+- Tone: ${settings?.brandVoice || 'Professional, informative, and practical'}`;
+		}
+	},
+	{
+		id: 'newsletter-format',
+		name: 'Newsletter Format',
+		description: 'Adapt your content into an email-optimized newsletter section',
+		category: 'adapt',
+		icon: '📧',
+		requirements: {
+			needsMasterContent: true // MUST have content
+		},
+		producesArtifact: true,
+		artifactType: 'newsletter',
+		generate: (idea, settings) => {
+			const contentSource = idea.content || idea.notes || idea.oneLiner;
+
+			return `Convert this content into an email newsletter section.
+
+${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}Original content:
+${contentSource}
+
+Format for email (scannable and engaging):
+
+**Subject Line** (40-50 characters)
+- Curiosity-driven or benefit-focused
+- Personable, not corporate
+- Avoid spam triggers (NO: FREE, !!!, URGENT)
+- Example: "Why [common belief] is costing you [outcome]"
+
+**Preview Text** (35-55 characters)
+- Complements the subject line
+- Adds context or intrigue
+- Shows in inbox preview
+
+**Opening** (1-2 sentences)
+- Personal greeting tone
+- Jump straight into the value
+- No "Hope this email finds you well" corporate speak
+
+**Main Content** (200-400 words)
+Structure:
+- Use short paragraphs (2-3 sentences)
+- Add white space - email needs MORE breaks than web
+- Bold key phrases for scanning
+- Use a conversational tone (write like you're emailing a friend)
+
+Section breakdown:
+1. The Hook: Why this matters today
+2. The Insight: Your main point with supporting example
+3. The Action: What they should do with this info
+
+**Closing**
+- Quick summary or key takeaway
+- Warm sign-off (match your brand voice)
+- Single, clear CTA button or link
+
+**CTA Options**:
+- Read the full article →
+- Reply with your thoughts
+- Share this with a friend
+- Try this [tool/method]
+
+Email-specific tips:
+- Write for mobile-first (60%+ open on mobile)
+- Keep links to 2-3 max (too many = spam folder)
+- Personal tone - write "you" not "users" or "people"
+- Test: Would you send this to a friend? If not, rewrite.
+- Tone: ${settings?.brandVoice || 'Helpful friend, not faceless brand'}
+
+Include plain text version suggestion (simplified formatting for text-only email clients).`;
+		}
+	},
+	{
+		id: 'bluesky-thread',
+		name: 'Bluesky Thread',
+		description: 'Adapt your content for Bluesky\'s authentic, early-adopter community',
+		category: 'adapt',
+		icon: '🦋',
+		requirements: {
+			needsMasterContent: true // MUST have content
+		},
+		producesArtifact: true,
+		artifactType: 'thread',
+		generate: (idea, settings) => {
+			const contentSource = idea.content || idea.notes || idea.oneLiner;
+
+			return `Convert this content into a Bluesky thread (6-10 posts).
+
+${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}Original content:
+${contentSource}
+
+Bluesky-specific approach:
+- More authentic and less polished than Twitter
+- Tech-savvy, early-adopter audience
+- Values transparency and "building in public"
+- Less corporate, more human
+- Community over broadcasting
+
+**Post 1** (The Hook):
+- Start with a genuine insight or experience
+- No "thread 🧵" needed - Bluesky handles threading UI
+- Be direct and relatable
+- Show your perspective, not just facts
+
+**Posts 2-8** (The Content):
+- Each post: 1-2 key points
+- Use your natural voice - write how you'd explain to a colleague
+- Share the "why" behind your thinking
+- It's okay to be unfinished or exploratory
+- Technical details are welcomed (this audience gets it)
+- Show your work - screenshots, code snippets, rough diagrams
+
+**Post 9** (The Insight):
+- What you learned or concluded
+- Connect back to the opening
+- Can be a question or an observation
+- Authenticity > polish
+
+**Post 10** (Optional Closer):
+- Invite conversation: "What's your experience with this?"
+- Could share what you're working on next
+- NO hard sell - this community values genuine interaction
+
+Tone differences from Twitter:
+- ✅ "I'm still figuring this out, but here's what I've learned so far"
+- ✅ "Made this mistake today. Here's what I learned"
+- ✅ Technical deep-dives with actual uncertainty
+- ❌ Hustle culture "10x your productivity" framing
+- ❌ Over-polished marketing speak
+- ❌ Engagement bait tactics
+
+Bluesky formatting:
+- 300 character limit per post (vs Twitter's 280)
+- Can use more natural formatting
+- Code blocks and links work well
+- Community appreciates alt text on images
+
+Voice: ${settings?.brandVoice || 'Authentic, thoughtful, and human - like talking to fellow builders'}
+
+Remember: Bluesky values substance over virality. Write for depth and genuine connection.`;
+		}
 	}
 ];
 
