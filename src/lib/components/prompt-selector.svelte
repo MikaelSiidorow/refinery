@@ -1,0 +1,277 @@
+<script lang="ts">
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import { promptStrategies } from '$lib/prompts/strategies';
+	import type { ContentIdea, ContentSetting } from '$lib/zero/zero-schema.gen';
+	import { Copy, Check } from '@lucide/svelte';
+
+	let {
+		open = $bindable(false),
+		idea,
+		settings,
+		onCreateArtifact
+	}: {
+		open?: boolean;
+		idea: ContentIdea;
+		settings?: ContentSetting;
+		onCreateArtifact?: (artifactType: string) => void;
+	} = $props();
+
+	let selectedStrategyId = $state<string | null>(null);
+	let copiedStrategyId = $state<string | null>(null);
+	let copiedTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	const hasContent = $derived(!!(idea.content && idea.content.trim().length > 0));
+	const hasNotes = $derived(!!(idea.notes && idea.notes.trim().length > 0));
+	const hasOneLiner = $derived(!!(idea.oneLiner && idea.oneLiner.trim().length > 0));
+
+	const relevantStrategies = $derived(
+		promptStrategies.filter((strategy) => {
+			if (
+				strategy.requirements.needsMasterContent !== undefined &&
+				strategy.requirements.needsMasterContent !== hasContent
+			) {
+				return false;
+			}
+			if (strategy.requirements.needsNotes && !hasNotes) return false;
+			if (strategy.requirements.needsOneLiner && !hasOneLiner) return false;
+			return true;
+		})
+	);
+
+	const expandStrategies = $derived(relevantStrategies.filter((s) => s.category === 'expand'));
+	const adaptStrategies = $derived(relevantStrategies.filter((s) => s.category === 'adapt'));
+	const engageStrategies = $derived(relevantStrategies.filter((s) => s.category === 'engage'));
+
+	const selectedStrategy = $derived(
+		selectedStrategyId ? promptStrategies.find((s) => s.id === selectedStrategyId) : null
+	);
+
+	const generatedPrompt = $derived(
+		selectedStrategy ? selectedStrategy.generate(idea, settings) : ''
+	);
+
+	const categoryColors = {
+		expand: 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400',
+		adapt: 'bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400',
+		engage: 'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400',
+		analyze: 'bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400'
+	};
+
+	function handleSelectStrategy(strategyId: string) {
+		selectedStrategyId = strategyId;
+	}
+
+	function handleCopyPrompt() {
+		if (generatedPrompt && selectedStrategyId) {
+			navigator.clipboard.writeText(generatedPrompt);
+			copiedStrategyId = selectedStrategyId;
+
+			if (copiedTimeout) {
+				clearTimeout(copiedTimeout);
+			}
+
+			copiedTimeout = setTimeout(() => {
+				copiedStrategyId = null;
+			}, 2000);
+		}
+	}
+
+	function handleCopyAndCreateArtifact() {
+		if (generatedPrompt && selectedStrategy?.artifactType) {
+			// Copy to clipboard
+			navigator.clipboard.writeText(generatedPrompt);
+
+			// Trigger artifact creation with pre-filled type
+			onCreateArtifact?.(selectedStrategy.artifactType);
+
+			// Close the prompt selector
+			open = false;
+		}
+	}
+
+	// Reset state when dialog closes
+	$effect(() => {
+		if (!open) {
+			selectedStrategyId = null;
+			copiedStrategyId = null;
+			if (copiedTimeout) {
+				clearTimeout(copiedTimeout);
+			}
+		}
+	});
+</script>
+
+<Dialog.Root bind:open>
+	<Dialog.Content class="flex max-h-[90vh] max-w-[95vw] flex-col overflow-hidden lg:max-w-[85vw]">
+		<Dialog.Header>
+			<Dialog.Title>Select a Prompt Strategy</Dialog.Title>
+			<Dialog.Description>
+				Choose a strategy to generate a refined prompt for your content idea
+			</Dialog.Description>
+		</Dialog.Header>
+
+		<div class="mb-4 rounded-lg border bg-muted/50 p-3">
+			{#if !hasContent}
+				<p class="text-sm">
+					<span class="font-semibold">💡 No master content yet</span><br />
+					Start by expanding your idea into a full post
+				</p>
+			{:else}
+				<p class="text-sm">
+					<span class="font-semibold">✅ Master content ready</span><br />
+					Create platform-specific versions or engagement content
+				</p>
+			{/if}
+		</div>
+
+		<div class="flex flex-1 gap-4 overflow-hidden">
+			<div class="w-1/3 space-y-4 overflow-y-auto pr-2">
+				{#if relevantStrategies.length === 0}
+					<div class="rounded-lg border border-dashed bg-muted/20 p-6 text-center">
+						<p class="mb-2 text-sm font-semibold">No strategies available</p>
+						<p class="text-xs text-muted-foreground">
+							{#if !hasOneLiner}
+								Add a one-liner to your idea to see available strategies.
+							{:else}
+								Please check the debug info above to see why strategies are hidden.
+							{/if}
+						</p>
+					</div>
+				{/if}
+
+				{#if expandStrategies.length > 0}
+					<div>
+						<h3 class="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+							Expand Your Idea ({expandStrategies.length})
+						</h3>
+						<div class="space-y-2">
+							{#each expandStrategies as strategy (strategy.id)}
+								<button
+									onclick={() => handleSelectStrategy(strategy.id)}
+									class="w-full rounded-lg border p-3 text-left transition-all hover:bg-accent {selectedStrategyId ===
+									strategy.id
+										? 'border-primary bg-accent'
+										: 'bg-card'}"
+									type="button"
+								>
+									<div class="mb-2 flex items-start justify-between gap-2">
+										<span class="text-2xl">{strategy.icon}</span>
+										<Badge class="{categoryColors[strategy.category]} text-xs">
+											{strategy.category}
+										</Badge>
+									</div>
+									<h3 class="mb-1 font-semibold">{strategy.name}</h3>
+									<p class="text-xs text-muted-foreground">{strategy.description}</p>
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
+				{#if adaptStrategies.length > 0}
+					<div>
+						<h3 class="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+							Adapt to Platforms ({adaptStrategies.length})
+						</h3>
+						<div class="space-y-2">
+							{#each adaptStrategies as strategy (strategy.id)}
+								<button
+									onclick={() => handleSelectStrategy(strategy.id)}
+									class="w-full rounded-lg border p-3 text-left transition-all hover:bg-accent {selectedStrategyId ===
+									strategy.id
+										? 'border-primary bg-accent'
+										: 'bg-card'}"
+									type="button"
+								>
+									<div class="mb-2 flex items-start justify-between gap-2">
+										<span class="text-2xl">{strategy.icon}</span>
+										<Badge class="{categoryColors[strategy.category]} text-xs">
+											{strategy.category}
+										</Badge>
+									</div>
+									<h3 class="mb-1 font-semibold">{strategy.name}</h3>
+									<p class="text-xs text-muted-foreground">{strategy.description}</p>
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
+				{#if engageStrategies.length > 0}
+					<div>
+						<h3 class="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+							Engagement Tools ({engageStrategies.length})
+						</h3>
+						<div class="space-y-2">
+							{#each engageStrategies as strategy (strategy.id)}
+								<button
+									onclick={() => handleSelectStrategy(strategy.id)}
+									class="w-full rounded-lg border p-3 text-left transition-all hover:bg-accent {selectedStrategyId ===
+									strategy.id
+										? 'border-primary bg-accent'
+										: 'bg-card'}"
+									type="button"
+								>
+									<div class="mb-2 flex items-start justify-between gap-2">
+										<span class="text-2xl">{strategy.icon}</span>
+										<Badge class="{categoryColors[strategy.category]} text-xs">
+											{strategy.category}
+										</Badge>
+									</div>
+									<h3 class="mb-1 font-semibold">{strategy.name}</h3>
+									<p class="text-xs text-muted-foreground">{strategy.description}</p>
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</div>
+
+			<div class="flex flex-1 flex-col overflow-hidden border-l pl-4">
+				{#if selectedStrategy}
+					<div class="mb-3">
+						<h3 class="mb-1 flex items-center gap-2 font-semibold">
+							<span class="text-xl">{selectedStrategy.icon}</span>
+							{selectedStrategy.name}
+						</h3>
+						<p class="text-sm text-muted-foreground">{selectedStrategy.description}</p>
+					</div>
+
+					<div class="mb-3 flex-1 overflow-y-auto rounded-lg border bg-muted/50 p-4">
+						<pre
+							class="font-mono text-xs leading-relaxed whitespace-pre-wrap">{generatedPrompt}</pre>
+					</div>
+
+					<div class="flex gap-2 self-end">
+						<Button onclick={handleCopyPrompt} variant="outline" class="gap-2">
+							{#if copiedStrategyId === selectedStrategy.id}
+								<Check class="h-4 w-4" />
+								Copied!
+							{:else}
+								<Copy class="h-4 w-4" />
+								Copy to Clipboard
+							{/if}
+						</Button>
+
+						{#if selectedStrategy.producesArtifact && onCreateArtifact}
+							<Button onclick={handleCopyAndCreateArtifact} class="gap-2">
+								<Copy class="h-4 w-4" />
+								Copy & Create Artifact
+							</Button>
+						{/if}
+					</div>
+				{:else}
+					<div class="flex flex-1 items-center justify-center text-center">
+						<div class="max-w-xs">
+							<p class="text-muted-foreground">
+								Select a strategy on the left to see the generated prompt
+							</p>
+						</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>

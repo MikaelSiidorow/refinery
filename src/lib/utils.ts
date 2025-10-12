@@ -31,3 +31,8 @@ export type UuidV7 = string & { __uuid_v7: true };
 export const generateId = (): UuidV7 => {
 	return uuidv7() as UuidV7;
 };
+
+export type NonEmptyArray<T> = [T, ...T[]];
+export const isNonEmpty = <T>(arr: T[] | undefined): arr is NonEmptyArray<T> => {
+	return Array.isArray(arr) && arr.length > 0;
+};

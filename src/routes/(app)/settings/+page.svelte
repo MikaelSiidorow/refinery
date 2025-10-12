@@ -10,9 +10,7 @@
 
 	const z = get_z();
 
-	const settingsQuery = new Query(
-		z.query.contentSettings.where('userId', data.user.id as UuidV7)
-	);
+	const settingsQuery = new Query(z.query.contentSettings.where('userId', data.user.id as UuidV7));
 	const settings = $derived(settingsQuery.current[0]);
 
 	let editedTargetAudience = $state('');
@@ -115,11 +113,8 @@
 	</div>
 
 	<form class="space-y-8">
-		<!-- Target Audience -->
 		<div class="space-y-2">
-			<label for="targetAudience" class="text-sm font-semibold">
-				Target Audience
-			</label>
+			<label for="targetAudience" class="text-sm font-semibold">Target Audience</label>
 			<p class="text-xs text-muted-foreground">
 				Who are you writing for? (e.g., developers, startup founders, marketers)
 			</p>
@@ -132,11 +127,8 @@
 			/>
 		</div>
 
-		<!-- Brand Voice -->
 		<div class="space-y-2">
-			<label for="brandVoice" class="text-sm font-semibold">
-				Brand Voice
-			</label>
+			<label for="brandVoice" class="text-sm font-semibold">Brand Voice</label>
 			<p class="text-xs text-muted-foreground">
 				How should your content sound? (e.g., casual & friendly, professional & authoritative)
 			</p>
@@ -149,11 +141,8 @@
 			/>
 		</div>
 
-		<!-- Content Pillars -->
 		<div class="space-y-2">
-			<label for="contentPillars" class="text-sm font-semibold">
-				Content Focus Areas
-			</label>
+			<label for="contentPillars" class="text-sm font-semibold">Content Focus Areas</label>
 			<p class="text-xs text-muted-foreground">
 				What main topics do you cover? (e.g., Web Technology, Startups, AI/ML, Developer
 				Productivity)
@@ -165,16 +154,13 @@
 				rows={3}
 				class="resize-y"
 			/>
-			<p class="text-xs italic text-muted-foreground">
+			<p class="text-xs text-muted-foreground italic">
 				These are your core content themes - the main areas you want to be known for
 			</p>
 		</div>
 
-		<!-- Unique Perspective -->
 		<div class="space-y-2">
-			<label for="uniquePerspective" class="text-sm font-semibold">
-				Unique Perspective
-			</label>
+			<label for="uniquePerspective" class="text-sm font-semibold">Unique Perspective</label>
 			<p class="text-xs text-muted-foreground">
 				What makes your perspective unique? What value do you provide?
 			</p>
@@ -190,9 +176,8 @@
 
 	<div class="mt-8 rounded-lg border bg-muted/50 p-4">
 		<p class="text-sm text-muted-foreground">
-			💡 <strong>Tip:</strong> These settings will be used to enhance AI prompts when you copy them
-			from your ideas. The more specific you are, the better your generated content will align with
-			your brand.
+			💡 <strong>Tip:</strong> These settings will be used to enhance AI prompts when you copy them from
+			your ideas. The more specific you are, the better your generated content will align with your brand.
 		</p>
 	</div>
 </div>

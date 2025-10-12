@@ -42,6 +42,18 @@ export const ideaStatusEnum = pgEnum('idea_status', [
 	'cancelled'
 ]);
 
+export const artifactTypeEnum = pgEnum('artifact_type', [
+	'blog-post',
+	'thread',
+	'carousel',
+	'newsletter',
+	'email',
+	'short-post',
+	'comment'
+]);
+
+export const artifactStatusEnum = pgEnum('artifact_status', ['draft', 'ready', 'published']);
+
 export const contentIdea = pgTable('content_idea', {
 	id: uuid().primaryKey().$type<UuidV7>(),
 	userId: uuid()
@@ -83,6 +95,42 @@ export const contentSettingsRelations = relations(contentSettings, ({ one }) => 
 	})
 }));
 
+export const contentArtifact = pgTable('content_artifact', {
+	id: uuid().primaryKey().$type<UuidV7>(),
+	userId: uuid()
+		.notNull()
+		.references(() => user.id)
+		.$type<UuidV7>(),
+	ideaId: uuid()
+		.notNull()
+		.references(() => contentIdea.id)
+		.$type<UuidV7>(),
+	title: text(),
+	content: text().notNull(),
+	artifactType: artifactTypeEnum().notNull(),
+	platform: text(),
+	status: artifactStatusEnum().notNull().default('draft'),
+	publishedAt: timestamp(),
+	publishedUrl: text(),
+	impressions: integer(),
+	likes: integer(),
+	comments: integer(),
+	shares: integer(),
+	notes: text(),
+	...timestamps
+});
+
+export const contentArtifactRelations = relations(contentArtifact, ({ one }) => ({
+	user: one(user, {
+		fields: [contentArtifact.userId],
+		references: [user.id]
+	}),
+	idea: one(contentIdea, {
+		fields: [contentArtifact.ideaId],
+		references: [contentIdea.id]
+	})
+}));
+
 export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
@@ -90,3 +138,10 @@ export type User = typeof user.$inferSelect;
 export type ContentIdea = typeof contentIdea.$inferSelect;
 
 export type ContentSettings = typeof contentSettings.$inferSelect;
+
+export type ContentArtifact = typeof contentArtifact.$inferSelect;
+
+// Derive enum types
+export type ArtifactType = (typeof artifactTypeEnum.enumValues)[number];
+export type ArtifactStatus = (typeof artifactStatusEnum.enumValues)[number];
+export type IdeaStatus = (typeof ideaStatusEnum.enumValues)[number];

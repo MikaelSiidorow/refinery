@@ -5,7 +5,7 @@ import {
 	type Schema as ZeroSchema
 } from '@rocicorp/zero';
 import { schema as genSchema } from './zero-schema.gen';
-import type { AuthData } from './auth';
+import type { AuthData, OwnedTable } from './auth';
 
 const schema = {
 	...genSchema,
@@ -17,13 +17,8 @@ type Schema = typeof schema;
 export { schema, type Schema };
 
 export const permissions = definePermissions<AuthData, Schema>(schema, () => {
-	const allowIfOwner = (authData: AuthData, { cmp }: ExpressionBuilder<Schema, 'contentIdea'>) =>
+	const allowIfOwner = (authData: AuthData, { cmp }: ExpressionBuilder<Schema, OwnedTable>) =>
 		cmp('userId', authData.sub);
-
-	const allowIfSettingsOwner = (
-		authData: AuthData,
-		{ cmp }: ExpressionBuilder<Schema, 'contentSettings'>
-	) => cmp('userId', authData.sub);
 
 	return {
 		contentIdea: {
@@ -39,12 +34,23 @@ export const permissions = definePermissions<AuthData, Schema>(schema, () => {
 		},
 		contentSettings: {
 			row: {
-				select: [allowIfSettingsOwner],
-				insert: [allowIfSettingsOwner],
+				select: [allowIfOwner],
+				insert: [allowIfOwner],
 				update: {
-					preMutation: [allowIfSettingsOwner],
-					postMutation: [allowIfSettingsOwner]
+					preMutation: [allowIfOwner],
+					postMutation: [allowIfOwner]
 				}
+			}
+		},
+		contentArtifact: {
+			row: {
+				select: [allowIfOwner],
+				insert: [allowIfOwner],
+				update: {
+					preMutation: [allowIfOwner],
+					postMutation: [allowIfOwner]
+				},
+				delete: [allowIfOwner]
 			}
 		},
 		user: {

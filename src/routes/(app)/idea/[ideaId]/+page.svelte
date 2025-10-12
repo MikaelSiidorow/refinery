@@ -1,26 +1,49 @@
 <script lang="ts">
 	import { Query } from 'zero-svelte';
 	import { get_z } from '$lib/z.svelte';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
-	import { ArrowLeft, Copy, CircleCheck, CircleAlert } from '@lucide/svelte';
+	import { Copy, CircleCheck, Plus } from '@lucide/svelte';
 	import { formatRelativeTime } from '$lib/utils/date';
 	import type { UuidV7 } from '$lib/utils';
+	import { generateId } from '$lib/utils';
 	import type { PageData } from './$types';
+	import PromptSelector from '$lib/components/prompt-selector.svelte';
+	import ArtifactCard from '$lib/components/artifact-card.svelte';
 
 	let { data }: { data: PageData } = $props();
 
 	const z = get_z();
 
-	const ideas = new Query(z.query.contentIdea.where('id', data.ideaId as UuidV7));
-	const idea = $derived(ideas.current[0]);
+	// Initialize query without filter first
+	let ideasQuery = new Query(z.query.contentIdea.limit(0));
+
+	// Update query when params change
+	$effect(() => {
+		const ideaId = page.params.ideaId as UuidV7;
+		ideasQuery.updateQuery(z.query.contentIdea.where('id', ideaId));
+	});
+
+	const idea = $derived(ideasQuery.current[0]);
 
 	const settingsQuery = new Query(z.query.contentSettings.where('userId', data.user.id as UuidV7));
 	const settings = $derived(settingsQuery.current[0]);
+
+	let artifactsQuery = new Query(z.query.contentArtifact.limit(0));
+
+	$effect(() => {
+		const ideaId = page.params.ideaId as UuidV7;
+		artifactsQuery.updateQuery(
+			z.query.contentArtifact.where('ideaId', ideaId).orderBy('createdAt', 'desc')
+		);
+	});
+
+	const artifacts = $derived(artifactsQuery.current);
 
 	let editedOneLiner = $state('');
 	let editedNotes = $state('');
@@ -28,12 +51,13 @@
 	let selectedStatus = $state<
 		'inbox' | 'developing' | 'ready' | 'published' | 'archived' | 'cancelled'
 	>('inbox');
-	let isSaving = $state(false);
 	let saveStatus = $state<'idle' | 'saving' | 'saved'>('idle');
 	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 	let savedIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
+	let promptSelectorOpen = $state(false);
 
 	$effect(() => {
+		if (!idea) return;
 		editedOneLiner = idea.oneLiner || '';
 		editedNotes = idea.notes || '';
 		editedContent = idea.content || '';
@@ -41,6 +65,7 @@
 	});
 
 	$effect(() => {
+		if (!idea) return;
 		const currentValues = {
 			oneLiner: editedOneLiner,
 			notes: editedNotes,
@@ -80,8 +105,8 @@
 	] as const;
 
 	async function saveChanges() {
+		if (!idea) return;
 		saveStatus = 'saving';
-		isSaving = true;
 		try {
 			const write = z.mutate.contentIdea.update({
 				id: idea.id,
@@ -102,65 +127,11 @@
 		} catch (error) {
 			console.error('Failed to save changes:', error);
 			saveStatus = 'idle';
-			// TODO: Show error toast
-		} finally {
-			isSaving = false;
 		}
 	}
 
-	function copyPromptToClipboard() {
-		if (!idea) return;
-
-		const hasSettings =
-			settings &&
-			(settings.targetAudience ||
-				settings.brandVoice ||
-				settings.contentPillars ||
-				settings.uniquePerspective);
-
-		let prompt: string;
-
-		if (hasSettings) {
-			prompt = `You are a professional content writer creating content for ${settings.targetAudience || 'your audience'}.
-
-Brand Voice: ${settings.brandVoice || 'Professional and engaging'}
-Content Focus Areas: ${settings.contentPillars || 'Your expertise areas'}
-Unique Value: ${settings.uniquePerspective || 'High-quality insights'}
-
-Based on the following idea and notes, write a complete, engaging piece that aligns with one or more of your content focus areas.
-
-Idea: ${editedOneLiner}
-
-Notes:
-${editedNotes || '(No notes yet)'}
-
-Write a well-structured piece with:
-- Compelling introduction that hooks the reader
-- Clear main points with supporting examples that relate to your focus areas
-- Practical takeaways
-- Strong conclusion
-
-Tone: Match the brand voice described above
-Focus: Ensure the content clearly connects to your stated content focus areas`;
-		} else {
-			// Fallback to simple prompt if no settings
-			prompt = `You are a professional content writer. Based on the following idea and notes, write a complete, engaging blog post.
-
-Idea: ${editedOneLiner}
-
-Notes:
-${editedNotes || '(No notes yet)'}
-
-Write a well-structured post with:
-- Compelling introduction that hooks the reader
-- Clear main points with supporting examples
-- Practical takeaways
-- Strong conclusion`;
-		}
-
-		navigator.clipboard.writeText(prompt);
-		// TODO: Show success toast
-		alert('Prompt copied to clipboard! Paste it into Claude 4.5');
+	function openPromptSelector() {
+		promptSelectorOpen = true;
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -174,15 +145,106 @@ Write a well-structured post with:
 			return;
 		}
 
-		// Escape to go back (only when not focused in input)
+		// Escape to go back (only when not focused in input and no modals are open)
+		// Check for dialog overlays in the DOM to ensure no modals are open
 		if (event.key === 'Escape' && !isInputFocused) {
-			event.preventDefault();
-			goBack();
+			const hasOpenDialog = document.querySelector('[role="dialog"]');
+			if (!hasOpenDialog && !promptSelectorOpen) {
+				event.preventDefault();
+				goBack();
+			}
 		}
 	}
 
 	function goBack() {
 		goto(resolve('/'));
+	}
+
+	function handleEditArtifact(id: string) {
+		if (!idea) return;
+		goto(resolve(`/idea/${idea.id}/artifact/${id}`));
+	}
+
+	async function handleCreateArtifact() {
+		if (!idea) return;
+
+		try {
+			const artifactId = generateId();
+			const write = z.mutate.contentArtifact.create({
+				id: artifactId,
+				ideaId: idea.id,
+				title: undefined,
+				content: '',
+				artifactType: 'thread',
+				platform: undefined
+			});
+			await write.client;
+
+			// Navigate to the edit page
+			goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
+		} catch (error) {
+			console.error('Failed to create artifact:', error);
+		}
+	}
+
+	async function handleCreateArtifactFromPrompt(artifactType: string) {
+		if (!idea) return;
+
+		try {
+			const artifactId = generateId();
+			const write = z.mutate.contentArtifact.create({
+				id: artifactId,
+				ideaId: idea.id,
+				title: undefined,
+				content: '',
+				artifactType: artifactType as
+					| 'blog-post'
+					| 'thread'
+					| 'carousel'
+					| 'newsletter'
+					| 'email'
+					| 'short-post'
+					| 'comment',
+				platform: undefined
+			});
+			await write.client;
+
+			// Navigate to the edit page
+			goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
+		} catch (error) {
+			console.error('Failed to create artifact:', error);
+		}
+	}
+
+	async function handleDeleteArtifact(id: string) {
+		const confirmed = confirm('Delete this artifact? This cannot be undone.');
+		if (!confirmed) return;
+
+		try {
+			const write = z.mutate.contentArtifact.delete(id as UuidV7);
+			await write.client;
+		} catch (error) {
+			console.error('Failed to delete artifact:', error);
+		}
+	}
+
+	async function handleCopyArtifact(content: string) {
+		try {
+			await navigator.clipboard.writeText(content);
+			// TODO: Show toast notification
+			console.log('Content copied to clipboard');
+		} catch (error) {
+			console.error('Failed to copy to clipboard:', error);
+			// Fallback: create temporary textarea
+			const textarea = document.createElement('textarea');
+			textarea.value = content;
+			textarea.style.position = 'fixed';
+			textarea.style.opacity = '0';
+			document.body.appendChild(textarea);
+			textarea.select();
+			document.execCommand('copy');
+			document.body.removeChild(textarea);
+		}
 	}
 </script>
 
@@ -192,28 +254,8 @@ Write a well-structured post with:
 	<title>{idea?.oneLiner || 'Not Found'} - Refinery</title>
 </svelte:head>
 
-{#if !idea}
-	<!-- 404 Not Found -->
-	<div class="flex flex-1 items-center justify-center p-8">
-		<div class="max-w-md text-center">
-			<CircleAlert class="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-			<h1 class="mb-2 text-2xl font-bold">Idea not found</h1>
-			<p class="mb-6 text-muted-foreground">
-				The idea you're looking for doesn't exist or has been deleted.
-			</p>
-			<Button onclick={() => goto(resolve('/'))} class="gap-2">
-				<ArrowLeft class="h-4 w-4" />
-				Back to Dashboard
-			</Button>
-		</div>
-	</div>
-{:else}
+{#if idea}
 	<div class="mx-auto max-w-7xl p-4 sm:p-8">
-		<Button variant="ghost" onclick={goBack} class="mb-6 gap-2">
-			<ArrowLeft class="h-4 w-4" />
-			Back to Dashboard
-		</Button>
-
 		<div class="mb-6 space-y-4 border-b pb-6">
 			<Input
 				bind:value={editedOneLiner}
@@ -247,11 +289,6 @@ Write a well-structured post with:
 						{/if}
 					</div>
 				</div>
-
-				<Button onclick={copyPromptToClipboard} variant="outline" size="sm" class="gap-2">
-					<Copy class="h-4 w-4" />
-					Copy Prompt
-				</Button>
 			</div>
 		</div>
 
@@ -273,10 +310,18 @@ Write a well-structured post with:
 			</div>
 
 			<div class="min-w-0 space-y-2">
-				<label for="content" class="text-sm font-semibold">Content Draft</label>
-				<p class="text-xs text-muted-foreground">
-					Your full content draft - paste AI-generated content here or write manually
-				</p>
+				<div class="flex items-center justify-between">
+					<div>
+						<label for="content" class="text-sm font-semibold">Content Draft</label>
+						<p class="text-xs text-muted-foreground">
+							Your full content draft - paste AI-generated content here or write manually
+						</p>
+					</div>
+					<Button onclick={openPromptSelector} variant="outline" size="sm" class="gap-2">
+						<Copy class="h-4 w-4" />
+						AI Prompts
+					</Button>
+				</div>
 				<Textarea
 					id="content"
 					bind:value={editedContent}
@@ -285,5 +330,53 @@ Write a well-structured post with:
 				/>
 			</div>
 		</div>
+
+		<div class="mt-12 border-t pt-8" style="max-width: 1224px;">
+			<div class="mb-6 flex items-center justify-between">
+				<div>
+					<h2 class="text-xl font-semibold">
+						Artifacts
+						<span class="ml-2 text-sm font-normal text-muted-foreground">
+							({artifacts.length})
+						</span>
+					</h2>
+					<p class="mt-1 text-sm text-muted-foreground">
+						Platform-specific versions of your content
+					</p>
+				</div>
+				<Button onclick={handleCreateArtifact} class="gap-2">
+					<Plus class="h-4 w-4" />
+					New Artifact
+				</Button>
+			</div>
+
+			{#if artifacts.length === 0}
+				<div class="rounded-lg border border-dashed bg-muted/20 p-8 text-center">
+					<p class="text-sm text-muted-foreground">
+						No artifacts yet. Create platform-specific versions using the prompt library.
+					</p>
+				</div>
+			{:else}
+				<div class="space-y-3">
+					{#each artifacts as artifact (artifact.id)}
+						<ArtifactCard
+							{artifact}
+							onEdit={handleEditArtifact}
+							onDelete={handleDeleteArtifact}
+							onCopy={handleCopyArtifact}
+						/>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</div>
+
+	{#if idea}
+		<PromptSelector
+			bind:open={promptSelectorOpen}
+			{idea}
+			{settings}
+			onCreateArtifact={handleCreateArtifactFromPrompt}
+		/>
+	{/if}
 {/if}

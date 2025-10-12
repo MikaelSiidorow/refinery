@@ -13,18 +13,16 @@ export function assertIsSignedIn(authData: AuthData | undefined): asserts authDa
 	assert(authData, 'user must be logged in for this operation');
 }
 
-export async function assertIsCreator(
+/** All tables that belong to a user and have a userId column */
+export type OwnedTable = 'contentIdea' | 'contentArtifact' | 'contentSettings';
+
+export async function assertIsOwner(
 	authData: AuthData | undefined,
-	query: Query<typeof schema, 'contentIdea'>,
+	query: Query<typeof schema, OwnedTable>,
 	id: UuidV7
 ) {
 	assertIsSignedIn(authData);
-	const userId = must(
-		await query.where('id', id).one().run(),
-		`entity ${id} does not exist`
-	).userId;
-	assert(
-		authData.sub === userId,
-		`User ${authData.sub} is not an admin or the creator of the target entity`
-	);
+	const entity = must(await query.where('id', id).one().run(), `entity ${id} does not exist`);
+	const userId = entity.userId;
+	assert(authData.sub === userId, `User ${authData.sub} is not the owner of this entity`);
 }

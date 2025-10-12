@@ -5,7 +5,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Kbd from '$lib/components/ui/kbd';
 	import { ideaSchema } from './schema';
-	import { generateId } from '$lib/utils';
+	import { generateId, isNonEmpty } from '$lib/utils';
 	import Fuse from 'fuse.js';
 	import { CircleCheck, CircleAlert, X, LoaderCircle, Copy, Trash2, Pencil } from '@lucide/svelte';
 	import type { UuidV7 } from '$lib/utils';
@@ -40,7 +40,7 @@
 	function checkDuplicate(text: string): boolean {
 		const fuse = new Fuse(allIdeas.current, fuseOptions);
 		const results = fuse.search(text);
-		return results.length > 0 && results[0].score! < 0.4;
+		return isNonEmpty(results) && (results[0].score ?? 0) < 0.4;
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
