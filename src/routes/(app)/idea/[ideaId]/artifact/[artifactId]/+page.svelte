@@ -38,6 +38,7 @@
 	>('thread');
 	let platform = $state('');
 	let status = $state<'draft' | 'ready' | 'published'>('draft');
+	let plannedPublishDate = $state('');
 	let publishedUrl = $state('');
 	let publishedAt = $state('');
 	let impressions = $state('');
@@ -73,6 +74,9 @@
 			artifactType = artifact.artifactType;
 			platform = artifact.platform ? artifact.platform : '';
 			status = artifact.status || 'draft';
+			plannedPublishDate = artifact.plannedPublishDate
+				? new Date(artifact.plannedPublishDate).toISOString().split('T')[0]!
+				: '';
 			publishedUrl = (artifact.publishedUrl || '') as string;
 			publishedAt = artifact.publishedAt
 				? new Date(artifact.publishedAt).toISOString().split('T')[0]!
@@ -94,6 +98,7 @@
 			artifactType,
 			platform,
 			status,
+			plannedPublishDate,
 			publishedUrl,
 			publishedAt,
 			impressions,
@@ -109,6 +114,10 @@
 			currentValues.artifactType !== artifact.artifactType ||
 			currentValues.platform !== (artifact.platform || '') ||
 			currentValues.status !== (artifact.status || 'draft') ||
+			currentValues.plannedPublishDate !==
+				(artifact.plannedPublishDate
+					? new Date(artifact.plannedPublishDate).toISOString().split('T')[0]
+					: '') ||
 			currentValues.publishedUrl !== (artifact.publishedUrl || '') ||
 			currentValues.publishedAt !==
 				(artifact.publishedAt ? new Date(artifact.publishedAt).toISOString().split('T')[0] : '') ||
@@ -145,6 +154,7 @@
 				artifactType,
 				platform: platform || undefined,
 				status,
+				plannedPublishDate: plannedPublishDate ? new Date(plannedPublishDate).getTime() : undefined,
 				publishedUrl: publishedUrl || undefined,
 				publishedAt: publishedAt ? new Date(publishedAt).getTime() : undefined,
 				impressions: impressions ? parseInt(impressions) : undefined,
@@ -296,6 +306,18 @@
 					</Select.Content>
 				</Select.Root>
 			</div>
+
+			{#if status !== 'published'}
+				<div class="space-y-2">
+					<label for="planned-date" class="text-sm font-medium">
+						Planned Publish Date <span class="text-muted-foreground">(optional)</span>
+					</label>
+					<Input id="planned-date" type="date" bind:value={plannedPublishDate} />
+					<p class="text-xs text-muted-foreground">
+						Set a target date to help plan your content calendar
+					</p>
+				</div>
+			{/if}
 
 			{#if status === 'published'}
 				<div class="space-y-4 rounded-lg border bg-muted/50 p-4">

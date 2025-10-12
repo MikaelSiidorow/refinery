@@ -110,6 +110,7 @@ export const contentArtifact = pgTable('content_artifact', {
 	artifactType: artifactTypeEnum().notNull(),
 	platform: text(),
 	status: artifactStatusEnum().notNull().default('draft'),
+	plannedPublishDate: timestamp(),
 	publishedAt: timestamp(),
 	publishedUrl: text(),
 	impressions: integer(),

@@ -180,7 +180,6 @@
 			});
 			await write.client;
 
-			// Navigate to the edit page
 			goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
 		} catch (error) {
 			console.error('Failed to create artifact:', error);
@@ -209,7 +208,6 @@
 			});
 			await write.client;
 
-			// Navigate to the edit page
 			goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
 		} catch (error) {
 			console.error('Failed to create artifact:', error);

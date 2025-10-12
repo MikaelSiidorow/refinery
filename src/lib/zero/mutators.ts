@@ -38,6 +38,7 @@ export type CreateContentArtifactArgs = {
 		| 'short-post'
 		| 'comment';
 	platform?: string;
+	plannedPublishDate?: number;
 };
 
 export type UpdateContentArtifactArgs = {
@@ -54,6 +55,7 @@ export type UpdateContentArtifactArgs = {
 		| 'comment';
 	platform?: string;
 	status?: 'draft' | 'ready' | 'published';
+	plannedPublishDate?: number;
 	publishedAt?: number;
 	publishedUrl?: string;
 	impressions?: number;
@@ -154,7 +156,15 @@ export function createMutators(authData: AuthData | undefined) {
 		contentArtifact: {
 			async create(
 				tx: Transaction<Schema>,
-				{ id, ideaId, title, content, artifactType, platform }: CreateContentArtifactArgs
+				{
+					id,
+					ideaId,
+					title,
+					content,
+					artifactType,
+					platform,
+					plannedPublishDate
+				}: CreateContentArtifactArgs
 			) {
 				assertIsSignedIn(authData);
 				const userId = authData.sub;
@@ -170,6 +180,7 @@ export function createMutators(authData: AuthData | undefined) {
 					artifactType,
 					platform: platform || null,
 					status: 'draft',
+					plannedPublishDate: plannedPublishDate || null,
 					publishedAt: null,
 					publishedUrl: null,
 					impressions: null,
@@ -190,6 +201,7 @@ export function createMutators(authData: AuthData | undefined) {
 					artifactType,
 					platform,
 					status,
+					plannedPublishDate,
 					publishedAt,
 					publishedUrl,
 					impressions,
@@ -215,6 +227,7 @@ export function createMutators(authData: AuthData | undefined) {
 						| 'comment';
 					platform?: string | null;
 					status?: 'draft' | 'ready' | 'published';
+					plannedPublishDate?: number | null;
 					publishedAt?: number | null;
 					publishedUrl?: string | null;
 					impressions?: number | null;
@@ -233,6 +246,8 @@ export function createMutators(authData: AuthData | undefined) {
 				if (artifactType !== undefined) updateData.artifactType = artifactType;
 				if (platform !== undefined) updateData.platform = platform || null;
 				if (status !== undefined) updateData.status = status;
+				if (plannedPublishDate !== undefined)
+					updateData.plannedPublishDate = plannedPublishDate || null;
 				if (publishedAt !== undefined) updateData.publishedAt = publishedAt;
 				if (publishedUrl !== undefined) updateData.publishedUrl = publishedUrl || null;
 				if (impressions !== undefined) updateData.impressions = impressions;

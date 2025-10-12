@@ -12,7 +12,8 @@
 		Twitter,
 		Pencil,
 		Trash2,
-		Copy
+		Copy,
+		Calendar
 	} from '@lucide/svelte';
 
 	let {
@@ -47,6 +48,34 @@
 
 	const displayTitle = artifact.title || artifact.artifactType.replace('-', ' ');
 	const status = artifact.status || 'draft';
+
+	const plannedDate = $derived(
+		artifact.plannedPublishDate ? new Date(artifact.plannedPublishDate) : null
+	);
+
+	const dateStatus = $derived.by(() => {
+		if (!artifact.plannedPublishDate) return null;
+
+		const todayTimestamp = Date.now();
+		const todayDate = Math.floor(todayTimestamp / 86400000) * 86400000;
+
+		const plannedTimestamp = artifact.plannedPublishDate;
+		const plannedDateOnly = Math.floor(plannedTimestamp / 86400000) * 86400000;
+
+		if (plannedDateOnly < todayDate) return 'overdue';
+		if (plannedDateOnly === todayDate) return 'today';
+		return 'upcoming';
+	});
+
+	const dateStatusColors = {
+		overdue: 'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400',
+		today: 'bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400',
+		upcoming: 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400'
+	};
+
+	const formatPlannedDate = (date: Date) => {
+		return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+	};
 </script>
 
 <div class="group rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50">
@@ -73,6 +102,21 @@
 				<p class="text-xs text-muted-foreground">
 					Created {formatRelativeTime(artifact.createdAt)}
 				</p>
+
+				{#if plannedDate && status !== 'published' && dateStatus}
+					<div class="mt-1 flex items-center gap-1">
+						<Calendar class="h-3 w-3" />
+						<span class="text-xs"> Planned: </span>
+						<Badge class="{dateStatusColors[dateStatus]} px-1.5 py-0 text-xs">
+							{formatPlannedDate(plannedDate)}
+							{#if dateStatus === 'overdue'}
+								(overdue)
+							{:else if dateStatus === 'today'}
+								(today)
+							{/if}
+						</Badge>
+					</div>
+				{/if}
 
 				{#if artifact.content}
 					<p class="mt-2 line-clamp-2 text-sm text-muted-foreground">

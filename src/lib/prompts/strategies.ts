@@ -504,7 +504,7 @@ Include plain text version suggestion (simplified formatting for text-only email
 	{
 		id: 'bluesky-thread',
 		name: 'Bluesky Thread',
-		description: 'Adapt your content for Bluesky\'s authentic, early-adopter community',
+		description: "Adapt your content for Bluesky's authentic, early-adopter community",
 		category: 'adapt',
 		icon: '🦋',
 		requirements: {
