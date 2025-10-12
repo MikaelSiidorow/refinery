@@ -81,7 +81,8 @@
 			currentValues.oneLiner === idea.oneLiner &&
 			currentValues.notes === (idea.notes || '') &&
 			currentValues.content === (idea.content || '') &&
-			JSON.stringify(currentValues.tags.slice().sort()) === JSON.stringify((idea.tags || []).slice().sort()) &&
+			JSON.stringify(currentValues.tags.slice().sort()) ===
+				JSON.stringify((idea.tags || []).slice().sort()) &&
 			currentValues.status === (idea.status || 'inbox')
 		) {
 			return;
@@ -301,11 +302,7 @@
 			<p class="text-xs text-muted-foreground">
 				Organize your ideas with tags (press Enter to add)
 			</p>
-			<TagsInput
-				id="tags"
-				bind:value={editedTags}
-				validate={(tag) => tag.toLowerCase().trim()}
-			/>
+			<TagsInput id="tags" bind:value={editedTags} validate={(tag) => tag.toLowerCase().trim()} />
 		</div>
 
 		<div

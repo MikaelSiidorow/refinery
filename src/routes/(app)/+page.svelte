@@ -6,6 +6,8 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { formatRelativeTime } from '$lib/utils/date';
 	import { getTagColor } from '$lib/utils/tag-colors';
+	import { SvelteSet } from 'svelte/reactivity';
+	import { isNonEmpty } from '$lib/utils';
 
 	const z = get_z();
 
@@ -14,18 +16,21 @@
 	let selectedTags = $state<string[]>([]);
 
 	const allUniqueTags = $derived.by(() => {
-		const tagSet = new Set<string>();
+		const tagSet = new SvelteSet<string>();
 		allIdeas.current.forEach((idea) => {
-			idea.tags?.forEach((tag) => tagSet.add(tag));
+			if (isNonEmpty(idea.tags)) {
+				idea.tags.forEach((tag) => tagSet.add(tag));
+			}
 		});
 		return Array.from(tagSet).sort();
 	});
 
 	const filteredIdeas = $derived.by(() => {
 		if (selectedTags.length === 0) return allIdeas.current;
-		return allIdeas.current.filter(
-			(idea) => idea.tags && selectedTags.some((tag) => idea.tags.includes(tag))
-		);
+		return allIdeas.current.filter((idea) => {
+			const tags = idea.tags;
+			return isNonEmpty(tags) && selectedTags.some((tag) => tags.includes(tag));
+		});
 	});
 
 	const groupedIdeas = $derived.by(() => {
@@ -72,7 +77,7 @@
 		</p>
 	</div>
 
-	{#if allUniqueTags.length > 0}
+	{#if isNonEmpty(allUniqueTags)}
 		<div class="mb-6 flex flex-wrap gap-2">
 			<span class="text-sm text-muted-foreground">Filter by tags:</span>
 			{#each allUniqueTags as tag (tag)}
@@ -92,7 +97,7 @@
 					{tag}
 				</button>
 			{/each}
-			{#if selectedTags.length > 0}
+			{#if isNonEmpty(selectedTags)}
 				<button
 					onclick={() => {
 						selectedTags = [];
@@ -129,7 +134,7 @@
 									{idea.oneLiner}
 								</p>
 							</div>
-							{#if idea.tags && idea.tags.length > 0}
+							{#if isNonEmpty(idea.tags)}
 								<div class="mt-1.5 flex flex-wrap gap-1">
 									{#each idea.tags.slice(0, 3) as tag (tag)}
 										<Badge class="{getTagColor(tag)} px-1.5 py-0 text-xs">

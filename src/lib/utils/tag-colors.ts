@@ -29,5 +29,6 @@ function simpleHash(str: string): number {
 
 export function getTagColor(tag: string): string {
 	const hash = simpleHash(tag.toLowerCase());
-	return TAG_COLORS[hash % TAG_COLORS.length];
+	const color = TAG_COLORS[hash % TAG_COLORS.length];
+	return color ?? TAG_COLORS[0];
 }

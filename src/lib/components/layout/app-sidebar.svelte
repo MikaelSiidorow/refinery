@@ -1,6 +1,7 @@
 <script lang="ts">
 	import HouseIcon from '@lucide/svelte/icons/house';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
+	import CalendarIcon from '@lucide/svelte/icons/calendar';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { resolve } from '$app/paths';
 	import NavUser from './nav-user.svelte';
@@ -14,6 +15,11 @@
 			title: 'Dashboard',
 			url: '/',
 			icon: HouseIcon
+		},
+		{
+			title: 'Timeline',
+			url: '/timeline',
+			icon: CalendarIcon
 		},
 		{
 			title: 'Settings',

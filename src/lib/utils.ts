@@ -33,6 +33,6 @@ export const generateId = (): UuidV7 => {
 };
 
 export type NonEmptyArray<T> = [T, ...T[]];
-export const isNonEmpty = <T>(arr: T[] | undefined): arr is NonEmptyArray<T> => {
+export const isNonEmpty = <T>(arr: T[] | undefined | null): arr is NonEmptyArray<T> => {
 	return Array.isArray(arr) && arr.length > 0;
 };
