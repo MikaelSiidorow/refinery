@@ -15,6 +15,7 @@
 	import type { PageData } from './$types';
 	import PromptSelector from '$lib/components/prompt-selector.svelte';
 	import ArtifactCard from '$lib/components/artifact-card.svelte';
+	import { TagsInput } from '$lib/components/ui/tags-input';
 
 	let { data }: { data: PageData } = $props();
 
@@ -48,6 +49,7 @@
 	let editedOneLiner = $state('');
 	let editedNotes = $state('');
 	let editedContent = $state('');
+	let editedTags = $state<string[]>([]);
 	let selectedStatus = $state<
 		'inbox' | 'developing' | 'ready' | 'published' | 'archived' | 'cancelled'
 	>('inbox');
@@ -61,6 +63,7 @@
 		editedOneLiner = idea.oneLiner || '';
 		editedNotes = idea.notes || '';
 		editedContent = idea.content || '';
+		editedTags = idea.tags || [];
 		selectedStatus = idea.status || 'inbox';
 	});
 
@@ -70,6 +73,7 @@
 			oneLiner: editedOneLiner,
 			notes: editedNotes,
 			content: editedContent,
+			tags: editedTags,
 			status: selectedStatus
 		};
 
@@ -77,6 +81,7 @@
 			currentValues.oneLiner === idea.oneLiner &&
 			currentValues.notes === (idea.notes || '') &&
 			currentValues.content === (idea.content || '') &&
+			JSON.stringify(currentValues.tags.slice().sort()) === JSON.stringify((idea.tags || []).slice().sort()) &&
 			currentValues.status === (idea.status || 'inbox')
 		) {
 			return;
@@ -113,7 +118,8 @@
 				oneLiner: editedOneLiner,
 				status: selectedStatus,
 				notes: editedNotes,
-				content: editedContent
+				content: editedContent,
+				tags: editedTags
 			});
 			await write.client;
 
@@ -288,6 +294,18 @@
 					</div>
 				</div>
 			</div>
+		</div>
+
+		<div class="mb-6 space-y-2" style="max-width: 1224px;">
+			<label for="tags" class="text-sm font-semibold">Tags</label>
+			<p class="text-xs text-muted-foreground">
+				Organize your ideas with tags (press Enter to add)
+			</p>
+			<TagsInput
+				id="tags"
+				bind:value={editedTags}
+				validate={(tag) => tag.toLowerCase().trim()}
+			/>
 		</div>
 
 		<div

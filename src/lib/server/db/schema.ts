@@ -1,5 +1,5 @@
 import type { UuidV7 } from '$lib/utils';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { integer, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
 const timestamps = {
@@ -64,6 +64,10 @@ export const contentIdea = pgTable('content_idea', {
 	status: ideaStatusEnum().notNull().default('inbox'),
 	content: text().notNull().default(''),
 	notes: text().notNull().default(''),
+	tags: text()
+		.array()
+		.notNull()
+		.default(sql`'{}'::text[]`),
 	...timestamps
 });
 

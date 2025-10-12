@@ -15,6 +15,7 @@ export type UpdateContentIdeaArgs = {
 	status?: 'inbox' | 'developing' | 'ready' | 'published' | 'archived' | 'cancelled';
 	content?: string;
 	notes?: string;
+	tags?: string[];
 };
 
 export type UpsertContentSettingsArgs = {
@@ -87,7 +88,7 @@ export function createMutators(authData: AuthData | undefined) {
 			},
 			async update(
 				tx: Transaction<Schema>,
-				{ id, oneLiner, status, content, notes }: UpdateContentIdeaArgs
+				{ id, oneLiner, status, content, notes, tags }: UpdateContentIdeaArgs
 			) {
 				await assertIsOwner(authData, tx.query.contentIdea, id);
 
@@ -101,6 +102,7 @@ export function createMutators(authData: AuthData | undefined) {
 					status?: 'inbox' | 'developing' | 'ready' | 'published' | 'archived' | 'cancelled';
 					content?: string;
 					notes?: string;
+					tags?: string[];
 					updatedAt: number;
 				} = {
 					id,
@@ -111,6 +113,7 @@ export function createMutators(authData: AuthData | undefined) {
 				if (status !== undefined) updateData.status = status;
 				if (content !== undefined) updateData.content = content;
 				if (notes !== undefined) updateData.notes = notes;
+				if (tags !== undefined) updateData.tags = tags;
 
 				await tx.mutate.contentIdea.update(updateData);
 			}

@@ -5,17 +5,35 @@
 	import { resolve } from '$app/paths';
 	import { Badge } from '$lib/components/ui/badge';
 	import { formatRelativeTime } from '$lib/utils/date';
+	import { getTagColor } from '$lib/utils/tag-colors';
 
 	const z = get_z();
 
 	const allIdeas = new Query(z.query.contentIdea.orderBy('createdAt', 'desc'));
 
+	let selectedTags = $state<string[]>([]);
+
+	const allUniqueTags = $derived.by(() => {
+		const tagSet = new Set<string>();
+		allIdeas.current.forEach((idea) => {
+			idea.tags?.forEach((tag) => tagSet.add(tag));
+		});
+		return Array.from(tagSet).sort();
+	});
+
+	const filteredIdeas = $derived.by(() => {
+		if (selectedTags.length === 0) return allIdeas.current;
+		return allIdeas.current.filter(
+			(idea) => idea.tags && selectedTags.some((tag) => idea.tags.includes(tag))
+		);
+	});
+
 	const groupedIdeas = $derived.by(() => {
 		const groups = {
-			inbox: allIdeas.current.filter((i) => i.status === 'inbox'),
-			developing: allIdeas.current.filter((i) => i.status === 'developing'),
-			ready: allIdeas.current.filter((i) => i.status === 'ready'),
-			published: allIdeas.current.filter((i) => i.status === 'published')
+			inbox: filteredIdeas.filter((i) => i.status === 'inbox'),
+			developing: filteredIdeas.filter((i) => i.status === 'developing'),
+			ready: filteredIdeas.filter((i) => i.status === 'ready'),
+			published: filteredIdeas.filter((i) => i.status === 'published')
 		};
 		return groups;
 	});
@@ -54,6 +72,39 @@
 		</p>
 	</div>
 
+	{#if allUniqueTags.length > 0}
+		<div class="mb-6 flex flex-wrap gap-2">
+			<span class="text-sm text-muted-foreground">Filter by tags:</span>
+			{#each allUniqueTags as tag (tag)}
+				{@const isSelected = selectedTags.includes(tag)}
+				<button
+					onclick={() => {
+						if (isSelected) {
+							selectedTags = selectedTags.filter((t) => t !== tag);
+						} else {
+							selectedTags = [...selectedTags, tag];
+						}
+					}}
+					class="rounded-md px-2 py-1 text-xs transition-opacity {getTagColor(tag)} {isSelected
+						? 'opacity-100'
+						: 'opacity-60 hover:opacity-80'}"
+				>
+					{tag}
+				</button>
+			{/each}
+			{#if selectedTags.length > 0}
+				<button
+					onclick={() => {
+						selectedTags = [];
+					}}
+					class="rounded-md border border-dashed px-2 py-1 text-xs hover:bg-accent"
+				>
+					Clear
+				</button>
+			{/if}
+		</div>
+	{/if}
+
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		{#each Object.entries(statusConfig) as [status, config] (status)}
 			<div class="flex min-h-[400px] flex-col">
@@ -78,6 +129,20 @@
 									{idea.oneLiner}
 								</p>
 							</div>
+							{#if idea.tags && idea.tags.length > 0}
+								<div class="mt-1.5 flex flex-wrap gap-1">
+									{#each idea.tags.slice(0, 3) as tag (tag)}
+										<Badge class="{getTagColor(tag)} px-1.5 py-0 text-xs">
+											{tag}
+										</Badge>
+									{/each}
+									{#if idea.tags.length > 3}
+										<Badge variant="outline" class="px-1.5 py-0 text-xs">
+											+{idea.tags.length - 3}
+										</Badge>
+									{/if}
+								</div>
+							{/if}
 							<p class="text-xs text-muted-foreground">
 								{formatRelativeTime(idea.createdAt)}
 							</p>

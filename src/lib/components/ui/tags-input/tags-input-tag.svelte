@@ -1,5 +1,6 @@
 <script lang="ts">
 	import XIcon from '@lucide/svelte/icons/x';
+	import { getTagColor } from '$lib/utils/tag-colors';
 
 	type Props = {
 		value: string;
@@ -12,7 +13,9 @@
 </script>
 
 <div
-	class="flex place-items-center gap-2 rounded-md bg-secondary px-2 py-0.5 ring-offset-background transition-all hover:cursor-default hover:bg-secondary/90 aria-selected:bg-secondary/90 aria-selected:ring-2 aria-selected:ring-ring aria-selected:ring-offset-2"
+	class="flex place-items-center gap-2 rounded-md px-2 py-0.5 ring-offset-background transition-all hover:cursor-default aria-selected:ring-2 aria-selected:ring-ring aria-selected:ring-offset-2 {getTagColor(
+		value
+	)}"
 	aria-selected={active}
 >
 	<span>
