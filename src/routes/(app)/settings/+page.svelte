@@ -1,17 +1,14 @@
 <script lang="ts">
-	import { Query } from 'zero-svelte';
 	import { get_z } from '$lib/z.svelte';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { CircleCheck } from '@lucide/svelte';
-	import type { UuidV7 } from '$lib/utils';
-	import type { PageData } from './$types';
-
-	let { data }: { data: PageData } = $props();
+	import { createQuery } from '$lib/zero/use-query.svelte';
+	import * as queries from '$lib/zero/queries';
 
 	const z = get_z();
 
-	const settingsQuery = new Query(z.query.contentSettings.where('userId', data.user.id as UuidV7));
-	const settings = $derived(settingsQuery.current[0]);
+	const settingsQuery = createQuery(z, queries.userSettings);
+	const settings = $derived(settingsQuery.data[0]);
 
 	let editedTargetAudience = $state('');
 	let editedBrandVoice = $state('');

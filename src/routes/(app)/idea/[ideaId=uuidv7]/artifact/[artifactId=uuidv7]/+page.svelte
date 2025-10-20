@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { Query } from 'zero-svelte';
 	import { get_z } from '$lib/z.svelte';
-	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
@@ -9,27 +7,22 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
 	import { CircleCheck } from '@lucide/svelte';
-	import type { UuidV7 } from '$lib/utils';
+	import { createParameterizedQuery } from '$lib/zero/use-query.svelte';
+	import * as queries from '$lib/zero/queries';
 
 	const z = get_z();
 
-	let artifactQuery = new Query(z.query.contentArtifact.limit(0));
+	const { params } = $props();
 
-	$effect(() => {
-		const artifactId = page.params.artifactId as UuidV7;
-		artifactQuery.updateQuery(z.query.contentArtifact.where('id', artifactId));
-	});
+	// Parameterized query for artifact by ID
+	const artifactQuery = createParameterizedQuery(z, queries.artifactById, () => [
+		params.artifactId
+	]);
+	const artifact = $derived(artifactQuery.data[0]);
 
-	const artifact = $derived(artifactQuery.current[0]);
-
-	let ideaQuery = new Query(z.query.contentIdea.limit(0));
-
-	$effect(() => {
-		const ideaId = page.params.ideaId as UuidV7;
-		ideaQuery.updateQuery(z.query.contentIdea.where('id', ideaId));
-	});
-
-	const idea = $derived(ideaQuery.current[0]);
+	// Parameterized query for idea by ID
+	const ideaQuery = createParameterizedQuery(z, queries.ideaById, () => [params.ideaId]);
+	const idea = $derived(ideaQuery.data[0]);
 
 	let title = $state('');
 	let content = $state('');

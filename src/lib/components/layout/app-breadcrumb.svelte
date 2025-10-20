@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { Query } from 'zero-svelte';
 	import { get_z } from '$lib/z.svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
-	import type { UuidV7 } from '$lib/utils';
+	import { assert, type UuidV7 } from '$lib/utils';
+	import { createParameterizedQuery } from '$lib/zero/use-query.svelte';
+	import * as queries from '$lib/zero/queries';
 
 	const z = get_z();
 
@@ -42,21 +43,30 @@
 		return { type: 'dashboard' as const };
 	});
 
-	let ideaQuery = new Query(z.query.contentIdea.limit(0));
-	$effect(() => {
-		if (routeInfo.type === 'idea' || routeInfo.type === 'artifact') {
-			ideaQuery.updateQuery(z.query.contentIdea.where('id', routeInfo.ideaId));
-		}
-	});
-	const idea = $derived(ideaQuery.current[0]);
+	const ideaQuery = createParameterizedQuery(
+		z,
+		queries.ideaById,
+		() => {
+			assert(
+				routeInfo.type === 'idea' || routeInfo.type === 'artifact',
+				'Idea ID should be available'
+			);
+			return [routeInfo.ideaId];
+		},
+		() => routeInfo.type === 'idea' || routeInfo.type === 'artifact'
+	);
+	const idea = $derived(ideaQuery.data[0]);
 
-	let artifactQuery = new Query(z.query.contentArtifact.limit(0));
-	$effect(() => {
-		if (routeInfo.type === 'artifact') {
-			artifactQuery.updateQuery(z.query.contentArtifact.where('id', routeInfo.artifactId));
-		}
-	});
-	const artifact = $derived(artifactQuery.current[0]);
+	const artifactQuery = createParameterizedQuery(
+		z,
+		queries.artifactById,
+		() => {
+			assert(routeInfo.type === 'artifact', 'Artifact ID should be available');
+			return [routeInfo.artifactId];
+		},
+		() => routeInfo.type === 'artifact'
+	);
+	const artifact = $derived(artifactQuery.data[0]);
 
 	const artifactDisplayName = $derived.by(() => {
 		if (!artifact) return 'Artifact';

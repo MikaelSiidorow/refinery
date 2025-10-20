@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Query } from 'zero-svelte';
 	import { get_z } from '$lib/z.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -19,6 +18,8 @@
 	} from '@lucide/svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { isNonEmpty } from '$lib/utils';
+	import { createQuery } from '$lib/zero/use-query.svelte';
+	import * as queries from '$lib/zero/queries';
 
 	const z = get_z();
 
@@ -27,11 +28,11 @@
 		'all' | 'blog-post' | 'thread' | 'carousel' | 'newsletter' | 'email' | 'short-post' | 'comment'
 	>('all');
 
-	const artifactsQuery = new Query(z.query.contentArtifact.orderBy('plannedPublishDate', 'asc'));
+	const artifactsQuery = createQuery(z, queries.scheduledArtifacts);
 
 	const artifacts = $derived.by(() => {
 		// Filter for artifacts with planned dates
-		let filtered = artifactsQuery.current.filter((a) => a.plannedPublishDate != null);
+		let filtered = artifactsQuery.data.filter((a) => a.plannedPublishDate != null);
 
 		if (statusFilter !== 'all') {
 			filtered = filtered.filter((a) => a.status === statusFilter);

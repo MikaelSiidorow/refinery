@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Query } from 'zero-svelte';
 	import { get_z } from '$lib/z.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -8,16 +7,18 @@
 	import { getTagColor } from '$lib/utils/tag-colors';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { isNonEmpty } from '$lib/utils';
+	import { createQuery } from '$lib/zero/use-query.svelte';
+	import * as queries from '$lib/zero/queries';
 
 	const z = get_z();
 
-	const allIdeas = new Query(z.query.contentIdea.orderBy('createdAt', 'desc'));
+	const allIdeas = createQuery(z, queries.allIdeas);
 
 	let selectedTags = $state<string[]>([]);
 
 	const allUniqueTags = $derived.by(() => {
 		const tagSet = new SvelteSet<string>();
-		allIdeas.current.forEach((idea) => {
+		allIdeas.data.forEach((idea) => {
 			if (isNonEmpty(idea.tags)) {
 				idea.tags.forEach((tag) => tagSet.add(tag));
 			}
@@ -26,8 +27,8 @@
 	});
 
 	const filteredIdeas = $derived.by(() => {
-		if (selectedTags.length === 0) return allIdeas.current;
-		return allIdeas.current.filter((idea) => {
+		if (selectedTags.length === 0) return allIdeas.data;
+		return allIdeas.data.filter((idea) => {
 			const tags = idea.tags;
 			return isNonEmpty(tags) && selectedTags.some((tag) => tags.includes(tag));
 		});

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Query } from 'zero-svelte';
 	import { get_z } from '$lib/z.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -12,16 +11,16 @@
 	import { formatRelativeTime } from '$lib/utils/date';
 	import { cmdOrCtrl } from '$lib/hooks/is-mac.svelte';
 	import { ZodError } from 'zod';
+	import { createQuery } from '$lib/zero/use-query.svelte';
+	import * as queries from '$lib/zero/queries';
 
 	const z = get_z();
 
-	// Query all inbox ideas for duplicate detection and display
-	const allIdeas = new Query(z.query.contentIdea);
+	// Query all ideas for duplicate detection
+	const allIdeas = createQuery(z, queries.allIdeas);
 
-	// Query all inbox ideas for display (sorted by newest first)
-	const inboxIdeas = new Query(
-		z.query.contentIdea.where('status', 'inbox').orderBy('createdAt', 'desc')
-	);
+	// Query inbox ideas for display (sorted by newest first)
+	const inboxIdeas = createQuery(z, queries.inboxIdeas);
 
 	let inputValue = $state('');
 	let queuedIdeas = $state<Array<{ id: UuidV7; text: string; isDuplicate: boolean }>>([]);
@@ -38,7 +37,7 @@
 	};
 
 	function checkDuplicate(text: string): boolean {
-		const fuse = new Fuse(allIdeas.current, fuseOptions);
+		const fuse = new Fuse(allIdeas.data, fuseOptions);
 		const results = fuse.search(text);
 		return isNonEmpty(results) && (results[0].score ?? 0) < 0.4;
 	}
@@ -320,15 +319,15 @@
 			<h2 class="mb-4 text-lg font-semibold">
 				Inbox Ideas
 				<span class="ml-2 text-sm font-normal text-muted-foreground">
-					({inboxIdeas.current.length})
+					({inboxIdeas.data.length})
 				</span>
 			</h2>
 
-			{#if inboxIdeas.current.length === 0}
+			{#if inboxIdeas.data.length === 0}
 				<p class="text-sm text-muted-foreground">No ideas yet. Create one above!</p>
 			{:else}
 				<div class="space-y-2 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pr-2">
-					{#each inboxIdeas.current as idea (idea.id)}
+					{#each inboxIdeas.data as idea (idea.id)}
 						<div class="group relative rounded-lg border bg-card p-3 transition-colors">
 							{#if editingId === idea.id}
 								<div class="flex items-center gap-2">

@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { Query } from 'zero-svelte';
 	import { get_z } from '$lib/z.svelte';
-	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
@@ -12,39 +10,26 @@
 	import { formatRelativeTime } from '$lib/utils/date';
 	import type { UuidV7 } from '$lib/utils';
 	import { generateId } from '$lib/utils';
-	import type { PageData } from './$types';
 	import PromptSelector from '$lib/components/prompt-selector.svelte';
 	import ArtifactCard from '$lib/components/artifact-card.svelte';
 	import { TagsInput } from '$lib/components/ui/tags-input';
-
-	let { data }: { data: PageData } = $props();
+	import { createParameterizedQuery, createQuery } from '$lib/zero/use-query.svelte';
+	import * as queries from '$lib/zero/queries';
 
 	const z = get_z();
 
-	// Initialize query without filter first
-	let ideasQuery = new Query(z.query.contentIdea.limit(0));
+	const { params } = $props();
 
-	// Update query when params change
-	$effect(() => {
-		const ideaId = page.params.ideaId as UuidV7;
-		ideasQuery.updateQuery(z.query.contentIdea.where('id', ideaId));
-	});
+	const ideasQuery = createParameterizedQuery(z, queries.ideaById, () => [params.ideaId]);
+	const idea = $derived(ideasQuery.data[0]);
 
-	const idea = $derived(ideasQuery.current[0]);
+	const settingsQuery = createQuery(z, queries.userSettings);
+	const settings = $derived(settingsQuery.data[0]);
 
-	const settingsQuery = new Query(z.query.contentSettings.where('userId', data.user.id as UuidV7));
-	const settings = $derived(settingsQuery.current[0]);
-
-	let artifactsQuery = new Query(z.query.contentArtifact.limit(0));
-
-	$effect(() => {
-		const ideaId = page.params.ideaId as UuidV7;
-		artifactsQuery.updateQuery(
-			z.query.contentArtifact.where('ideaId', ideaId).orderBy('createdAt', 'desc')
-		);
-	});
-
-	const artifacts = $derived(artifactsQuery.current);
+	const artifactsQuery = createParameterizedQuery(z, queries.artifactsByIdeaId, () => [
+		params.ideaId
+	]);
+	const artifacts = $derived(artifactsQuery.data);
 
 	let editedOneLiner = $state('');
 	let editedNotes = $state('');

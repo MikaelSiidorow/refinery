@@ -2,9 +2,10 @@ import type { Query } from '@rocicorp/zero';
 import type { schema } from './schema';
 import { z } from 'zod';
 import { assert, must, type UuidV7 } from '$lib/utils';
+import { zUuidV7 } from '$lib/utils/validators';
 
 export const authDataSchema = z.object({
-	sub: z.uuidv7().transform((val): UuidV7 => val as UuidV7)
+	sub: zUuidV7()
 });
 
 export type AuthData = z.infer<typeof authDataSchema>;

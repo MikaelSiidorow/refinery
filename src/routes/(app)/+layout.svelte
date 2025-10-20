@@ -12,6 +12,7 @@
 	import CommandPalette from '$lib/components/layout/command-palette.svelte';
 	import { setupAppShortcuts } from '$lib/hooks/use-keyboard-shortcuts.svelte';
 	import type { LayoutData } from './$types';
+	import { set_z } from '$lib/z.svelte';
 
 	let { data, children }: WithChildren<{ data: LayoutData }> = $props();
 
@@ -19,13 +20,14 @@
 		sub: data.user.id
 	};
 
-	new Z<Schema, ReturnType<typeof createMutators>>({
-		userID: data.user.id, // For IndexedDB namespacing (multi-user browser support)
-		auth: data.zeroAuth, // JWT - the actual security boundary
-		server: PUBLIC_SERVER,
-		schema,
-		mutators: createMutators(authData)
-	});
+	set_z(
+		new Z<Schema, ReturnType<typeof createMutators>>({
+			userID: data.user.id,
+			server: PUBLIC_SERVER,
+			schema,
+			mutators: createMutators(authData)
+		})
+	);
 
 	let commandPaletteOpen = $state(false);
 	const shortcuts = setupAppShortcuts();
