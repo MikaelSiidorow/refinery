@@ -1,0 +1,34 @@
+# Dockerfile for Drizzle Studio
+# Database management UI
+
+FROM node:24-slim
+
+# Enable pnpm
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+WORKDIR /app
+
+# Copy dependency files
+COPY package.json pnpm-lock.yaml ./
+COPY drizzle.config.ts ./
+COPY src/lib/server/db ./src/lib/server/db
+
+# Install dependencies (drizzle-kit for studio)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm add drizzle-kit@^0.31.5 drizzle-orm@^0.44.6 postgres@^3.4.7
+
+# Create non-root user
+RUN groupadd -r drizzle && useradd -r -g drizzle drizzle
+RUN chown -R drizzle:drizzle /app
+USER drizzle
+
+# Expose Drizzle Studio port
+EXPOSE 4983
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node --eval "fetch('http://localhost:4983/').then(r => r.ok || process.exit(1)).catch(() => process.exit(1))"
+
+# Run Drizzle Studio
+CMD ["pnpm", "exec", "drizzle-kit", "studio", "--port", "4983", "--host", "0.0.0.0"]

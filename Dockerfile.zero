@@ -1,0 +1,45 @@
+# Dockerfile for Zero Cache Server
+# Runs the production zero-cache service
+
+FROM node:24-slim
+
+# Enable pnpm
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+WORKDIR /app
+
+# Copy necessary files for zero-cache, migrations, and permissions
+COPY package.json pnpm-lock.yaml ./
+COPY drizzle.config.ts ./
+COPY src/lib/zero ./src/lib/zero
+COPY src/lib/server/db ./src/lib/server/db
+
+# Install @rocicorp/zero (includes zero-cache and zero-deploy-permissions) and drizzle tools
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm add @rocicorp/zero@^0.24.2025101500 drizzle-kit@^0.31.5 drizzle-orm@^0.44.6 postgres@^3.4.7
+
+# Create data directory for replica file
+RUN mkdir -p /data && chmod 777 /data
+
+# Copy entrypoint script
+COPY scripts/zero-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Create non-root user
+RUN groupadd -r zero && useradd -r -g zero zero
+RUN chown -R zero:zero /app /data
+USER zero
+
+# Expose port
+EXPOSE 4848
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD node --eval "fetch('http://localhost:4848/health').then(r => r.ok || process.exit(1)).catch(() => process.exit(1))"
+
+# Set environment
+ENV NODE_ENV=production
+
+# Run entrypoint (migrations + permissions + zero-cache)
+CMD ["/usr/local/bin/entrypoint.sh"]

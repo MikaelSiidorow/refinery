@@ -1,0 +1,76 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+build
+.svelte-kit
+dist
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+**/*.test.*
+**/*.spec.*
+tests
+test
+
+# Documentation
+*.md
+!README.md
+docs
+
+# CI/CD
+.github
+
+# Docker files (don't copy into themselves)
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# Development files
+.prettierrc
+.prettierignore
+.eslintrc*
+tsconfig.json
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Database files (development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Drizzle
+drizzle
+
+# Coverage
+coverage
+.nyc_output
