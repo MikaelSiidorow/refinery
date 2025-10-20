@@ -74,14 +74,26 @@ export async function invalidateSession(sessionId: string) {
 }
 
 export function setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date) {
+	const isProduction = process.env.NODE_ENV === 'production';
+	const cookieDomain = process.env.COOKIE_DOMAIN;
+
 	event.cookies.set(sessionCookieName, token, {
 		expires: expiresAt,
-		path: '/'
+		path: '/',
+		// In production, set domain for cookie sharing between app and zero subdomains
+		...(isProduction && cookieDomain ? { domain: cookieDomain } : {}),
+		httpOnly: true,
+		secure: isProduction,
+		sameSite: 'lax'
 	});
 }
 
 export function deleteSessionTokenCookie(event: RequestEvent) {
+	const isProduction = process.env.NODE_ENV === 'production';
+	const cookieDomain = process.env.COOKIE_DOMAIN;
+
 	event.cookies.delete(sessionCookieName, {
-		path: '/'
+		path: '/',
+		...(isProduction && cookieDomain ? { domain: cookieDomain } : {})
 	});
 }

@@ -4,10 +4,10 @@ import postgres from 'postgres';
 import { schema } from '$lib/zero/schema';
 import { createMutators } from '$lib/zero/mutators';
 import type { AuthData } from '$lib/zero/auth';
-import { ZERO_UPSTREAM_DB } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 // Create postgres connection (reuse across requests)
-const sql = postgres(ZERO_UPSTREAM_DB);
+const sql = postgres(env.ZERO_UPSTREAM_DB!);
 
 // Create processor (reuse across requests)
 const processor = new PushProcessor(new ZQLDatabase(new PostgresJSConnection(sql), schema));

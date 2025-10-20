@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { WithChildren } from 'bits-ui';
 	import { Z } from 'zero-svelte';
-	import { PUBLIC_SERVER } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 	import type { AuthData } from '$lib/zero/auth';
 	import { createMutators } from '$lib/zero/mutators';
 	import { schema, type Schema } from '$lib/zero/schema';
@@ -23,7 +23,7 @@
 	set_z(
 		new Z<Schema, ReturnType<typeof createMutators>>({
 			userID: data.user.id,
-			server: PUBLIC_SERVER,
+			server: env.PUBLIC_SERVER!,
 			schema,
 			mutators: createMutators(authData)
 		})
