@@ -39,7 +39,6 @@
 		'inbox' | 'developing' | 'ready' | 'published' | 'archived' | 'cancelled'
 	>('inbox');
 	let saveStatus = $state<'idle' | 'saving' | 'saved'>('idle');
-	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 	let savedIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
 	let promptSelectorOpen = $state(false);
 
@@ -53,7 +52,9 @@
 	});
 
 	$effect(() => {
+		// Don't save until idea has loaded and initialized
 		if (!idea) return;
+
 		const currentValues = {
 			oneLiner: editedOneLiner,
 			notes: editedNotes,
@@ -62,6 +63,7 @@
 			status: selectedStatus
 		};
 
+		// Don't save if values match existing idea
 		if (
 			currentValues.oneLiner === idea.oneLiner &&
 			currentValues.notes === (idea.notes || '') &&
@@ -73,17 +75,7 @@
 			return;
 		}
 
-		if (saveTimeout) {
-			clearTimeout(saveTimeout);
-		}
-
-		saveTimeout = setTimeout(() => {
-			saveChanges();
-		}, 1000);
-
-		return () => {
-			if (saveTimeout) clearTimeout(saveTimeout);
-		};
+		saveChanges();
 	});
 
 	const statusOptions = [

@@ -15,7 +15,6 @@
 	let editedContentPillars = $state('');
 	let editedUniquePerspective = $state('');
 	let saveStatus = $state<'idle' | 'saving' | 'saved'>('idle');
-	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 	let savedIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Initialize edited values from settings
@@ -28,8 +27,11 @@
 		}
 	});
 
-	// Auto-save with debounce
+	// Auto-save immediately
 	$effect(() => {
+		// Don't save until settings have loaded and initialized
+		if (!settings) return;
+
 		const currentValues = {
 			targetAudience: editedTargetAudience,
 			brandVoice: editedBrandVoice,
@@ -38,30 +40,16 @@
 		};
 
 		// Don't save if values match existing settings
-		if (settings) {
-			if (
-				currentValues.targetAudience === (settings.targetAudience || '') &&
-				currentValues.brandVoice === (settings.brandVoice || '') &&
-				currentValues.contentPillars === (settings.contentPillars || '') &&
-				currentValues.uniquePerspective === (settings.uniquePerspective || '')
-			) {
-				return;
-			}
+		if (
+			currentValues.targetAudience === (settings.targetAudience || '') &&
+			currentValues.brandVoice === (settings.brandVoice || '') &&
+			currentValues.contentPillars === (settings.contentPillars || '') &&
+			currentValues.uniquePerspective === (settings.uniquePerspective || '')
+		) {
+			return;
 		}
 
-		// Clear existing timeout
-		if (saveTimeout) {
-			clearTimeout(saveTimeout);
-		}
-
-		// Set new timeout for auto-save
-		saveTimeout = setTimeout(() => {
-			saveChanges();
-		}, 1000);
-
-		return () => {
-			if (saveTimeout) clearTimeout(saveTimeout);
-		};
+		saveChanges();
 	});
 
 	async function saveChanges() {

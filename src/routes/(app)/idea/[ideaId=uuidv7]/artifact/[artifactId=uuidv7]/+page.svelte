@@ -41,7 +41,6 @@
 	let notes = $state('');
 
 	let saveStatus = $state<'idle' | 'saving' | 'saved'>('idle');
-	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 	let savedIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	const artifactTypeOptions = [
@@ -83,6 +82,7 @@
 	});
 
 	$effect(() => {
+		// Don't save until artifact has loaded and initialized
 		if (!artifact) return;
 
 		const currentValues = {
@@ -101,6 +101,7 @@
 			notes
 		};
 
+		// Don't save if values match existing artifact
 		const hasChanges =
 			currentValues.title !== (artifact.title || '') ||
 			currentValues.content !== artifact.content ||
@@ -122,17 +123,7 @@
 
 		if (!hasChanges) return;
 
-		if (saveTimeout) {
-			clearTimeout(saveTimeout);
-		}
-
-		saveTimeout = setTimeout(() => {
-			saveChanges();
-		}, 1000);
-
-		return () => {
-			if (saveTimeout) clearTimeout(saveTimeout);
-		};
+		saveChanges();
 	});
 
 	async function saveChanges() {
