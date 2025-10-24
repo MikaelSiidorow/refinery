@@ -18,8 +18,9 @@ COPY drizzle ./drizzle
 COPY src/lib/zero ./src/lib/zero
 COPY src/lib/server/db ./src/lib/server/db
 
-# Install @rocicorp/zero (includes zero-cache and zero-deploy-permissions) and drizzle tools
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm add @rocicorp/zero@^0.24.2025101500 drizzle-kit@^0.31.5 drizzle-orm@^0.44.6 postgres@^3.4.7 drizzle-zero@^0.14.5
+# Install dependencies from package.json
+# Need devDependencies for drizzle-zero, drizzle-kit (used at build and runtime)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Generate Zero schema from Drizzle schema
 RUN pnpm exec drizzle-zero generate --format --output src/lib/zero/zero-schema.gen.ts
