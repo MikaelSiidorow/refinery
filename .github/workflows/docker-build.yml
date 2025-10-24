@@ -74,3 +74,224 @@ jobs:
 
       - name: Image digest
         run: echo "Image pushed with tags:${{ steps.meta.outputs.tags }}"
+
+  deploy:
+    name: Deploy to Coolify
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Zero Cache to Coolify
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_UUID: ${{ secrets.COOLIFY_UUID_ZERO }}
+          # Use short SHA (first 7 chars) to match docker metadata action output
+          IMAGE_TAG: main-${{ github.sha }}
+        run: |
+          # Extract short SHA (first 7 chars)
+          SHORT_SHA="${IMAGE_TAG:5:7}"
+          IMAGE_TAG="main-$SHORT_SHA"
+
+          echo "Deploying Zero Cache with tag: $IMAGE_TAG"
+
+          # Update docker image tag
+          curl -X PATCH \
+            --fail-with-body \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"docker_registry_image_tag\": \"$IMAGE_TAG\"}" \
+            "$COOLIFY_URL/api/v1/applications/$COOLIFY_UUID"
+
+          # Trigger deployment and capture deployment UUID
+          DEPLOY_RESPONSE=$(curl -s -X GET \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_UUID&force=true")
+
+          echo "Deploy API Response: $DEPLOY_RESPONSE"
+
+          # Extract deployment_uuid from response
+          DEPLOYMENT_UUID=$(echo "$DEPLOY_RESPONSE" | grep -o '"deployment_uuid":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+          if [ -z "$DEPLOYMENT_UUID" ]; then
+            echo "✗ Failed to get deployment UUID from response"
+            exit 1
+          fi
+
+          echo "Deployment UUID: $DEPLOYMENT_UUID"
+          echo "ZERO_DEPLOYMENT_UUID=$DEPLOYMENT_UUID" >> $GITHUB_ENV
+
+      - name: Wait for Zero deployment to complete
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          DEPLOYMENT_UUID: ${{ env.ZERO_DEPLOYMENT_UUID }}
+        run: |
+          MAX_ATTEMPTS=120
+          ATTEMPT=0
+
+          echo "Polling deployment $DEPLOYMENT_UUID for status..."
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            # Get specific deployment by UUID
+            RESPONSE=$(curl -s -H "Authorization: Bearer $COOLIFY_TOKEN" \
+              "$COOLIFY_URL/api/v1/deployments/$DEPLOYMENT_UUID")
+
+            # Extract status from response
+            STATUS=$(echo "$RESPONSE" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+            if [ -z "$STATUS" ]; then
+              echo "✗ Could not get deployment status (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+              if [ $ATTEMPT -gt 5 ]; then
+                echo "Response: $RESPONSE"
+              fi
+            elif [ "$STATUS" = "finished" ]; then
+              echo "✓ Zero deployment completed successfully"
+              break
+            elif [ "$STATUS" = "failed" ] || [ "$STATUS" = "error" ]; then
+              echo "✗ Zero deployment failed (status: $STATUS)"
+              exit 1
+            else
+              echo "Zero deployment status: $STATUS (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+            fi
+
+            ATTEMPT=$((ATTEMPT + 1))
+            sleep 5
+          done
+
+          if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+            echo "✗ Zero deployment timed out after $MAX_ATTEMPTS attempts"
+            exit 1
+          fi
+
+      - name: Verify Zero Cache health
+        run: |
+          echo "Verifying Zero Cache is responding..."
+          MAX_ATTEMPTS=12
+          ATTEMPT=0
+          ZERO_URL="https://zero.m12w.me"
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            if curl -f -s "$ZERO_URL" > /dev/null 2>&1; then
+              echo "✓ Zero Cache is healthy!"
+              exit 0
+            fi
+
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Waiting for Zero Cache to respond... (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+            sleep 5
+          done
+
+          echo "✗ Zero Cache is not responding"
+          exit 1
+
+      - name: Deploy App to Coolify
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_UUID: ${{ secrets.COOLIFY_UUID_APP }}
+          IMAGE_TAG: main-${{ github.sha }}
+        run: |
+          # Extract short SHA (first 7 chars)
+          SHORT_SHA="${IMAGE_TAG:5:7}"
+          IMAGE_TAG="main-$SHORT_SHA"
+
+          echo "Deploying App with tag: $IMAGE_TAG"
+
+          # Update docker image tag
+          curl -X PATCH \
+            --fail-with-body \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"docker_registry_image_tag\": \"$IMAGE_TAG\"}" \
+            "$COOLIFY_URL/api/v1/applications/$COOLIFY_UUID"
+
+          # Trigger deployment and capture deployment UUID
+          DEPLOY_RESPONSE=$(curl -s -X GET \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_UUID&force=true")
+
+          echo "Deploy API Response: $DEPLOY_RESPONSE"
+
+          # Extract deployment_uuid from response
+          DEPLOYMENT_UUID=$(echo "$DEPLOY_RESPONSE" | grep -o '"deployment_uuid":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+          if [ -z "$DEPLOYMENT_UUID" ]; then
+            echo "✗ Failed to get deployment UUID from response"
+            exit 1
+          fi
+
+          echo "Deployment UUID: $DEPLOYMENT_UUID"
+          echo "APP_DEPLOYMENT_UUID=$DEPLOYMENT_UUID" >> $GITHUB_ENV
+
+      - name: Wait for App deployment to complete
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          DEPLOYMENT_UUID: ${{ env.APP_DEPLOYMENT_UUID }}
+        run: |
+          MAX_ATTEMPTS=120
+          ATTEMPT=0
+
+          echo "Polling deployment $DEPLOYMENT_UUID for status..."
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            # Get specific deployment by UUID
+            RESPONSE=$(curl -s -H "Authorization: Bearer $COOLIFY_TOKEN" \
+              "$COOLIFY_URL/api/v1/deployments/$DEPLOYMENT_UUID")
+
+            # Extract status from response
+            STATUS=$(echo "$RESPONSE" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+            if [ -z "$STATUS" ]; then
+              echo "✗ Could not get deployment status (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+              if [ $ATTEMPT -gt 5 ]; then
+                echo "Response: $RESPONSE"
+              fi
+            elif [ "$STATUS" = "finished" ]; then
+              echo "✓ App deployment completed successfully"
+              break
+            elif [ "$STATUS" = "failed" ] || [ "$STATUS" = "error" ]; then
+              echo "✗ App deployment failed (status: $STATUS)"
+              exit 1
+            else
+              echo "App deployment status: $STATUS (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+            fi
+
+            ATTEMPT=$((ATTEMPT + 1))
+            sleep 5
+          done
+
+          if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+            echo "✗ App deployment timed out after $MAX_ATTEMPTS attempts"
+            exit 1
+          fi
+
+      - name: Verify App health
+        run: |
+          echo "Verifying App is responding..."
+          MAX_ATTEMPTS=12
+          ATTEMPT=0
+          APP_URL="https://app.m12w.me"
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            if curl -f -s "$APP_URL" > /dev/null 2>&1; then
+              echo "✓ App is healthy!"
+              exit 0
+            fi
+
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Waiting for App to respond... (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+            sleep 5
+          done
+
+          echo "✗ App is not responding"
+          exit 1
+
+      - name: Deployment Summary
+        if: success()
+        run: |
+          echo "🚀 Deployment completed successfully!"
+          echo "Zero Cache: https://zero.m12w.me"
+          echo "App: https://app.m12w.me"
+          echo "Image tag: main-${{ github.sha }}"
