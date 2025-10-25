@@ -15,6 +15,7 @@
 	import * as queries from '$lib/zero/queries';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
@@ -157,7 +158,9 @@
 			queuedIdeas = [];
 		} catch (error) {
 			console.error('Failed to create ideas:', error);
-			// TODO: Show error toast
+			toast.error('Failed to create ideas', {
+				description: 'Please try again or check your connection.'
+			});
 		} finally {
 			isSubmitting = false;
 		}
@@ -206,7 +209,7 @@
 		const sharedContent = $page.url.searchParams.get('shared');
 		if (sharedContent) {
 			inputValue = sharedContent.slice(0, 256);
-			goto('/new-idea', { replaceState: true });
+			goto(resolve('/new-idea'), { replaceState: true });
 		}
 	});
 </script>

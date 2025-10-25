@@ -16,6 +16,7 @@
 	import { createParameterizedQuery, createQuery } from '$lib/zero/use-query.svelte';
 	import * as queries from '$lib/zero/queries';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import { toast } from 'svelte-sonner';
 
 	const z = get_z();
 
@@ -222,8 +223,9 @@
 	async function handleCopyArtifact(content: string) {
 		try {
 			await navigator.clipboard.writeText(content);
-			// TODO: Show toast notification
-			console.log('Content copied to clipboard');
+			toast.success('Copied to clipboard', {
+				description: 'Content is ready to paste'
+			});
 		} catch (error) {
 			console.error('Failed to copy to clipboard:', error);
 			// Fallback: create temporary textarea
@@ -233,8 +235,18 @@
 			textarea.style.opacity = '0';
 			document.body.appendChild(textarea);
 			textarea.select();
-			document.execCommand('copy');
+			const success = document.execCommand('copy');
 			document.body.removeChild(textarea);
+
+			if (success) {
+				toast.success('Copied to clipboard', {
+					description: 'Content is ready to paste'
+				});
+			} else {
+				toast.error('Failed to copy', {
+					description: 'Please try copying manually'
+				});
+			}
 		}
 	}
 </script>
@@ -351,9 +363,20 @@
 
 			{#if artifacts.length === 0}
 				<div class="rounded-lg border border-dashed bg-muted/20 p-8 text-center">
-					<p class="text-sm text-muted-foreground">
-						No artifacts yet. Create platform-specific versions using the prompt library.
+					<Copy class="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+					<p class="mb-1 text-sm font-medium">No artifacts yet</p>
+					<p class="mb-4 text-sm text-muted-foreground">
+						Create platform-specific versions of your content.<br />
+						Use the AI Prompts button to get started.
 					</p>
+					<div
+						class="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground"
+					>
+						<span class="rounded-md bg-muted px-2 py-1">Twitter Thread</span>
+						<span class="rounded-md bg-muted px-2 py-1">LinkedIn Post</span>
+						<span class="rounded-md bg-muted px-2 py-1">Blog Post</span>
+						<span class="rounded-md bg-muted px-2 py-1">Newsletter</span>
+					</div>
 				</div>
 			{:else}
 				<div class="space-y-3">
@@ -390,7 +413,10 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-			<AlertDialog.Action onclick={handleDeleteArtifact} class="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+			<AlertDialog.Action
+				onclick={handleDeleteArtifact}
+				class="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+			>
 				Delete
 			</AlertDialog.Action>
 		</AlertDialog.Footer>
