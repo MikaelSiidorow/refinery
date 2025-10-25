@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { OAuth2Tokens } from 'arctic';
 import { generateId, type UuidV7 } from '$lib/utils';
+import { seedUserData } from '$lib/server/seed-data';
 
 export async function GET(event: RequestEvent): Promise<Response> {
 	const code = event.url.searchParams.get('code');
@@ -53,6 +54,14 @@ export async function GET(event: RequestEvent): Promise<Response> {
 				createdAt: new Date(),
 				updatedAt: new Date()
 			});
+
+			// Load example data for new users
+			try {
+				await seedUserData(db, userId);
+			} catch (seedError) {
+				console.error('Failed to seed example data for new user:', seedError);
+				// Don't fail signup if seed data fails
+			}
 		}
 
 		// Create session
