@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 
 	onMount(() => {
@@ -10,11 +11,14 @@
 
 		const sharedContent = [title, text, url].filter(Boolean).join(' ').trim();
 
+		const basePath = resolve('/new-idea');
+
 		if (sharedContent) {
 			const params = new URLSearchParams({ shared: sharedContent });
-			goto(`/new-idea?${params.toString()}`, { replaceState: true });
+			// eslint-disable-next-line svelte/no-navigation-without-resolve -- Path is resolved via basePath variable
+			goto(`${basePath}?${params.toString()}`, { replaceState: true });
 		} else {
-			goto('/new-idea', { replaceState: true });
+			goto(basePath, { replaceState: true });
 		}
 	});
 </script>

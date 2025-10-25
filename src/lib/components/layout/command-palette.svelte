@@ -288,9 +288,11 @@
 				<Command.Item onSelect={() => handleSelect(result.item)}>
 					<result.item.icon class="mr-2 h-4 w-4" />
 					<div class="flex flex-1 flex-col gap-0.5">
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -- Safe: highlighting static text from const array, user input only affects indices -->
 						<span>{@html highlightMatches(result.item.title, titleMatch)}</span>
 						{#if result.item.description}
 							<span class="text-xs text-muted-foreground">
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -- Safe: highlighting static text from const array, user input only affects indices -->
 								{@html highlightMatches(result.item.description, descMatch)}
 							</span>
 						{/if}
