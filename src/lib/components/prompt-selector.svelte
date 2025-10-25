@@ -3,17 +3,19 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { promptStrategies } from '$lib/prompts/strategies';
-	import type { ContentIdea, ContentSetting } from '$lib/zero/zero-schema.gen';
+	import type { ContentIdea, ContentArtifact, ContentSetting } from '$lib/zero/zero-schema.gen';
 	import { Copy, Check } from '@lucide/svelte';
 
 	let {
 		open = $bindable(false),
 		idea,
+		artifact,
 		settings,
 		onCreateArtifact
 	}: {
 		open?: boolean;
-		idea: ContentIdea;
+		idea?: ContentIdea;
+		artifact?: ContentArtifact;
 		settings?: ContentSetting;
 		onCreateArtifact?: (artifactType: string) => void;
 	} = $props();
@@ -22,12 +24,48 @@
 	let copiedStrategyId = $state<string | null>(null);
 	let copiedTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	const hasContent = $derived(!!(idea.content && idea.content.trim().length > 0));
-	const hasNotes = $derived(!!(idea.notes && idea.notes.trim().length > 0));
-	const hasOneLiner = $derived(!!(idea.oneLiner && idea.oneLiner.trim().length > 0));
+	// Determine context
+	const isArtifactContext = $derived(!!artifact);
+	const contentSource = $derived(artifact || idea);
+
+	const hasContent = $derived(
+		!!(idea?.content && idea.content.trim().length > 0) ||
+			!!(artifact?.content && artifact.content.trim().length > 0)
+	);
+	const hasNotes = $derived(!!(idea?.notes && idea.notes.trim().length > 0));
+	const hasOneLiner = $derived(!!(idea?.oneLiner && idea.oneLiner.trim().length > 0));
 
 	const relevantStrategies = $derived(
 		promptStrategies.filter((strategy) => {
+			// For artifact context, filter by artifact type
+			if (isArtifactContext && artifact) {
+				// If strategy has targetArtifactTypes, check if current artifact matches
+				if (strategy.targetArtifactTypes) {
+					if (!strategy.targetArtifactTypes.includes(artifact.artifactType)) {
+						return false;
+					}
+				}
+				// For refine category, always show in artifact context
+				if (strategy.category === 'refine') {
+					return true;
+				}
+				// For adapt/engage categories, they can also be useful for refining
+				if (strategy.category === 'adapt' || strategy.category === 'engage') {
+					return true;
+				}
+				// Don't show expand strategies in artifact context
+				if (strategy.category === 'expand') {
+					return false;
+				}
+			} else {
+				// For idea context (original behavior)
+				// Don't show refine strategies
+				if (strategy.category === 'refine') {
+					return false;
+				}
+			}
+
+			// Check requirements
 			if (
 				strategy.requirements.needsMasterContent !== undefined &&
 				strategy.requirements.needsMasterContent !== hasContent
@@ -43,20 +81,22 @@
 	const expandStrategies = $derived(relevantStrategies.filter((s) => s.category === 'expand'));
 	const adaptStrategies = $derived(relevantStrategies.filter((s) => s.category === 'adapt'));
 	const engageStrategies = $derived(relevantStrategies.filter((s) => s.category === 'engage'));
+	const refineStrategies = $derived(relevantStrategies.filter((s) => s.category === 'refine'));
 
 	const selectedStrategy = $derived(
 		selectedStrategyId ? promptStrategies.find((s) => s.id === selectedStrategyId) : null
 	);
 
 	const generatedPrompt = $derived(
-		selectedStrategy ? selectedStrategy.generate(idea, settings) : ''
+		selectedStrategy && contentSource ? selectedStrategy.generate(contentSource, settings) : ''
 	);
 
 	const categoryColors = {
 		expand: 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400',
 		adapt: 'bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400',
 		engage: 'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400',
-		analyze: 'bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400'
+		analyze: 'bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400',
+		refine: 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400'
 	};
 
 	function handleSelectStrategy(strategyId: string) {
@@ -106,14 +146,26 @@
 <Dialog.Root bind:open>
 	<Dialog.Content class="flex max-h-[90vh] max-w-[95vw] flex-col overflow-hidden lg:max-w-[85vw]">
 		<Dialog.Header>
-			<Dialog.Title>Select a Prompt Strategy</Dialog.Title>
+			<Dialog.Title>
+				{isArtifactContext ? 'Refine Your Content' : 'Select a Prompt Strategy'}
+			</Dialog.Title>
 			<Dialog.Description>
-				Choose a strategy to generate a refined prompt for your content idea
+				{#if isArtifactContext}
+					Choose a strategy to refine and improve your {artifact?.artifactType.replace('-', ' ')}
+				{:else}
+					Choose a strategy to generate a refined prompt for your content idea
+				{/if}
 			</Dialog.Description>
 		</Dialog.Header>
 
 		<div class="mb-4 rounded-lg border bg-muted/50 p-3">
-			{#if !hasContent}
+			{#if isArtifactContext}
+				<p class="text-sm">
+					<span class="font-semibold">✨ Refining: {artifact?.artifactType.replace('-', ' ')}</span
+					><br />
+					Use AI to improve hooks, add CTAs, optimize length, and more
+				</p>
+			{:else if !hasContent}
 				<p class="text-sm">
 					<span class="font-semibold">💡 No master content yet</span><br />
 					Start by expanding your idea into a full post
@@ -206,6 +258,35 @@
 						</h3>
 						<div class="space-y-2">
 							{#each engageStrategies as strategy (strategy.id)}
+								<button
+									onclick={() => handleSelectStrategy(strategy.id)}
+									class="w-full rounded-lg border p-3 text-left transition-all hover:bg-accent {selectedStrategyId ===
+									strategy.id
+										? 'border-primary bg-accent'
+										: 'bg-card'}"
+									type="button"
+								>
+									<div class="mb-2 flex items-start justify-between gap-2">
+										<span class="text-2xl">{strategy.icon}</span>
+										<Badge class="{categoryColors[strategy.category]} text-xs">
+											{strategy.category}
+										</Badge>
+									</div>
+									<h3 class="mb-1 font-semibold">{strategy.name}</h3>
+									<p class="text-xs text-muted-foreground">{strategy.description}</p>
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
+				{#if refineStrategies.length > 0}
+					<div>
+						<h3 class="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+							Refine Content ({refineStrategies.length})
+						</h3>
+						<div class="space-y-2">
+							{#each refineStrategies as strategy (strategy.id)}
 								<button
 									onclick={() => handleSelectStrategy(strategy.id)}
 									class="w-full rounded-lg border p-3 text-left transition-all hover:bg-accent {selectedStrategyId ===

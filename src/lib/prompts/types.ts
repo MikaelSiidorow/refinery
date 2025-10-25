@@ -1,7 +1,7 @@
-import type { ContentIdea, ContentSetting } from '$lib/zero/zero-schema.gen';
+import type { ContentIdea, ContentArtifact, ContentSetting } from '$lib/zero/zero-schema.gen';
 import type { ArtifactType } from '$lib/server/db/schema';
 
-export type PromptCategory = 'expand' | 'adapt' | 'engage' | 'analyze';
+export type PromptCategory = 'expand' | 'adapt' | 'engage' | 'analyze' | 'refine';
 
 export type { ArtifactType };
 
@@ -20,5 +20,6 @@ export interface PromptStrategy {
 	requirements: StrategyRequirements;
 	producesArtifact: boolean; // If true, this creates an artifact
 	artifactType?: ArtifactType; // What type of artifact it creates
-	generate: (idea: ContentIdea, settings?: ContentSetting) => string;
+	targetArtifactTypes?: ArtifactType[]; // Which artifact types this strategy applies to (for refine category)
+	generate: (ideaOrArtifact: ContentIdea | ContentArtifact, settings?: ContentSetting) => string;
 }

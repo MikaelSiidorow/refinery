@@ -6,10 +6,11 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
-	import { CircleCheck } from '@lucide/svelte';
-	import { createParameterizedQuery } from '$lib/zero/use-query.svelte';
+	import { CircleCheck, Sparkles } from '@lucide/svelte';
+	import { createParameterizedQuery, createQuery } from '$lib/zero/use-query.svelte';
 	import * as queries from '$lib/zero/queries';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import PromptSelector from '$lib/components/prompt-selector.svelte';
 
 	const z = get_z();
 
@@ -24,6 +25,12 @@
 	// Parameterized query for idea by ID
 	const ideaQuery = createParameterizedQuery(z, queries.ideaById, () => [params.ideaId]);
 	const idea = $derived(ideaQuery.data[0]);
+
+	// Query for user settings
+	const settingsQuery = createQuery(z, queries.userSettings);
+	const settings = $derived(settingsQuery.data[0]);
+
+	let promptSelectorOpen = $state(false);
 
 	let title = $state('');
 	let content = $state('');
@@ -270,7 +277,18 @@
 			</div>
 
 			<div class="space-y-2">
-				<label for="artifact-content" class="text-sm font-medium">Content</label>
+				<div class="flex items-center justify-between">
+					<label for="artifact-content" class="text-sm font-medium">Content</label>
+					<Button
+						variant="outline"
+						size="sm"
+						onclick={() => (promptSelectorOpen = true)}
+						class="gap-2"
+					>
+						<Sparkles class="h-4 w-4" />
+						Refine with AI
+					</Button>
+				</div>
 				<Textarea
 					id="artifact-content"
 					bind:value={content}
@@ -390,3 +408,7 @@
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>
+
+{#if artifact}
+	<PromptSelector bind:open={promptSelectorOpen} {artifact} {settings} />
+{/if}
