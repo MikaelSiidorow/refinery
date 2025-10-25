@@ -10,6 +10,8 @@
 
 	let { user }: { user: Pick<User, 'username' | 'avatarUrl'> } = $props();
 
+	const sidebar = Sidebar.useSidebar();
+
 	const items = [
 		{
 			title: 'Dashboard',
@@ -27,6 +29,12 @@
 			icon: SettingsIcon
 		}
 	] as const;
+
+	function handleNavClick() {
+		if (sidebar.isMobile && sidebar.openMobile) {
+			sidebar.setOpenMobile(false);
+		}
+	}
 </script>
 
 <Sidebar.Root>
@@ -35,7 +43,7 @@
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton size="lg">
 					{#snippet child({ props })}
-						<a href={resolve('/new-idea')} {...props}>
+						<a href={resolve('/new-idea')} {...props} onclick={handleNavClick}>
 							<PlusIcon />
 							<span>New Idea</span>
 						</a>
@@ -53,7 +61,7 @@
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton>
 								{#snippet child({ props })}
-									<a href={resolve(item.url)} {...props}>
+									<a href={resolve(item.url)} {...props} onclick={handleNavClick}>
 										<item.icon />
 										<span>{item.title}</span>
 									</a>

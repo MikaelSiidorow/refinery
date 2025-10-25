@@ -214,7 +214,10 @@
 	<div class="min-w-0 lg:order-1">
 		<div class="mb-8">
 			<h1 class="text-3xl font-bold tracking-tight">Quick Capture</h1>
-			<p class="mt-2 text-muted-foreground">
+			<p class="mt-2 text-muted-foreground md:hidden">
+				Rapidly capture content ideas. Tap Add to queue, then submit all at once.
+			</p>
+			<p class="mt-2 hidden text-muted-foreground md:block">
 				Rapidly capture content ideas. Press <Kbd.Root>Enter</Kbd.Root> to queue, <Kbd.Root
 					>{cmdOrCtrl}+Enter</Kbd.Root
 				> to submit.
@@ -223,28 +226,38 @@
 
 		<div class="mb-8 space-y-3">
 			<div>
-				<div class="relative">
-					<Input
-						bind:value={inputValue}
-						autofocus
-						placeholder="Quick capture an idea... (Press Enter to add)"
-						onkeydown={handleKeydown}
-						onpaste={handlePaste}
-						oninput={() => {
-							if (inputError) inputError = null;
-						}}
-						aria-invalid={hasError}
-						class="pr-16 text-base"
-					/>
-					<div
-						class="absolute top-1/2 right-3 -translate-y-1/2 text-xs transition-colors {isOverLimit
-							? 'font-medium text-destructive'
-							: isNearLimit
-								? 'font-medium text-amber-600 dark:text-amber-500'
-								: 'text-muted-foreground'}"
-					>
-						{charCount}/256
+				<div class="flex gap-2">
+					<div class="relative flex-1">
+						<Input
+							bind:value={inputValue}
+							autofocus
+							placeholder="Quick capture an idea..."
+							onkeydown={handleKeydown}
+							onpaste={handlePaste}
+							oninput={() => {
+								if (inputError) inputError = null;
+							}}
+							aria-invalid={hasError}
+							class="pr-16 text-base"
+						/>
+						<div
+							class="absolute top-1/2 right-3 -translate-y-1/2 text-xs transition-colors {isOverLimit
+								? 'font-medium text-destructive'
+								: isNearLimit
+									? 'font-medium text-amber-600 dark:text-amber-500'
+									: 'text-muted-foreground'}"
+						>
+							{charCount}/256
+						</div>
 					</div>
+					<Button
+						onclick={addIdeaToQueue}
+						disabled={!inputValue.trim() || hasError}
+						size="default"
+						class="shrink-0 md:hidden"
+					>
+						Add
+					</Button>
 				</div>
 				{#if inputError}
 					<div class="mt-2 text-sm font-medium text-destructive">
