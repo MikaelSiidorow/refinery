@@ -3,6 +3,8 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import type { ContentArtifact } from '$lib/zero/zero-schema.gen';
 	import { formatRelativeTime } from '$lib/utils/date';
+	import { extractUrls, removeUrls } from '$lib/utils/url';
+	import UrlBadges from '$lib/components/url-badges.svelte';
 	import {
 		FileText,
 		MessageSquare,
@@ -76,6 +78,13 @@
 	const formatPlannedDate = (date: Date) => {
 		return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 	};
+
+	const contentUrls = $derived(artifact.content ? extractUrls(artifact.content) : []);
+	const cleanContent = $derived(
+		artifact.content && contentUrls.length > 0
+			? removeUrls(artifact.content)
+			: artifact.content || ''
+	);
 </script>
 
 <div class="group rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50">
@@ -118,10 +127,16 @@
 					</div>
 				{/if}
 
-				{#if artifact.content}
-					<p class="mt-2 line-clamp-2 text-sm text-muted-foreground">
-						{artifact.content}
+				{#if cleanContent}
+					<p class="mt-2 line-clamp-2 text-sm wrap-break-word text-muted-foreground">
+						{cleanContent}
 					</p>
+				{/if}
+
+				{#if contentUrls.length > 0}
+					<div class="mt-2">
+						<UrlBadges urls={contentUrls} variant="outline" size="sm" />
+					</div>
 				{/if}
 
 				{#if status === 'published'}
