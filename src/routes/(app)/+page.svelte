@@ -5,6 +5,8 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { formatRelativeTime } from '$lib/utils/date';
 	import { getTagColor } from '$lib/utils/tag-colors';
+	import { extractUrls, removeUrls } from '$lib/utils/url';
+	import UrlBadges from '$lib/components/url-badges.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { isNonEmpty } from '$lib/utils';
 	import { createQuery } from '$lib/zero/use-query.svelte';
@@ -125,16 +127,23 @@
 
 				<div class="space-y-2">
 					{#each groupedIdeas[status as keyof typeof groupedIdeas] as idea (idea.id)}
+						{@const urls = extractUrls(idea.oneLiner)}
+						{@const cleanText = urls.length > 0 ? removeUrls(idea.oneLiner) : idea.oneLiner}
 						<button
 							onclick={() => navigateToIdea(idea.id)}
 							class="group w-full rounded-lg border bg-card p-3 text-left transition-colors hover:bg-accent"
 							type="button"
 						>
 							<div class="mb-2 flex items-start justify-between gap-2">
-								<p class="line-clamp-2 flex-1 text-sm leading-relaxed">
-									{idea.oneLiner}
+								<p class="line-clamp-2 flex-1 text-sm leading-relaxed wrap-break-word">
+									{cleanText}
 								</p>
 							</div>
+							{#if urls.length > 0}
+								<div class="mb-2">
+									<UrlBadges {urls} variant="outline" size="sm" />
+								</div>
+							{/if}
 							{#if isNonEmpty(idea.tags)}
 								<div class="mt-1.5 flex flex-wrap gap-1">
 									{#each idea.tags.slice(0, 3) as tag (tag)}
@@ -154,8 +163,24 @@
 							</p>
 						</button>
 					{:else}
-						<div class="rounded-lg border border-dashed p-4 text-center">
-							<p class="text-xs text-muted-foreground">No ideas</p>
+						<div class="rounded-lg border border-dashed p-6 text-center">
+							{#if status === 'inbox'}
+								<p class="mb-1 text-sm font-medium">No ideas yet</p>
+								<p class="text-xs text-muted-foreground">Capture ideas as they come to you</p>
+							{:else if status === 'developing'}
+								<p class="mb-1 text-sm font-medium">Nothing in development</p>
+								<p class="text-xs text-muted-foreground">Move ideas here to expand them</p>
+							{:else if status === 'ready'}
+								<p class="mb-1 text-sm font-medium">No content ready</p>
+								<p class="text-xs text-muted-foreground">
+									Finish developing ideas to mark as ready
+								</p>
+							{:else}
+								<p class="mb-1 text-sm font-medium">Nothing published</p>
+								<p class="text-xs text-muted-foreground">
+									Share your content and track performance
+								</p>
+							{/if}
 						</div>
 					{/each}
 				</div>
