@@ -170,7 +170,7 @@
 			</Select.Root>
 
 			<Select.Root type="single" bind:value={typeFilter}>
-				<Select.Trigger class="h-9 w-[160px]">
+				<Select.Trigger class="h-9 w-40">
 					Type: {typeFilter === 'all' ? 'All' : typeFilter.replace('-', ' ')}
 				</Select.Trigger>
 				<Select.Content>
@@ -416,7 +416,8 @@
 				<Calendar class="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
 				<h3 class="mb-2 text-lg font-semibold">No scheduled content</h3>
 				<p class="mb-4 text-sm text-muted-foreground">
-					Start planning your content by setting publish dates on your artifacts
+					Set planned publish dates on your artifacts to see them here.<br />
+					This helps you plan your content calendar and stay organized.
 				</p>
 				<Button onclick={() => goto(resolve('/'))}>Go to Dashboard</Button>
 			</div>
