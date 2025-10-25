@@ -16,6 +16,8 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 
 	const z = get_z();
 
@@ -32,6 +34,7 @@
 	let editValue = $state('');
 	let saveStatus = $state<Record<string, 'saving' | 'saved'>>({});
 	let inputError = $state<string | null>(null);
+	let clearDialogOpen = $state(false);
 
 	const fuseOptions = {
 		includeScore: true,
@@ -99,23 +102,28 @@
 		if (lines.length > 1) {
 			event.preventDefault();
 
-			const confirmed = confirm(`Detected ${lines.length} ideas. Add all to queue?`);
-			if (confirmed) {
-				lines.forEach((line) => {
-					try {
-						ideaSchema.parse(line);
-						const isDuplicate = checkDuplicate(line);
-						queuedIdeas.push({
-							id: generateId(),
-							text: line,
-							isDuplicate
+			toast(`Detected ${lines.length} ideas`, {
+				description: 'Add all to queue?',
+				action: {
+					label: 'Add All',
+					onClick: () => {
+						lines.forEach((line) => {
+							try {
+								ideaSchema.parse(line);
+								const isDuplicate = checkDuplicate(line);
+								queuedIdeas.push({
+									id: generateId(),
+									text: line,
+									isDuplicate
+								});
+							} catch (error) {
+								console.error('Validation error for line:', line, error);
+							}
 						});
-					} catch (error) {
-						console.error('Validation error for line:', line, error);
+						inputValue = '';
 					}
-				});
-				inputValue = '';
-			}
+				}
+			});
 		}
 	}
 
@@ -123,14 +131,14 @@
 		queuedIdeas = queuedIdeas.filter((idea) => idea.id !== id);
 	}
 
-	function clearQueue() {
+	function confirmClearQueue() {
 		if (queuedIdeas.length === 0) return;
-		const confirmed = confirm(
-			`Clear ${queuedIdeas.length} queued ${queuedIdeas.length === 1 ? 'idea' : 'ideas'}?`
-		);
-		if (confirmed) {
-			queuedIdeas = [];
-		}
+		clearDialogOpen = true;
+	}
+
+	function clearQueue() {
+		queuedIdeas = [];
+		clearDialogOpen = false;
 	}
 
 	async function submitAllIdeas() {
@@ -285,7 +293,7 @@
 					</h2>
 					<div class="flex gap-2">
 						<Button
-							onclick={clearQueue}
+							onclick={confirmClearQueue}
 							disabled={queuedIdeas.length === 0}
 							variant="outline"
 							size="sm"
@@ -313,10 +321,10 @@
 								: ''}"
 						>
 							<div class="flex items-start justify-between gap-3">
-								<p class="flex-1 text-sm break-words">{idea.text}</p>
+								<p class="flex-1 text-sm wrap-break-word">{idea.text}</p>
 								<button
 									onclick={() => removeFromQueue(idea.id)}
-									class="flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+									class="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
 									type="button"
 								>
 									<X class="h-4 w-4 text-muted-foreground hover:text-destructive" />
@@ -392,7 +400,7 @@
 											</p>
 										</div>
 										<div
-											class="flex-shrink-0 pt-0.5 opacity-0 transition-opacity group-hover/item:opacity-100"
+											class="shrink-0 pt-0.5 opacity-0 transition-opacity group-hover/item:opacity-100"
 										>
 											<Pencil class="h-3.5 w-3.5 text-muted-foreground" />
 										</div>
@@ -414,3 +422,24 @@
 		</div>
 	</div>
 </div>
+
+<AlertDialog.Root bind:open={clearDialogOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Clear queued ideas?</AlertDialog.Title>
+			<AlertDialog.Description>
+				This will remove {queuedIdeas.length}
+				{queuedIdeas.length === 1 ? 'idea' : 'ideas'} from the queue. This action cannot be undone.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action
+				onclick={clearQueue}
+				class="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+			>
+				Clear
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

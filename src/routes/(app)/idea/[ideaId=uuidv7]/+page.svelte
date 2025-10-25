@@ -15,6 +15,7 @@
 	import { TagsInput } from '$lib/components/ui/tags-input';
 	import { createParameterizedQuery, createQuery } from '$lib/zero/use-query.svelte';
 	import * as queries from '$lib/zero/queries';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 
 	const z = get_z();
 
@@ -41,6 +42,8 @@
 	let saveStatus = $state<'idle' | 'saving' | 'saved'>('idle');
 	let savedIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
 	let promptSelectorOpen = $state(false);
+	let deleteDialogOpen = $state(false);
+	let artifactToDelete = $state<string | null>(null);
 
 	$effect(() => {
 		if (!idea) return;
@@ -198,13 +201,19 @@
 		}
 	}
 
-	async function handleDeleteArtifact(id: string) {
-		const confirmed = confirm('Delete this artifact? This cannot be undone.');
-		if (!confirmed) return;
+	function confirmDeleteArtifact(id: string) {
+		artifactToDelete = id;
+		deleteDialogOpen = true;
+	}
+
+	async function handleDeleteArtifact() {
+		if (!artifactToDelete) return;
 
 		try {
-			const write = z.mutate.contentArtifact.delete(id as UuidV7);
+			const write = z.mutate.contentArtifact.delete(artifactToDelete as UuidV7);
 			await write.client;
+			deleteDialogOpen = false;
+			artifactToDelete = null;
 		} catch (error) {
 			console.error('Failed to delete artifact:', error);
 		}
@@ -352,7 +361,7 @@
 						<ArtifactCard
 							{artifact}
 							onEdit={handleEditArtifact}
-							onDelete={handleDeleteArtifact}
+							onDelete={confirmDeleteArtifact}
 							onCopy={handleCopyArtifact}
 						/>
 					{/each}
@@ -370,3 +379,20 @@
 		/>
 	{/if}
 {/if}
+
+<AlertDialog.Root bind:open={deleteDialogOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Delete artifact?</AlertDialog.Title>
+			<AlertDialog.Description>
+				This action cannot be undone. This will permanently delete this artifact.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action onclick={handleDeleteArtifact} class="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+				Delete
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

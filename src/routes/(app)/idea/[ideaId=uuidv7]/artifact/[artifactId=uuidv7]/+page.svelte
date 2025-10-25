@@ -9,6 +9,7 @@
 	import { CircleCheck } from '@lucide/svelte';
 	import { createParameterizedQuery } from '$lib/zero/use-query.svelte';
 	import * as queries from '$lib/zero/queries';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 
 	const z = get_z();
 
@@ -42,6 +43,7 @@
 
 	let saveStatus = $state<'idle' | 'saving' | 'saved'>('idle');
 	let savedIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
+	let deleteDialogOpen = $state(false);
 
 	const artifactTypeOptions = [
 		{ value: 'blog-post', label: 'Blog Post' },
@@ -162,15 +164,17 @@
 		}
 	}
 
+	function confirmDelete() {
+		deleteDialogOpen = true;
+	}
+
 	async function handleDelete() {
 		if (!artifact) return;
-
-		const confirmed = confirm('Delete this artifact? This cannot be undone.');
-		if (!confirmed) return;
 
 		try {
 			const write = z.mutate.contentArtifact.delete(artifact.id);
 			await write.client;
+			deleteDialogOpen = false;
 			goBack();
 		} catch (error) {
 			console.error('Failed to delete artifact:', error);
@@ -219,7 +223,7 @@
 							<span class="text-xs text-muted-foreground">Saving...</span>
 						{/if}
 					</div>
-					<Button variant="destructive" onclick={handleDelete} size="sm">Delete</Button>
+					<Button variant="destructive" onclick={confirmDelete} size="sm">Delete</Button>
 				</div>
 			</div>
 		</div>
@@ -366,3 +370,20 @@
 		<p class="text-muted-foreground">Loading artifact...</p>
 	</div>
 {/if}
+
+<AlertDialog.Root bind:open={deleteDialogOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Delete artifact?</AlertDialog.Title>
+			<AlertDialog.Description>
+				This action cannot be undone. This will permanently delete this artifact.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action onclick={handleDelete} class="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+				Delete
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
