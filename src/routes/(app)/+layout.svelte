@@ -35,9 +35,8 @@
 
 <svelte:window onkeydown={shortcuts.handleKeydown} />
 
-<CommandPalette bind:open={commandPaletteOpen} />
-
 <Sidebar.Provider>
+	<CommandPalette bind:open={commandPaletteOpen} />
 	<AppSidebar user={data.user} />
 	<main class="flex flex-1 flex-col overflow-hidden">
 		<header class="flex h-14 shrink-0 items-center gap-2 border-b px-4">
