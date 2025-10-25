@@ -1,62 +1,66 @@
-import { syncedQuery } from '@rocicorp/zero';
+import { syncedQueryWithContext } from '@rocicorp/zero';
 import { z } from 'zod';
 import { builder } from './schema';
-import type { UuidV7 } from '$lib/utils';
+import type { QueryContext } from './auth';
 import { zUuidV7 } from '$lib/utils/validators';
 
 // All content ideas for a user
-export const allIdeas = syncedQuery('allIdeas', z.tuple([zUuidV7()]), (userId: UuidV7) => {
-	return builder.contentIdea.where('userId', userId).orderBy('createdAt', 'desc');
+export const allIdeas = syncedQueryWithContext('allIdeas', z.tuple([]), (ctx: QueryContext) => {
+	return builder.contentIdea.where('userId', ctx.userID).orderBy('createdAt', 'desc');
 });
 
 // Inbox ideas for quick capture
-export const inboxIdeas = syncedQuery('inboxIdeas', z.tuple([zUuidV7()]), (userId: UuidV7) => {
+export const inboxIdeas = syncedQueryWithContext('inboxIdeas', z.tuple([]), (ctx: QueryContext) => {
 	return builder.contentIdea
-		.where('userId', userId)
+		.where('userId', ctx.userID)
 		.where('status', 'inbox')
 		.orderBy('createdAt', 'desc');
 });
 
 // Single idea by ID
-export const ideaById = syncedQuery(
+export const ideaById = syncedQueryWithContext(
 	'ideaById',
-	z.tuple([zUuidV7(), zUuidV7()]),
-	(userId: UuidV7, ideaId: UuidV7) => {
-		return builder.contentIdea.where('userId', userId).where('id', ideaId);
+	z.tuple([zUuidV7()]),
+	(ctx: QueryContext, ideaId) => {
+		return builder.contentIdea.where('userId', ctx.userID).where('id', ideaId);
 	}
 );
 
 // Artifacts for a specific idea
-export const artifactsByIdeaId = syncedQuery(
+export const artifactsByIdeaId = syncedQueryWithContext(
 	'artifactsByIdeaId',
-	z.tuple([zUuidV7(), zUuidV7()]),
-	(userId: UuidV7, ideaId: UuidV7) => {
+	z.tuple([zUuidV7()]),
+	(ctx: QueryContext, ideaId) => {
 		return builder.contentArtifact
-			.where('userId', userId)
+			.where('userId', ctx.userID)
 			.where('ideaId', ideaId)
 			.orderBy('createdAt', 'desc');
 	}
 );
 
 // Single artifact by ID
-export const artifactById = syncedQuery(
+export const artifactById = syncedQueryWithContext(
 	'artifactById',
-	z.tuple([zUuidV7(), zUuidV7()]),
-	(userId: UuidV7, artifactId: UuidV7) => {
-		return builder.contentArtifact.where('userId', userId).where('id', artifactId);
+	z.tuple([zUuidV7()]),
+	(ctx: QueryContext, artifactId) => {
+		return builder.contentArtifact.where('userId', ctx.userID).where('id', artifactId);
 	}
 );
 
 // User's content settings
-export const userSettings = syncedQuery('userSettings', z.tuple([zUuidV7()]), (userId: UuidV7) => {
-	return builder.contentSettings.where('userId', userId);
-});
+export const userSettings = syncedQueryWithContext(
+	'userSettings',
+	z.tuple([]),
+	(ctx: QueryContext) => {
+		return builder.contentSettings.where('userId', ctx.userID);
+	}
+);
 
 // All artifacts with planned publish dates (for timeline)
-export const scheduledArtifacts = syncedQuery(
+export const scheduledArtifacts = syncedQueryWithContext(
 	'scheduledArtifacts',
-	z.tuple([zUuidV7()]),
-	(userId: UuidV7) => {
-		return builder.contentArtifact.where('userId', userId).orderBy('plannedPublishDate', 'asc');
+	z.tuple([]),
+	(ctx: QueryContext) => {
+		return builder.contentArtifact.where('userId', ctx.userID).orderBy('plannedPublishDate', 'asc');
 	}
 );

@@ -10,6 +10,10 @@ export const authDataSchema = z.object({
 
 export type AuthData = z.infer<typeof authDataSchema>;
 
+export type QueryContext = {
+	userID: UuidV7;
+};
+
 export function assertIsSignedIn(authData: AuthData | undefined): asserts authData {
 	assert(authData, 'user must be logged in for this operation');
 }

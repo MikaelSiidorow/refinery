@@ -3,6 +3,7 @@ import type { Z } from 'zero-svelte';
 import type { Schema } from './schema';
 import type { CustomMutatorDefs, Query as QueryDef } from '@rocicorp/zero';
 import { untrack } from 'svelte';
+import type { QueryContext } from './auth';
 import type { UuidV7 } from '$lib/utils';
 
 /**
@@ -42,11 +43,12 @@ export function createParameterizedQuery<
 	TArgs extends readonly unknown[] = readonly unknown[]
 >(
 	z: Z<TSchema, MD>,
-	queryFn: (userId: UuidV7, ...args: TArgs) => QueryDef<TSchema, TTable, TReturn>,
+	queryFn: (ctx: QueryContext, ...args: TArgs) => QueryDef<TSchema, TTable, TReturn>,
 	getArgs: () => Readonly<TArgs> | TArgs,
 	getEnabled: (() => boolean) | boolean = true
 ): Query<TSchema, TTable, TReturn, MD> {
-	const userId = z.userID as UuidV7;
+	// Client-side placeholder context - actual context is provided server-side
+	const ctx: QueryContext = { userID: z.userID as UuidV7 };
 
 	const initialEnabled = typeof getEnabled === 'function' ? untrack(getEnabled) : getEnabled;
 
@@ -56,16 +58,16 @@ export function createParameterizedQuery<
 	if (initialEnabled) {
 		try {
 			const initialArgs = untrack(getArgs);
-			initialQuery = queryFn(userId, ...initialArgs);
+			initialQuery = queryFn(ctx, ...initialArgs);
 			shouldEnableInitially = true;
 		} catch {
 			// getArgs threw (likely assertion failed), create placeholder query
 			// This query won't execute because we'll pass enabled: false
-			initialQuery = queryFn(userId, ...(Array(10).fill(userId) as unknown as TArgs));
+			initialQuery = queryFn(ctx, ...(Array(10).fill('') as unknown as TArgs));
 		}
 	} else {
 		// Query is initially disabled, create placeholder query that won't execute
-		initialQuery = queryFn(userId, ...(Array(10).fill(userId) as unknown as TArgs));
+		initialQuery = queryFn(ctx, ...(Array(10).fill('') as unknown as TArgs));
 	}
 
 	const query = new Query(initialQuery, z, shouldEnableInitially);
@@ -76,7 +78,7 @@ export function createParameterizedQuery<
 		if (currentEnabled) {
 			try {
 				const currentArgs = getArgs();
-				const newQuery = queryFn(userId, ...currentArgs);
+				const newQuery = queryFn(ctx, ...currentArgs);
 				query.updateQuery(newQuery, true);
 			} catch {
 				// getArgs threw, keep query disabled
@@ -91,9 +93,7 @@ export function createParameterizedQuery<
 }
 
 /**
- * Creates a static query (no parameters besides userId).
- *
- * This automatically injects the userId from the Z instance.
+ * Creates a static query (no parameters).
  *
  * @example
  * ```svelte
@@ -108,10 +108,11 @@ export function createQuery<
 	MD extends CustomMutatorDefs | undefined = undefined
 >(
 	z: Z<TSchema, MD>,
-	queryFn: (userId: UuidV7) => QueryDef<TSchema, TTable, TReturn>,
+	queryFn: (ctx: QueryContext) => QueryDef<TSchema, TTable, TReturn>,
 	enabled = true
 ): Query<TSchema, TTable, TReturn, MD> {
-	const userId = z.userID as UuidV7;
-	const queryDef = queryFn(userId);
+	// Client-side placeholder context - actual context is provided server-side
+	const ctx: QueryContext = { userID: z.userID as UuidV7 };
+	const queryDef = queryFn(ctx);
 	return new Query(queryDef, z, enabled);
 }

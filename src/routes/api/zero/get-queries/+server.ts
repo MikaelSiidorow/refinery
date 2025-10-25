@@ -3,6 +3,7 @@ import { handleGetQueriesRequest } from '@rocicorp/zero/server';
 import { schema } from '$lib/zero/schema';
 import * as queries from '$lib/zero/queries';
 import { withValidation } from '@rocicorp/zero';
+import type { QueryContext } from '$lib/zero/auth';
 
 const queryMap = Object.fromEntries(
 	Object.values(queries).map((q) => [q.queryName, withValidation(q)])
@@ -14,7 +15,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	try {
-		const userId = locals.user.id;
+		const context: QueryContext = { userID: locals.user.id };
 
 		const response = await handleGetQueriesRequest(
 			(name, args) => {
@@ -23,7 +24,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					throw new Error(`Unknown query: ${name}`);
 				}
 
-				return { query: q(userId, ...args) };
+				return { query: q(context, ...args), context };
 			},
 			schema,
 			request
