@@ -13,6 +13,9 @@
 	import { ZodError } from 'zod';
 	import { createQuery } from '$lib/zero/use-query.svelte';
 	import * as queries from '$lib/zero/queries';
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	const z = get_z();
 
@@ -190,6 +193,14 @@
 	let isNearLimit = $derived(charCount >= 230); // Yellow warning at 230
 	let isOverLimit = $derived(charCount > 256); // Red error over 256
 	let hasError = $derived(inputError !== null || isOverLimit);
+
+	onMount(() => {
+		const sharedContent = $page.url.searchParams.get('shared');
+		if (sharedContent) {
+			inputValue = sharedContent.slice(0, 256);
+			goto('/new-idea', { replaceState: true });
+		}
+	});
 </script>
 
 <svelte:head>
