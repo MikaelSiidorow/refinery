@@ -3,7 +3,6 @@
 	import { goto } from '$app/navigation';
 	import { cmdOrCtrl } from '$lib/hooks/is-mac.svelte';
 	import { useSidebar } from '$lib/components/ui/sidebar';
-	import Fuse from 'fuse.js';
 	import { House, CirclePlus, LogOut, PanelLeft, Settings, type IconProps } from '@lucide/svelte';
 	import type { Component } from 'svelte';
 	import * as Kbd from '$lib/components/ui/kbd';
@@ -104,20 +103,142 @@
 	] as const satisfies ReadonlyArray<NavItem>;
 
 	let searchQuery = $state('');
-	let filteredItems = $derived.by(() => {
-		if (!searchQuery.trim()) {
-			return navigationItems;
+
+	type NavItemType = (typeof navigationItems)[number];
+
+	type SearchMatch = {
+		score: number;
+		indices: [number, number][];
+	};
+
+	type SearchResult = {
+		item: NavItemType;
+		matches: { key: 'title' | 'description'; indices: [number, number][] }[];
+		score: number;
+	};
+
+	function sequentialMatch(query: string, text: string): SearchMatch | null {
+		const lowerQuery = query.toLowerCase();
+		const lowerText = text.toLowerCase();
+
+		const indices: [number, number][] = [];
+		let queryIndex = 0;
+		let textIndex = 0;
+
+		while (textIndex < lowerText.length && queryIndex < lowerQuery.length) {
+			if (lowerText[textIndex] === lowerQuery[queryIndex]) {
+				const start = textIndex;
+				let end = textIndex;
+
+				// Match consecutive characters
+				while (
+					queryIndex < lowerQuery.length &&
+					textIndex < lowerText.length &&
+					lowerText[textIndex] === lowerQuery[queryIndex]
+				) {
+					end = textIndex;
+					queryIndex++;
+					textIndex++;
+				}
+
+				indices.push([start, end]);
+			} else {
+				textIndex++;
+			}
 		}
 
-		const fuse = new Fuse(navigationItems, {
-			keys: ['title', 'description'],
-			threshold: 0.3,
-			includeScore: true
-		});
+		// If we didn't match all query characters, no match
+		if (queryIndex < lowerQuery.length) {
+			return null;
+		}
 
-		const results = fuse.search(searchQuery);
-		return results.map((result) => result.item);
+		// Calculate score (lower is better)
+		let score = 0;
+
+		// Position weight: earlier matches score better (0-0.3)
+		const startPosition = indices[0]?.[0] ?? text.length;
+		score += (startPosition / text.length) * 0.3;
+
+		// Consecutive chars weight: more consecutive = better (0-0.4)
+		const matchedLength = indices.reduce((sum, [start, end]) => sum + (end - start + 1), 0);
+		const consecutiveRatio = matchedLength / query.length;
+		score += (1 - consecutiveRatio) * 0.4;
+
+		// Coverage weight: how much text is matched (0-0.3)
+		score += (1 - matchedLength / text.length) * 0.3;
+
+		return { score, indices };
+	}
+
+	function searchItems(query: string): SearchResult[] {
+		const results: SearchResult[] = [];
+
+		for (const item of navigationItems) {
+			const titleMatch = sequentialMatch(query, item.title);
+			const descMatch = sequentialMatch(query, item.description);
+
+			// Item matches if either title or description matches
+			if (titleMatch || descMatch) {
+				const matches: SearchResult['matches'] = [];
+
+				if (titleMatch) {
+					matches.push({ key: 'title', indices: titleMatch.indices });
+				}
+
+				if (descMatch) {
+					matches.push({ key: 'description', indices: descMatch.indices });
+				}
+
+				// Calculate combined score (lower is better)
+				let score: number;
+
+				if (titleMatch && descMatch) {
+					// Both match: weighted combination
+					score = titleMatch.score * 0.7 + descMatch.score * 0.3;
+				} else if (titleMatch) {
+					// Only title matches: use title score directly (best case)
+					score = titleMatch.score;
+				} else {
+					// Only description matches: add penalty to always rank below title matches
+					score = 1.0 + descMatch!.score;
+				}
+
+				results.push({ item, matches, score });
+			}
+		}
+
+		// Sort by score (lower is better)
+		return results.sort((a, b) => a.score - b.score);
+	}
+
+	let filteredResults = $derived.by(() => {
+		// Force re-evaluation by reading searchQuery directly
+		const query = searchQuery.trim();
+
+		if (!query) {
+			return navigationItems.map((item) => ({ item, matches: [], score: 0 }));
+		}
+
+		return searchItems(query);
 	});
+
+	function highlightMatches(text: string, matches?: { indices: [number, number][] }): string {
+		if (!matches || matches.indices.length === 0) {
+			return text;
+		}
+
+		let result = '';
+		let lastIndex = 0;
+
+		for (const [start, end] of matches.indices) {
+			result += text.slice(lastIndex, start);
+			result += `<mark class="bg-yellow-200/50 dark:bg-yellow-500/30 rounded-sm px-0.5">${text.slice(start, end + 1)}</mark>`;
+			lastIndex = end + 1;
+		}
+
+		result += text.slice(lastIndex);
+		return result;
+	}
 
 	function handleSelect(item: (typeof navigationItems)[number]) {
 		if (item.isAction) {
@@ -156,48 +277,52 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<Command.Dialog bind:open>
+<Command.Dialog bind:open shouldFilter={false}>
 	<Command.Input placeholder="Type a command or search..." bind:value={searchQuery} />
 	<Command.List>
 		<Command.Empty>No results found.</Command.Empty>
 		<Command.Group heading="Navigation">
-			{#each filteredItems as item (item.id)}
-				<Command.Item onSelect={() => handleSelect(item)}>
-					<item.icon class="mr-2 h-4 w-4" />
+			{#each filteredResults as result (result.item.id)}
+				{@const titleMatch = result.matches?.find((m) => m.key === 'title')}
+				{@const descMatch = result.matches?.find((m) => m.key === 'description')}
+				<Command.Item onSelect={() => handleSelect(result.item)}>
+					<result.item.icon class="mr-2 h-4 w-4" />
 					<div class="flex flex-1 flex-col gap-0.5">
-						<span>{item.title}</span>
-						{#if item.description}
-							<span class="text-xs text-muted-foreground">{item.description}</span>
+						<span>{@html highlightMatches(result.item.title, titleMatch)}</span>
+						{#if result.item.description}
+							<span class="text-xs text-muted-foreground">
+								{@html highlightMatches(result.item.description, descMatch)}
+							</span>
 						{/if}
 					</div>
-					{#if item.shortcut}
+					{#if result.item.shortcut}
 						<Command.Shortcut>
-							{#if item.shortcut.type === 'chain'}
+							{#if result.item.shortcut.type === 'chain'}
 								<Kbd.Group>
-									{#each item.shortcut.keys as key, i (i)}
+									{#each result.item.shortcut.keys as key, i (i)}
 										<Kbd.Root>{key}</Kbd.Root>
-										{#if i < item.shortcut.keys.length - 1}
+										{#if i < result.item.shortcut.keys.length - 1}
 											<span>then</span>
 										{/if}
 									{/each}
 								</Kbd.Group>
-								<!-- 			{:else if item.shortcut.type === 'option'}
+								<!-- 			{:else if result.item.shortcut.type === 'option'}
 								<Kbd.Group>
-									{#each item.shortcut.keys as key, i (i)}
+									{#each result.item.shortcut.keys as key, i (i)}
 										<Kbd.Root>{key}</Kbd.Root>
-										{#if i < item.shortcut.keys.length - 1}
+										{#if i < result.item.shortcut.keys.length - 1}
 											<span>or</span>
 										{/if}
 									{/each}
 								</Kbd.Group> -->
-							{:else if item.shortcut.type === 'combination'}
+							{:else if result.item.shortcut.type === 'combination'}
 								<Kbd.Group>
-									{#each item.shortcut.keys as key, i (i)}
+									{#each result.item.shortcut.keys as key, i (i)}
 										<Kbd.Root>{key}</Kbd.Root>
 									{/each}
 								</Kbd.Group>
-							{:else if item.shortcut.type === 'single'}
-								<Kbd.Root>{item.shortcut.key}</Kbd.Root>
+							{:else if result.item.shortcut.type === 'single'}
+								<Kbd.Root>{result.item.shortcut.key}</Kbd.Root>
 							{/if}
 						</Command.Shortcut>
 					{/if}
