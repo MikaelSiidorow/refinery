@@ -11,45 +11,24 @@
 	import * as queries from '$lib/zero/queries';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import PromptSelector from '$lib/components/prompt-selector.svelte';
+	import { createAutosaveForm } from '$lib/autosave-form.svelte';
 
 	const z = get_z();
 
 	const { params } = $props();
 
-	// Parameterized query for artifact by ID
 	const artifactQuery = createParameterizedQuery(z, queries.artifactById, () => [
 		params.artifactId
 	]);
 	const artifact = $derived(artifactQuery.data[0]);
 
-	// Parameterized query for idea by ID
 	const ideaQuery = createParameterizedQuery(z, queries.ideaById, () => [params.ideaId]);
 	const idea = $derived(ideaQuery.data[0]);
 
-	// Query for user settings
 	const settingsQuery = createQuery(z, queries.userSettings);
 	const settings = $derived(settingsQuery.data[0]);
 
 	let promptSelectorOpen = $state(false);
-
-	let title = $state('');
-	let content = $state('');
-	let artifactType = $state<
-		'blog-post' | 'thread' | 'carousel' | 'newsletter' | 'email' | 'short-post' | 'comment'
-	>('thread');
-	let platform = $state('');
-	let status = $state<'draft' | 'ready' | 'published'>('draft');
-	let plannedPublishDate = $state('');
-	let publishedUrl = $state('');
-	let publishedAt = $state('');
-	let impressions = $state('');
-	let likes = $state('');
-	let comments = $state('');
-	let shares = $state('');
-	let notes = $state('');
-
-	let saveStatus = $state<'idle' | 'saving' | 'saved'>('idle');
-	let savedIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
 	let deleteDialogOpen = $state(false);
 
 	const artifactTypeOptions = [
@@ -68,108 +47,90 @@
 		{ value: 'published', label: 'Published' }
 	] as const;
 
-	$effect(() => {
-		if (artifact) {
-			title = artifact.title || '';
-			content = artifact.content || '';
-			artifactType = artifact.artifactType;
-			platform = artifact.platform ? artifact.platform : '';
-			status = artifact.status || 'draft';
-			plannedPublishDate = artifact.plannedPublishDate
+	const form = createAutosaveForm({
+		source: () => artifact,
+		key: () => artifact?.id,
+
+		defaultValues: {
+			title: '',
+			content: '',
+			artifactType: 'thread' as const,
+			platform: '',
+			status: 'draft' as const,
+			plannedPublishDate: '',
+			publishedUrl: '',
+			publishedAt: '',
+			impressions: '',
+			likes: '',
+			comments: '',
+			shares: '',
+			notes: ''
+		},
+
+		initialize: (artifact) => ({
+			title: artifact.title || '',
+			content: artifact.content || '',
+			artifactType: artifact.artifactType,
+			platform: artifact.platform || '',
+			status: artifact.status || 'draft',
+			plannedPublishDate: artifact.plannedPublishDate
 				? new Date(artifact.plannedPublishDate).toISOString().split('T')[0]!
-				: '';
-			publishedUrl = (artifact.publishedUrl || '') as string;
-			publishedAt = artifact.publishedAt
+				: '',
+			publishedUrl: artifact.publishedUrl || '',
+			publishedAt: artifact.publishedAt
 				? new Date(artifact.publishedAt).toISOString().split('T')[0]!
-				: '';
-			impressions = artifact.impressions ? artifact.impressions.toString() : '';
-			likes = artifact.likes ? artifact.likes.toString() : '';
-			comments = artifact.comments ? artifact.comments.toString() : '';
-			shares = artifact.shares ? artifact.shares.toString() : '';
-			notes = artifact.notes ? artifact.notes : '';
-		}
-	});
+				: '',
+			impressions: artifact.impressions != null ? artifact.impressions.toString() : '',
+			likes: artifact.likes != null ? artifact.likes.toString() : '',
+			comments: artifact.comments != null ? artifact.comments.toString() : '',
+			shares: artifact.shares != null ? artifact.shares.toString() : '',
+			notes: artifact.notes || ''
+		}),
 
-	$effect(() => {
-		// Don't save until artifact has loaded and initialized
-		if (!artifact) return;
+		normalize: (artifact) => ({
+			title: artifact.title || '',
+			content: artifact.content || '',
+			artifactType: artifact.artifactType,
+			platform: artifact.platform || '',
+			status: artifact.status || 'draft',
+			plannedPublishDate: artifact.plannedPublishDate
+				? new Date(artifact.plannedPublishDate).toISOString().split('T')[0]!
+				: '',
+			publishedUrl: artifact.publishedUrl || '',
+			publishedAt: artifact.publishedAt
+				? new Date(artifact.publishedAt).toISOString().split('T')[0]!
+				: '',
+			impressions: artifact.impressions != null ? artifact.impressions.toString() : '',
+			likes: artifact.likes != null ? artifact.likes.toString() : '',
+			comments: artifact.comments != null ? artifact.comments.toString() : '',
+			shares: artifact.shares != null ? artifact.shares.toString() : '',
+			notes: artifact.notes || ''
+		}),
 
-		const currentValues = {
-			title,
-			content,
-			artifactType,
-			platform,
-			status,
-			plannedPublishDate,
-			publishedUrl,
-			publishedAt,
-			impressions,
-			likes,
-			comments,
-			shares,
-			notes
-		};
+		onSave: async (values) => {
+			if (!artifact) return;
 
-		// Don't save if values match existing artifact
-		const hasChanges =
-			currentValues.title !== (artifact.title || '') ||
-			currentValues.content !== artifact.content ||
-			currentValues.artifactType !== artifact.artifactType ||
-			currentValues.platform !== (artifact.platform || '') ||
-			currentValues.status !== (artifact.status || 'draft') ||
-			currentValues.plannedPublishDate !==
-				(artifact.plannedPublishDate
-					? new Date(artifact.plannedPublishDate).toISOString().split('T')[0]
-					: '') ||
-			currentValues.publishedUrl !== (artifact.publishedUrl || '') ||
-			currentValues.publishedAt !==
-				(artifact.publishedAt ? new Date(artifact.publishedAt).toISOString().split('T')[0] : '') ||
-			currentValues.impressions !== (artifact.impressions?.toString() || '') ||
-			currentValues.likes !== (artifact.likes?.toString() || '') ||
-			currentValues.comments !== (artifact.comments?.toString() || '') ||
-			currentValues.shares !== (artifact.shares?.toString() || '') ||
-			currentValues.notes !== (artifact.notes || '');
-
-		if (!hasChanges) return;
-
-		saveChanges();
-	});
-
-	async function saveChanges() {
-		if (!artifact) return;
-
-		saveStatus = 'saving';
-		try {
 			const write = z.mutate.contentArtifact.update({
 				id: artifact.id,
-				title: title || undefined,
-				content: content.trim() || '',
-				artifactType,
-				platform: platform || undefined,
-				status,
-				plannedPublishDate: plannedPublishDate ? new Date(plannedPublishDate).getTime() : undefined,
-				publishedUrl: publishedUrl || undefined,
-				publishedAt: publishedAt ? new Date(publishedAt).getTime() : undefined,
-				impressions: impressions ? parseInt(impressions) : undefined,
-				likes: likes ? parseInt(likes) : undefined,
-				comments: comments ? parseInt(comments) : undefined,
-				shares: shares ? parseInt(shares) : undefined,
-				notes: notes || undefined
+				title: values.title || undefined,
+				content: values.content.trim() || '',
+				artifactType: values.artifactType,
+				platform: values.platform || undefined,
+				status: values.status,
+				plannedPublishDate: values.plannedPublishDate
+					? new Date(values.plannedPublishDate).getTime()
+					: undefined,
+				publishedUrl: values.publishedUrl || undefined,
+				publishedAt: values.publishedAt ? new Date(values.publishedAt).getTime() : undefined,
+				impressions: values.impressions ? parseInt(values.impressions) : undefined,
+				likes: values.likes ? parseInt(values.likes) : undefined,
+				comments: values.comments ? parseInt(values.comments) : undefined,
+				shares: values.shares ? parseInt(values.shares) : undefined,
+				notes: values.notes || undefined
 			});
 			await write.client;
-
-			saveStatus = 'saved';
-			if (savedIndicatorTimeout) {
-				clearTimeout(savedIndicatorTimeout);
-			}
-			savedIndicatorTimeout = setTimeout(() => {
-				saveStatus = 'idle';
-			}, 2000);
-		} catch (error) {
-			console.error('Failed to save artifact:', error);
-			saveStatus = 'idle';
 		}
-	}
+	});
 
 	function confirmDelete() {
 		deleteDialogOpen = true;
@@ -193,7 +154,7 @@
 
 		if (event.key === 's' && (event.metaKey || event.ctrlKey)) {
 			event.preventDefault();
-			saveChanges();
+			form.save();
 			return;
 		}
 
@@ -223,10 +184,10 @@
 				<h1 class="text-2xl font-bold">Edit Artifact</h1>
 				<div class="flex items-center gap-4">
 					<div class="flex min-w-[60px] items-center gap-1">
-						{#if saveStatus === 'saved'}
+						{#if form.status === 'saved'}
 							<CircleCheck class="h-3.5 w-3.5 text-green-600" />
 							<span class="text-xs text-green-600">Saved</span>
-						{:else if saveStatus === 'saving'}
+						{:else if form.status === 'saving'}
 							<span class="text-xs text-muted-foreground">Saving...</span>
 						{/if}
 					</div>
@@ -242,7 +203,7 @@
 				</label>
 				<Input
 					id="artifact-title"
-					bind:value={title}
+					bind:value={form.values.title}
 					placeholder="e.g., Twitter Thread about Zero Sync"
 				/>
 			</div>
@@ -250,9 +211,10 @@
 			<div class="grid grid-cols-2 gap-4">
 				<div class="space-y-2">
 					<label for="artifact-type" class="text-sm font-medium">Type</label>
-					<Select.Root type="single" bind:value={artifactType}>
+					<Select.Root type="single" bind:value={form.values.artifactType}>
 						<Select.Trigger id="artifact-type">
-							{artifactTypeOptions.find((o) => o.value === artifactType)?.label || 'Select type'}
+							{artifactTypeOptions.find((o) => o.value === form.values.artifactType)?.label ||
+								'Select type'}
 						</Select.Trigger>
 						<Select.Content>
 							{#each artifactTypeOptions as option (option.value)}
@@ -270,7 +232,7 @@
 					</label>
 					<Input
 						id="artifact-platform"
-						bind:value={platform}
+						bind:value={form.values.platform}
 						placeholder="e.g., Twitter, LinkedIn"
 					/>
 				</div>
@@ -291,7 +253,7 @@
 				</div>
 				<Textarea
 					id="artifact-content"
-					bind:value={content}
+					bind:value={form.values.content}
 					placeholder="Paste your AI-generated content here..."
 					class="min-h-[400px] font-mono text-sm"
 				/>
@@ -299,9 +261,9 @@
 
 			<div class="space-y-2">
 				<label for="artifact-status" class="text-sm font-medium">Status</label>
-				<Select.Root type="single" bind:value={status}>
+				<Select.Root type="single" bind:value={form.values.status}>
 					<Select.Trigger id="artifact-status">
-						{statusOptions.find((o) => o.value === status)?.label || 'Select status'}
+						{statusOptions.find((o) => o.value === form.values.status)?.label || 'Select status'}
 					</Select.Trigger>
 					<Select.Content>
 						{#each statusOptions as option (option.value)}
@@ -313,19 +275,19 @@
 				</Select.Root>
 			</div>
 
-			{#if status !== 'published'}
+			{#if form.values.status !== 'published'}
 				<div class="space-y-2">
 					<label for="planned-date" class="text-sm font-medium">
 						Planned Publish Date <span class="text-muted-foreground">(optional)</span>
 					</label>
-					<Input id="planned-date" type="date" bind:value={plannedPublishDate} />
+					<Input id="planned-date" type="date" bind:value={form.values.plannedPublishDate} />
 					<p class="text-xs text-muted-foreground">
 						Set a target date to help plan your content calendar
 					</p>
 				</div>
 			{/if}
 
-			{#if status === 'published'}
+			{#if form.values.status === 'published'}
 				<div class="space-y-4 rounded-lg border bg-muted/50 p-4">
 					<h4 class="text-sm font-semibold">Publishing Information</h4>
 
@@ -333,7 +295,7 @@
 						<label for="published-url" class="text-sm font-medium">Published URL</label>
 						<Input
 							id="published-url"
-							bind:value={publishedUrl}
+							bind:value={form.values.publishedUrl}
 							type="url"
 							placeholder="https://..."
 						/>
@@ -341,30 +303,40 @@
 
 					<div class="space-y-2">
 						<label for="published-date" class="text-sm font-medium">Published Date</label>
-						<Input id="published-date" bind:value={publishedAt} type="date" />
+						<Input id="published-date" bind:value={form.values.publishedAt} type="date" />
 					</div>
 
 					<div class="grid grid-cols-2 gap-4">
 						<div class="space-y-2">
 							<label for="impressions" class="text-sm font-medium">Impressions</label>
-							<Input id="impressions" bind:value={impressions} type="number" placeholder="0" />
+							<Input
+								id="impressions"
+								bind:value={form.values.impressions}
+								type="number"
+								placeholder="0"
+							/>
 						</div>
 
 						<div class="space-y-2">
 							<label for="likes" class="text-sm font-medium">Likes</label>
-							<Input id="likes" bind:value={likes} type="number" placeholder="0" />
+							<Input id="likes" bind:value={form.values.likes} type="number" placeholder="0" />
 						</div>
 					</div>
 
 					<div class="grid grid-cols-2 gap-4">
 						<div class="space-y-2">
 							<label for="comments-count" class="text-sm font-medium">Comments</label>
-							<Input id="comments-count" bind:value={comments} type="number" placeholder="0" />
+							<Input
+								id="comments-count"
+								bind:value={form.values.comments}
+								type="number"
+								placeholder="0"
+							/>
 						</div>
 
 						<div class="space-y-2">
 							<label for="shares" class="text-sm font-medium">Shares</label>
-							<Input id="shares" bind:value={shares} type="number" placeholder="0" />
+							<Input id="shares" bind:value={form.values.shares} type="number" placeholder="0" />
 						</div>
 					</div>
 				</div>
@@ -376,7 +348,7 @@
 				</label>
 				<Textarea
 					id="artifact-notes"
-					bind:value={notes}
+					bind:value={form.values.notes}
 					placeholder="Any additional notes about this artifact..."
 					class="min-h-[100px]"
 				/>

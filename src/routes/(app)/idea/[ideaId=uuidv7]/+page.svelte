@@ -17,6 +17,7 @@
 	import * as queries from '$lib/zero/queries';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { toast } from 'svelte-sonner';
+	import { createAutosaveForm } from '$lib/autosave-form.svelte';
 
 	const z = get_z();
 
@@ -33,54 +34,9 @@
 	]);
 	const artifacts = $derived(artifactsQuery.data);
 
-	let editedOneLiner = $state('');
-	let editedNotes = $state('');
-	let editedContent = $state('');
-	let editedTags = $state<string[]>([]);
-	let selectedStatus = $state<
-		'inbox' | 'developing' | 'ready' | 'published' | 'archived' | 'cancelled'
-	>('inbox');
-	let saveStatus = $state<'idle' | 'saving' | 'saved'>('idle');
-	let savedIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
 	let promptSelectorOpen = $state(false);
 	let deleteDialogOpen = $state(false);
 	let artifactToDelete = $state<string | null>(null);
-
-	$effect(() => {
-		if (!idea) return;
-		editedOneLiner = idea.oneLiner || '';
-		editedNotes = idea.notes || '';
-		editedContent = idea.content || '';
-		editedTags = idea.tags || [];
-		selectedStatus = idea.status || 'inbox';
-	});
-
-	$effect(() => {
-		// Don't save until idea has loaded and initialized
-		if (!idea) return;
-
-		const currentValues = {
-			oneLiner: editedOneLiner,
-			notes: editedNotes,
-			content: editedContent,
-			tags: editedTags,
-			status: selectedStatus
-		};
-
-		// Don't save if values match existing idea
-		if (
-			currentValues.oneLiner === idea.oneLiner &&
-			currentValues.notes === (idea.notes || '') &&
-			currentValues.content === (idea.content || '') &&
-			JSON.stringify(currentValues.tags.slice().sort()) ===
-				JSON.stringify((idea.tags || []).slice().sort()) &&
-			currentValues.status === (idea.status || 'inbox')
-		) {
-			return;
-		}
-
-		saveChanges();
-	});
 
 	const statusOptions = [
 		{ value: 'inbox', label: 'Inbox' },
@@ -91,50 +47,62 @@
 		{ value: 'cancelled', label: 'Cancelled' }
 	] as const;
 
-	async function saveChanges() {
-		if (!idea) return;
-		saveStatus = 'saving';
-		try {
+	const form = createAutosaveForm({
+		source: () => idea,
+		key: () => idea?.id,
+
+		defaultValues: {
+			oneLiner: '',
+			notes: '',
+			content: '',
+			tags: [],
+			status: 'inbox' as const
+		},
+
+		initialize: (idea) => ({
+			oneLiner: idea.oneLiner || '',
+			notes: idea.notes || '',
+			content: idea.content || '',
+			tags: idea.tags || [],
+			status: idea.status || 'inbox'
+		}),
+
+		normalize: (idea) => ({
+			oneLiner: idea.oneLiner || '',
+			notes: idea.notes || '',
+			content: idea.content || '',
+			tags: (idea.tags || []).slice().sort(),
+			status: idea.status || 'inbox'
+		}),
+
+		onSave: async (values) => {
+			if (!idea) return;
+
 			const write = z.mutate.contentIdea.update({
 				id: idea.id,
-				oneLiner: editedOneLiner,
-				status: selectedStatus,
-				notes: editedNotes,
-				content: editedContent,
-				tags: editedTags
+				oneLiner: values.oneLiner,
+				status: values.status,
+				notes: values.notes,
+				content: values.content,
+				tags: values.tags
 			});
 			await write.client;
-
-			saveStatus = 'saved';
-			if (savedIndicatorTimeout) {
-				clearTimeout(savedIndicatorTimeout);
-			}
-			savedIndicatorTimeout = setTimeout(() => {
-				saveStatus = 'idle';
-			}, 2000);
-		} catch (error) {
-			console.error('Failed to save changes:', error);
-			saveStatus = 'idle';
 		}
-	}
+	});
 
 	function openPromptSelector() {
 		promptSelectorOpen = true;
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
-		// Don't handle shortcuts when typing in inputs
 		const isInputFocused = ['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement)?.tagName);
 
-		// Cmd/Ctrl+S to save
 		if (event.key === 's' && (event.metaKey || event.ctrlKey)) {
 			event.preventDefault();
-			saveChanges();
+			form.save();
 			return;
 		}
 
-		// Escape to go back (only when not focused in input and no modals are open)
-		// Check for dialog overlays in the DOM to ensure no modals are open
 		if (event.key === 'Escape' && !isInputFocused) {
 			const hasOpenDialog = document.querySelector('[role="dialog"]');
 			if (!hasOpenDialog && !promptSelectorOpen) {
@@ -261,7 +229,7 @@
 	<div class="mx-auto max-w-7xl p-4 sm:p-8">
 		<div class="mb-6 space-y-4 border-b pb-6">
 			<Input
-				bind:value={editedOneLiner}
+				bind:value={form.values.oneLiner}
 				placeholder="Idea title..."
 				class="border-0 px-0 text-2xl font-bold shadow-none focus-visible:ring-0"
 			/>
@@ -270,9 +238,10 @@
 				<div class="flex items-center gap-4 text-sm">
 					<div class="flex items-center gap-2">
 						<span class="text-muted-foreground">Status:</span>
-						<Select.Root type="single" bind:value={selectedStatus}>
+						<Select.Root type="single" bind:value={form.values.status}>
 							<Select.Trigger class="h-8 w-[140px]">
-								{statusOptions.find((o) => o.value === selectedStatus)?.label || 'Select status'}
+								{statusOptions.find((o) => o.value === form.values.status)?.label ||
+									'Select status'}
 							</Select.Trigger>
 							<Select.Content>
 								{#each statusOptions as option (option.value)}
@@ -286,7 +255,7 @@
 					<span class="text-muted-foreground">·</span>
 					<span class="text-muted-foreground">Updated {formatRelativeTime(idea.updatedAt)}</span>
 					<div class="flex min-w-[60px] items-center gap-1">
-						{#if saveStatus === 'saved'}
+						{#if form.status === 'saved'}
 							<CircleCheck class="h-3.5 w-3.5 text-green-600" />
 							<span class="text-xs text-green-600">Saved</span>
 						{/if}
@@ -300,7 +269,11 @@
 			<p class="text-xs text-muted-foreground">
 				Organize your ideas with tags (press Enter to add)
 			</p>
-			<TagsInput id="tags" bind:value={editedTags} validate={(tag) => tag.toLowerCase().trim()} />
+			<TagsInput
+				id="tags"
+				bind:value={form.values.tags}
+				validate={(tag) => tag.toLowerCase().trim()}
+			/>
 		</div>
 
 		<div
@@ -314,7 +287,7 @@
 				</p>
 				<Textarea
 					id="notes"
-					bind:value={editedNotes}
+					bind:value={form.values.notes}
 					placeholder="Add your notes here..."
 					class="min-h-[calc(100vh-24rem)] resize-y"
 				/>
@@ -335,7 +308,7 @@
 				</div>
 				<Textarea
 					id="content"
-					bind:value={editedContent}
+					bind:value={form.values.content}
 					placeholder="Write or paste your content here..."
 					class="min-h-[calc(100vh-24rem)] resize-y font-mono text-sm"
 				/>
