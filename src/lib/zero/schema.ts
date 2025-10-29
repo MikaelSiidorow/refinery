@@ -9,7 +9,8 @@ import type { AuthData, OwnedTable } from './auth';
 
 const schema = {
 	...genSchema,
-	enableLegacyMutators: false
+	enableLegacyMutators: false,
+	enableLegacyQueries: false
 } satisfies ZeroSchema;
 
 type Schema = typeof schema;
@@ -57,8 +58,7 @@ export const permissions = definePermissions<AuthData, Schema>(schema, () => {
 			row: {
 				select: [(authData, { cmp }) => cmp('id', authData.sub)]
 			}
-		},
-		session: {}
+		}
 	};
 });
 

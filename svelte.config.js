@@ -15,7 +15,16 @@ const config = {
 			precompress: true,
 			// Environment variable prefix
 			envPrefix: ''
-		})
+		}),
+		experimental: {
+			remoteFunctions: true
+		}
+	},
+
+	compilerOptions: {
+		experimental: {
+			async: true
+		}
 	}
 };
 

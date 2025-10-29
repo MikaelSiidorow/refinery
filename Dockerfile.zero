@@ -13,6 +13,7 @@ WORKDIR /app
 # Copy necessary files for zero-cache, migrations, and permissions
 COPY package.json pnpm-lock.yaml ./
 COPY drizzle.config.ts ./
+COPY drizzle-zero.config.ts ./
 COPY tsconfig.json ./
 COPY drizzle ./drizzle
 COPY src/lib/zero ./src/lib/zero
@@ -22,8 +23,8 @@ COPY src/lib/server/db ./src/lib/server/db
 # Need devDependencies for drizzle-zero, drizzle-kit (used at build and runtime)
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
-# Generate Zero schema from Drizzle schema
-RUN pnpm exec drizzle-zero generate --format --output src/lib/zero/zero-schema.gen.ts
+# Generate Zero schema from Drizzle schema (using config to exclude tables)
+RUN pnpm exec drizzle-zero generate --config drizzle-zero.config.ts --format --output src/lib/zero/zero-schema.gen.ts
 
 # Create data directory for replica file
 RUN mkdir -p /data && chmod 777 /data

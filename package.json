@@ -17,7 +17,7 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
-		"zero:generate": "drizzle-zero generate --format --output src/lib/zero/zero-schema.gen.ts",
+		"zero:generate": "drizzle-zero generate --config drizzle-zero.config.ts --format --output src/lib/zero/zero-schema.gen.ts",
 		"zero:start": "zero-cache-dev --schema-path src/lib/zero/schema.ts"
 	},
 	"devDependencies": {
@@ -77,5 +77,8 @@
 		"ignoredBuiltDependencies": [
 			"protobufjs"
 		]
+	},
+	"dependencies": {
+		"@atproto/api": "^0.17.4"
 	}
 }

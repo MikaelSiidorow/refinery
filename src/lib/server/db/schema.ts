@@ -1,6 +1,7 @@
 import type { UuidV7 } from '$lib/utils';
 import { relations, sql } from 'drizzle-orm';
 import { integer, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import type { Encrypted } from '../crypto';
 
 const timestamps = {
 	createdAt: timestamp()
@@ -32,6 +33,28 @@ export const session = pgTable('session', {
 		.$type<UuidV7>(),
 	expiresAt: timestamp({ withTimezone: true, mode: 'date' }).notNull()
 });
+
+export const connectedAccount = pgTable('connected_account', {
+	id: uuid().primaryKey().$type<UuidV7>(),
+	userId: uuid()
+		.notNull()
+		.references(() => user.id)
+		.$type<UuidV7>(),
+	provider: text().notNull(), // 'linkedin' | 'bluesky'
+	providerAccountId: text().notNull(), // their user ID on the platform
+	username: text(),
+	accessToken: text().$type<Encrypted>(),
+	refreshToken: text().$type<Encrypted | null>(),
+	expiresAt: timestamp(),
+	...timestamps
+});
+
+export const connectedAccountRelations = relations(connectedAccount, ({ one }) => ({
+	user: one(user, {
+		fields: [connectedAccount.userId],
+		references: [user.id]
+	})
+}));
 
 export const ideaStatusEnum = pgEnum('idea_status', [
 	'inbox',
@@ -122,6 +145,8 @@ export const contentArtifact = pgTable('content_artifact', {
 	comments: integer(),
 	shares: integer(),
 	notes: text(),
+	importedFrom: text(), // 'linkedin' | 'bluesky' | null
+	externalId: text(), // original post ID from platform
 	...timestamps
 });
 
@@ -139,6 +164,8 @@ export const contentArtifactRelations = relations(contentArtifact, ({ one }) => 
 export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
+
+export type ConnectedAccount = typeof connectedAccount.$inferSelect;
 
 export type ContentIdea = typeof contentIdea.$inferSelect;
 
