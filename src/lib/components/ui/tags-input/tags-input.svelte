@@ -179,11 +179,35 @@
 	const blur = () => {
 		tagIndex = undefined;
 	};
+
+	const handleInput = (e: Event) => {
+		const target = e.target as HTMLInputElement;
+		const currentValue = target.value;
+
+		// Check for comma or semicolon
+		const separatorIndex = Math.max(currentValue.lastIndexOf(','), currentValue.lastIndexOf(';'));
+
+		if (separatorIndex !== -1) {
+			// Extract text before separator
+			const tagText = currentValue.substring(0, separatorIndex).trim();
+
+			if (tagText) {
+				const validated = validate(tagText, value);
+				if (validated) {
+					value = [...value, validated];
+				}
+			}
+
+			// Update input to text after separator
+			inputValue = currentValue.substring(separatorIndex + 1).trim();
+			target.value = inputValue;
+		}
+	};
 </script>
 
 <div
 	class={cn(
-		'flex min-h-[36px] w-full flex-wrap place-items-center gap-1 rounded-md border border-input bg-background py-0.5 pr-1 pl-1 selection:bg-primary disabled:opacity-50 aria-disabled:cursor-not-allowed dark:bg-input/30',
+		'flex min-h-9 w-full flex-wrap place-items-center gap-1 rounded-md border border-input bg-background py-0.5 pr-1 pl-1 selection:bg-primary disabled:opacity-50 aria-disabled:cursor-not-allowed dark:bg-input/30',
 		className
 	)}
 	aria-disabled={disabled}
@@ -195,6 +219,7 @@
 		{...rest}
 		bind:value={inputValue}
 		onblur={blur}
+		oninput={handleInput}
 		oncompositionstart={compositionStart}
 		oncompositionend={compositionEnd}
 		{disabled}

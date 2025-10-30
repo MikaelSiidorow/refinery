@@ -264,10 +264,10 @@
 			</div>
 		</div>
 
-		<div class="mb-6 space-y-2" style="max-width: 1224px;">
+		<div class="mb-6 space-y-2 px-4 sm:px-0" style="max-width: 1224px;">
 			<label for="tags" class="text-sm font-semibold">Tags</label>
 			<p class="text-xs text-muted-foreground">
-				Organize your ideas with tags (press Enter to add)
+				Organize your ideas with tags (use comma, semicolon, or Enter to add)
 			</p>
 			<TagsInput
 				id="tags"
@@ -277,7 +277,7 @@
 		</div>
 
 		<div
-			class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,600px)_minmax(0,600px)]"
+			class="grid grid-cols-1 gap-6 px-4 sm:px-0 lg:grid-cols-[minmax(0,600px)_minmax(0,600px)]"
 			style="max-width: 1224px;"
 		>
 			<div class="min-w-0 space-y-2">
@@ -315,7 +315,7 @@
 			</div>
 		</div>
 
-		<div class="mt-12 border-t pt-8" style="max-width: 1224px;">
+		<div class="mt-12 border-t px-4 pt-8 sm:px-0" style="max-width: 1224px;">
 			<div class="mb-6 flex items-center justify-between">
 				<div>
 					<h2 class="text-xl font-semibold">

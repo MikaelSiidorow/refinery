@@ -158,7 +158,7 @@
 			</div>
 		</div>
 
-		<div class="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+		<div class="flex gap-1 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
 			{#if onCopy}
 				<Button
 					variant="ghost"

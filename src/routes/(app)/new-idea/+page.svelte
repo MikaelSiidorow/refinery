@@ -103,28 +103,30 @@
 		if (lines.length > 1) {
 			event.preventDefault();
 
-			toast(`Detected ${lines.length} ideas`, {
-				description: 'Add all to queue?',
-				action: {
-					label: 'Add All',
-					onClick: () => {
-						lines.forEach((line) => {
-							try {
-								ideaSchema.parse(line);
-								const isDuplicate = checkDuplicate(line);
-								queuedIdeas.push({
-									id: generateId(),
-									text: line,
-									isDuplicate
-								});
-							} catch (error) {
-								console.error('Validation error for line:', line, error);
-							}
-						});
-						inputValue = '';
-					}
+			// Automatically add all ideas to queue
+			let addedCount = 0;
+			lines.forEach((line) => {
+				try {
+					ideaSchema.parse(line);
+					const isDuplicate = checkDuplicate(line);
+					queuedIdeas.push({
+						id: generateId(),
+						text: line,
+						isDuplicate
+					});
+					addedCount++;
+				} catch (error) {
+					console.error('Validation error for line:', line, error);
 				}
 			});
+
+			inputValue = '';
+
+			if (addedCount > 0) {
+				toast.success(`Added ${addedCount} idea${addedCount === 1 ? '' : 's'} to queue`, {
+					description: 'Review and submit when ready'
+				});
+			}
 		}
 	}
 
@@ -327,7 +329,7 @@
 								<p class="flex-1 text-sm wrap-break-word">{idea.text}</p>
 								<button
 									onclick={() => removeFromQueue(idea.id)}
-									class="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+									class="shrink-0 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
 									type="button"
 								>
 									<X class="h-4 w-4 text-muted-foreground hover:text-destructive" />
@@ -403,7 +405,7 @@
 											</p>
 										</div>
 										<div
-											class="shrink-0 pt-0.5 opacity-0 transition-opacity group-hover/item:opacity-100"
+											class="shrink-0 pt-0.5 transition-opacity sm:opacity-0 sm:group-hover/item:opacity-100"
 										>
 											<Pencil class="h-3.5 w-3.5 text-muted-foreground" />
 										</div>
