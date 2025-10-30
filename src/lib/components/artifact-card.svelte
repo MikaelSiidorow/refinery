@@ -95,9 +95,9 @@
 			</div>
 
 			<div class="min-w-0 flex-1">
-				<div class="mb-1 flex items-center gap-2">
-					<h3 class="truncate font-semibold capitalize">{displayTitle}</h3>
-					<Badge class="{statusColors[status]} text-xs">
+				<div class="mb-1 flex items-start gap-2">
+					<h3 class="line-clamp-2 min-w-0 flex-1 font-semibold capitalize">{displayTitle}</h3>
+					<Badge class="{statusColors[status]} shrink-0 text-xs">
 						{status}
 					</Badge>
 				</div>

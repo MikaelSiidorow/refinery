@@ -226,35 +226,41 @@
 </svelte:head>
 
 {#if idea}
-	<div class="mx-auto max-w-7xl p-4 sm:p-8">
-		<div class="mb-6 space-y-4 border-b pb-6">
-			<Input
-				bind:value={form.values.oneLiner}
-				placeholder="Idea title..."
-				class="border-0 px-0 text-2xl font-bold shadow-none focus-visible:ring-0"
-			/>
+	<div class="overflow-x-hidden p-4 sm:p-8">
+		<div class="mx-auto max-w-7xl">
+			<div class="mb-6 flex max-w-[1224px] border-b pb-6">
+				<Input
+					bind:value={form.values.oneLiner}
+					placeholder="Idea title..."
+					class="flex-1 border-0 px-0 text-2xl font-bold shadow-none focus-visible:ring-0"
+				/>
+			</div>
 
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-4 text-sm">
-					<div class="flex items-center gap-2">
-						<span class="text-muted-foreground">Status:</span>
-						<Select.Root type="single" bind:value={form.values.status}>
-							<Select.Trigger class="h-8 w-[140px]">
-								{statusOptions.find((o) => o.value === form.values.status)?.label ||
-									'Select status'}
-							</Select.Trigger>
-							<Select.Content>
-								{#each statusOptions as option (option.value)}
-									<Select.Item value={option.value} label={option.label}>
-										{option.label}
-									</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
+			<div class="mb-6 max-w-[1224px]">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+						<div class="flex items-center gap-2">
+							<span class="text-muted-foreground">Status:</span>
+							<Select.Root type="single" bind:value={form.values.status}>
+								<Select.Trigger class="h-8 w-[100px] sm:w-[140px]">
+									{statusOptions.find((o) => o.value === form.values.status)?.label ||
+										'Select status'}
+								</Select.Trigger>
+								<Select.Content>
+									{#each statusOptions as option (option.value)}
+										<Select.Item value={option.value} label={option.label}>
+											{option.label}
+										</Select.Item>
+									{/each}
+								</Select.Content>
+							</Select.Root>
+						</div>
+						<span class="text-muted-foreground">·</span>
+						<span class="min-w-0 truncate text-muted-foreground"
+							>Updated {formatRelativeTime(idea.updatedAt)}</span
+						>
 					</div>
-					<span class="text-muted-foreground">·</span>
-					<span class="text-muted-foreground">Updated {formatRelativeTime(idea.updatedAt)}</span>
-					<div class="flex min-w-[60px] items-center gap-1">
+					<div class="flex min-w-[60px] shrink-0 items-center gap-1">
 						{#if form.status === 'saved'}
 							<CircleCheck class="h-3.5 w-3.5 text-green-600" />
 							<span class="text-xs text-green-600">Saved</span>
@@ -262,107 +268,106 @@
 					</div>
 				</div>
 			</div>
-		</div>
 
-		<div class="mb-6 space-y-2 px-4 sm:px-0" style="max-width: 1224px;">
-			<label for="tags" class="text-sm font-semibold">Tags</label>
-			<p class="text-xs text-muted-foreground">
-				Organize your ideas with tags (use comma, semicolon, or Enter to add)
-			</p>
-			<TagsInput
-				id="tags"
-				bind:value={form.values.tags}
-				validate={(tag) => tag.toLowerCase().trim()}
-			/>
-		</div>
-
-		<div
-			class="grid grid-cols-1 gap-6 px-4 sm:px-0 lg:grid-cols-[minmax(0,600px)_minmax(0,600px)]"
-			style="max-width: 1224px;"
-		>
-			<div class="min-w-0 space-y-2">
-				<label for="notes" class="text-sm font-semibold">Notes</label>
+			<div class="mb-6 max-w-[1224px] space-y-2">
+				<label for="tags" class="text-sm font-semibold">Tags</label>
 				<p class="text-xs text-muted-foreground">
-					Brainstorm, research, outline - anything to help you write
+					Organize your ideas with tags (use comma, semicolon, or Enter to add)
 				</p>
-				<Textarea
-					id="notes"
-					bind:value={form.values.notes}
-					placeholder="Add your notes here..."
-					class="min-h-[calc(100vh-24rem)] resize-y"
+				<TagsInput
+					id="tags"
+					bind:value={form.values.tags}
+					validate={(tag) => tag.toLowerCase().trim()}
 				/>
 			</div>
 
-			<div class="min-w-0 space-y-2">
-				<div class="flex items-center justify-between">
-					<div>
-						<label for="content" class="text-sm font-semibold">Content Draft</label>
-						<p class="text-xs text-muted-foreground">
-							Your full content draft - paste AI-generated content here or write manually
+			<div
+				class="grid max-w-[1224px] grid-cols-1 gap-6 lg:grid-cols-[minmax(0,600px)_minmax(0,600px)]"
+			>
+				<div class="min-w-0 space-y-2">
+					<label for="notes" class="text-sm font-semibold">Notes</label>
+					<p class="text-xs text-muted-foreground">
+						Brainstorm, research, outline - anything to help you write
+					</p>
+					<Textarea
+						id="notes"
+						bind:value={form.values.notes}
+						placeholder="Add your notes here..."
+						class="min-h-[calc(100vh-24rem)] resize-y"
+					/>
+				</div>
+
+				<div class="min-w-0 space-y-2">
+					<div class="flex items-center justify-between gap-3">
+						<div class="min-w-0 flex-1">
+							<label for="content" class="text-sm font-semibold">Content Draft</label>
+							<p class="text-xs text-muted-foreground">
+								Your full content draft - paste AI-generated content here or write manually
+							</p>
+						</div>
+						<Button onclick={openPromptSelector} variant="outline" size="sm" class="gap-2">
+							<Copy class="h-4 w-4" />
+							<span class="sr-only sm:not-sr-only">AI Prompts</span>
+						</Button>
+					</div>
+					<Textarea
+						id="content"
+						bind:value={form.values.content}
+						placeholder="Write or paste your content here..."
+						class="min-h-[calc(100vh-24rem)] resize-y font-mono text-sm"
+					/>
+				</div>
+			</div>
+
+			<div class="mt-12 max-w-[1224px] border-t pt-8">
+				<div class="mb-6 flex items-center justify-between gap-3">
+					<div class="min-w-0 flex-1">
+						<h2 class="text-xl font-semibold">
+							Artifacts
+							<span class="ml-2 text-sm font-normal text-muted-foreground">
+								({artifacts.length})
+							</span>
+						</h2>
+						<p class="mt-1 text-sm text-muted-foreground">
+							Platform-specific versions of your content
 						</p>
 					</div>
-					<Button onclick={openPromptSelector} variant="outline" size="sm" class="gap-2">
-						<Copy class="h-4 w-4" />
-						AI Prompts
+					<Button onclick={handleCreateArtifact} size="default" class="gap-2 sm:px-4">
+						<Plus class="h-4 w-4" />
+						<span class="sr-only sm:not-sr-only">New Artifact</span>
 					</Button>
 				</div>
-				<Textarea
-					id="content"
-					bind:value={form.values.content}
-					placeholder="Write or paste your content here..."
-					class="min-h-[calc(100vh-24rem)] resize-y font-mono text-sm"
-				/>
-			</div>
-		</div>
 
-		<div class="mt-12 border-t px-4 pt-8 sm:px-0" style="max-width: 1224px;">
-			<div class="mb-6 flex items-center justify-between">
-				<div>
-					<h2 class="text-xl font-semibold">
-						Artifacts
-						<span class="ml-2 text-sm font-normal text-muted-foreground">
-							({artifacts.length})
-						</span>
-					</h2>
-					<p class="mt-1 text-sm text-muted-foreground">
-						Platform-specific versions of your content
-					</p>
-				</div>
-				<Button onclick={handleCreateArtifact} class="gap-2">
-					<Plus class="h-4 w-4" />
-					New Artifact
-				</Button>
-			</div>
-
-			{#if artifacts.length === 0}
-				<div class="rounded-lg border border-dashed bg-muted/20 p-8 text-center">
-					<Copy class="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-					<p class="mb-1 text-sm font-medium">No artifacts yet</p>
-					<p class="mb-4 text-sm text-muted-foreground">
-						Create platform-specific versions of your content.<br />
-						Use the AI Prompts button to get started.
-					</p>
-					<div
-						class="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground"
-					>
-						<span class="rounded-md bg-muted px-2 py-1">Twitter Thread</span>
-						<span class="rounded-md bg-muted px-2 py-1">LinkedIn Post</span>
-						<span class="rounded-md bg-muted px-2 py-1">Blog Post</span>
-						<span class="rounded-md bg-muted px-2 py-1">Newsletter</span>
+				{#if artifacts.length === 0}
+					<div class="rounded-lg border border-dashed bg-muted/20 p-8 text-center">
+						<Copy class="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+						<p class="mb-1 text-sm font-medium">No artifacts yet</p>
+						<p class="mb-4 text-sm text-muted-foreground">
+							Create platform-specific versions of your content.<br />
+							Use the AI Prompts button to get started.
+						</p>
+						<div
+							class="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground"
+						>
+							<span class="rounded-md bg-muted px-2 py-1">Twitter Thread</span>
+							<span class="rounded-md bg-muted px-2 py-1">LinkedIn Post</span>
+							<span class="rounded-md bg-muted px-2 py-1">Blog Post</span>
+							<span class="rounded-md bg-muted px-2 py-1">Newsletter</span>
+						</div>
 					</div>
-				</div>
-			{:else}
-				<div class="space-y-3">
-					{#each artifacts as artifact (artifact.id)}
-						<ArtifactCard
-							{artifact}
-							onEdit={handleEditArtifact}
-							onDelete={confirmDeleteArtifact}
-							onCopy={handleCopyArtifact}
-						/>
-					{/each}
-				</div>
-			{/if}
+				{:else}
+					<div class="space-y-3">
+						{#each artifacts as artifact (artifact.id)}
+							<ArtifactCard
+								{artifact}
+								onEdit={handleEditArtifact}
+								onDelete={confirmDeleteArtifact}
+								onCopy={handleCopyArtifact}
+							/>
+						{/each}
+					</div>
+				{/if}
+			</div>
 		</div>
 	</div>
 

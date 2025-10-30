@@ -104,7 +104,7 @@
 	<Breadcrumb.Root>
 		<Breadcrumb.List>
 			<Breadcrumb.Item>
-				<Breadcrumb.Page class="max-w-[300px] truncate sm:max-w-[500px]">
+				<Breadcrumb.Page class="max-w-[150px] truncate sm:max-w-[300px] md:max-w-[500px]">
 					{idea.oneLiner}
 				</Breadcrumb.Page>
 			</Breadcrumb.Item>
@@ -114,13 +114,16 @@
 	<Breadcrumb.Root>
 		<Breadcrumb.List>
 			<Breadcrumb.Item>
-				<Breadcrumb.Link href={resolve(`/idea/${idea.id}`)} class="max-w-[200px] truncate">
+				<Breadcrumb.Link
+					href={resolve(`/idea/${idea.id}`)}
+					class="max-w-[100px] truncate sm:max-w-[200px] md:max-w-[300px]"
+				>
 					{idea.oneLiner}
 				</Breadcrumb.Link>
 			</Breadcrumb.Item>
 			<Breadcrumb.Separator />
 			<Breadcrumb.Item>
-				<Breadcrumb.Page class="max-w-[200px] truncate sm:max-w-[300px]">
+				<Breadcrumb.Page class="max-w-[100px] truncate sm:max-w-[200px] md:max-w-[300px]">
 					{artifactDisplayName}
 				</Breadcrumb.Page>
 			</Breadcrumb.Item>
