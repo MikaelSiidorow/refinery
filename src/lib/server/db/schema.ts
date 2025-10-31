@@ -1,8 +1,8 @@
-import type { UuidV7 } from '$lib/utils';
+import type { UuidV7 } from '../../utils';
 import { relations, sql } from 'drizzle-orm';
 import { integer, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import type { Encrypted } from '../crypto';
-import { ARTIFACT_TYPES } from '$lib/constants/artifact-types';
+import { ARTIFACT_TYPES } from '../../constants/artifact-types';
 
 const timestamps = {
 	createdAt: timestamp()
@@ -167,6 +167,6 @@ export type ContentSettings = typeof contentSettings.$inferSelect;
 export type ContentArtifact = typeof contentArtifact.$inferSelect;
 
 // Derive enum types
-export type { ArtifactType } from '$lib/constants/artifact-types';
+export type { ArtifactType } from '../../constants/artifact-types';
 export type ArtifactStatus = (typeof artifactStatusEnum.enumValues)[number];
 export type IdeaStatus = (typeof ideaStatusEnum.enumValues)[number];
