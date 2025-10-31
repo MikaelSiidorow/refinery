@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { builder } from './schema';
 import type { QueryContext } from './auth';
 import { zUuidV7 } from '$lib/utils/validators';
-import { artifactTypeEnum } from '$lib/server/db/schema';
+import { ARTIFACT_TYPES } from '$lib/constants/artifact-types';
 
 // All content ideas for a user
 export const allIdeas = syncedQueryWithContext('allIdeas', z.tuple([]), (ctx: QueryContext) => {
@@ -69,7 +69,7 @@ export const scheduledArtifacts = syncedQueryWithContext(
 // Recent artifacts by type (for few-shot examples in prompts)
 export const recentArtifactsByType = syncedQueryWithContext(
 	'recentArtifactsByType',
-	z.tuple([z.enum(artifactTypeEnum.enumValues)]),
+	z.tuple([z.enum(ARTIFACT_TYPES)]),
 	(ctx: QueryContext, artifactType) => {
 		return builder.contentArtifact
 			.where('userId', ctx.userID)
