@@ -18,7 +18,8 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"zero:generate": "drizzle-zero generate --config drizzle-zero.config.ts --format --output src/lib/zero/zero-schema.gen.ts",
-		"zero:start": "zero-cache-dev --schema-path src/lib/zero/schema.ts"
+		"zero:start": "zero-cache-dev --schema-path src/lib/zero/schema.ts",
+		"screenshots": "node scripts/take-screenshots.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
