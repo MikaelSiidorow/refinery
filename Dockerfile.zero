@@ -18,6 +18,9 @@ COPY tsconfig.json ./
 COPY drizzle ./drizzle
 COPY src/lib/zero ./src/lib/zero
 COPY src/lib/server/db ./src/lib/server/db
+COPY src/lib/server/crypto.ts ./src/lib/server/crypto.ts
+COPY src/lib/utils.ts ./src/lib/utils.ts
+COPY src/lib/constants ./src/lib/constants
 
 # Install dependencies from package.json
 # Need devDependencies for drizzle-zero, drizzle-kit (used at build and runtime)
