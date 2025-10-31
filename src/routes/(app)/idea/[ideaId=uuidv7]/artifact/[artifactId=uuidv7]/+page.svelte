@@ -248,13 +248,13 @@
 						class="gap-2"
 					>
 						<Sparkles class="h-4 w-4" />
-						Refine with AI
+						Polish & Refine
 					</Button>
 				</div>
 				<Textarea
 					id="artifact-content"
 					bind:value={form.values.content}
-					placeholder="Paste your AI-generated content here..."
+					placeholder="Write your content here..."
 					class="min-h-[400px] font-mono text-sm"
 				/>
 			</div>

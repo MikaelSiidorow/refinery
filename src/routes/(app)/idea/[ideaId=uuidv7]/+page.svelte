@@ -302,12 +302,12 @@
 						<div class="min-w-0 flex-1">
 							<label for="content" class="text-sm font-semibold">Content Draft</label>
 							<p class="text-xs text-muted-foreground">
-								Your full content draft - paste AI-generated content here or write manually
+								Your full content draft - develop your thinking and write authentically
 							</p>
 						</div>
 						<Button onclick={openPromptSelector} variant="outline" size="sm" class="gap-2">
 							<Copy class="h-4 w-4" />
-							<span class="sr-only sm:not-sr-only">AI Prompts</span>
+							<span class="sr-only sm:not-sr-only">Frameworks</span>
 						</Button>
 					</div>
 					<Textarea
@@ -344,7 +344,7 @@
 						<p class="mb-1 text-sm font-medium">No artifacts yet</p>
 						<p class="mb-4 text-sm text-muted-foreground">
 							Create platform-specific versions of your content.<br />
-							Use the AI Prompts button to get started.
+							Use the Frameworks button to structure your thinking.
 						</p>
 						<div
 							class="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground"

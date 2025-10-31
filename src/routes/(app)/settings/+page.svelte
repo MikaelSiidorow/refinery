@@ -181,7 +181,7 @@
 			<div>
 				<h2 class="text-2xl font-bold">Connected Accounts</h2>
 				<p class="mt-1 text-sm text-muted-foreground">
-					Import your existing posts to use as context for AI prompts
+					Import your existing posts to learn your authentic voice
 				</p>
 			</div>
 		</div>
@@ -297,7 +297,7 @@
 			<div>
 				<h2 class="text-2xl font-bold">Content Settings</h2>
 				<p class="mt-1 text-sm text-muted-foreground">
-					Define your brand context to enhance AI-generated content
+					Define your brand voice to personalize thinking frameworks
 				</p>
 			</div>
 			<div class="flex min-w-[60px] items-center gap-1">
@@ -372,9 +372,9 @@
 
 		<div class="mt-8 rounded-lg border bg-muted/50 p-4">
 			<p class="text-sm text-muted-foreground">
-				💡 <strong>Tip:</strong> These settings will be used to enhance AI prompts when you copy them
-				from your ideas. The more specific you are, the better your generated content will align with
-				your brand.
+				💡 <strong>Tip:</strong> These settings personalize thinking frameworks to match your unique
+				voice and perspective. The more specific you are, the better frameworks will guide you toward
+				authentic, on-brand content.
 			</p>
 		</div>
 	</section>

@@ -4,7 +4,12 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { promptStrategies } from '$lib/prompts/strategies';
 	import type { ContentIdea, ContentArtifact, ContentSetting } from '$lib/zero/zero-schema.gen';
+	import type { ExampleContent } from '$lib/prompts/types';
 	import { Copy, Check } from '@lucide/svelte';
+	import { get_z } from '$lib/z.svelte';
+	import { createQuery } from '$lib/zero/use-query.svelte';
+	import * as queries from '$lib/zero/queries';
+	import { findRelevantIdeas, findRelevantArtifacts } from '$lib/prompts/example-matcher';
 
 	let {
 		open = $bindable(false),
@@ -19,6 +24,12 @@
 		settings?: ContentSetting;
 		onCreateArtifact?: (artifactType: string) => void;
 	} = $props();
+
+	const z = get_z();
+
+	// Fetch past content for examples
+	const pastIdeasQuery = createQuery(z, queries.recentIdeasWithContent);
+	const pastIdeas = $derived(pastIdeasQuery.data);
 
 	let selectedStrategyId = $state<string | null>(null);
 	let copiedStrategyId = $state<string | null>(null);
@@ -53,8 +64,8 @@
 				if (strategy.category === 'adapt' || strategy.category === 'engage') {
 					return true;
 				}
-				// Don't show expand strategies in artifact context
-				if (strategy.category === 'expand') {
+				// Don't show structure strategies in artifact context
+				if (strategy.category === 'structure') {
 					return false;
 				}
 			} else {
@@ -78,7 +89,9 @@
 		})
 	);
 
-	const expandStrategies = $derived(relevantStrategies.filter((s) => s.category === 'expand'));
+	const structureStrategies = $derived(
+		relevantStrategies.filter((s) => s.category === 'structure')
+	);
 	const adaptStrategies = $derived(relevantStrategies.filter((s) => s.category === 'adapt'));
 	const engageStrategies = $derived(relevantStrategies.filter((s) => s.category === 'engage'));
 	const refineStrategies = $derived(relevantStrategies.filter((s) => s.category === 'refine'));
@@ -87,12 +100,34 @@
 		selectedStrategyId ? promptStrategies.find((s) => s.id === selectedStrategyId) : null
 	);
 
+	// Fetch all past artifacts for examples
+	const allArtifactsQuery = createQuery(z, queries.allArtifacts);
+	const allArtifacts = $derived(allArtifactsQuery.data);
+
+	// Prepare examples for prompts using intelligent matching
+	const examples = $derived<ExampleContent>({
+		// For idea context, find relevant past ideas based on topic/tags
+		pastIdeas: idea ? findRelevantIdeas(idea, pastIdeas, 2) : [],
+		// For artifact context, find relevant past artifacts of the same type
+		pastArtifacts:
+			selectedStrategy?.artifactType && contentSource
+				? findRelevantArtifacts(
+						selectedStrategy.artifactType,
+						contentSource.content || '',
+						allArtifacts,
+						2
+					)
+				: []
+	});
+
 	const generatedPrompt = $derived(
-		selectedStrategy && contentSource ? selectedStrategy.generate(contentSource, settings) : ''
+		selectedStrategy && contentSource
+			? selectedStrategy.generate(contentSource, settings, examples)
+			: ''
 	);
 
 	const categoryColors = {
-		expand: 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400',
+		structure: 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400',
 		adapt: 'bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400',
 		engage: 'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400',
 		analyze: 'bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400',
@@ -147,13 +182,13 @@
 	<Dialog.Content class="flex max-h-[90vh] max-w-[95vw] flex-col overflow-hidden lg:max-w-[85vw]">
 		<Dialog.Header>
 			<Dialog.Title>
-				{isArtifactContext ? 'Refine Your Content' : 'Select a Prompt Strategy'}
+				{isArtifactContext ? 'Polish Your Content' : 'Content Frameworks'}
 			</Dialog.Title>
 			<Dialog.Description>
 				{#if isArtifactContext}
-					Choose a strategy to refine and improve your {artifact?.artifactType.replace('-', ' ')}
+					Choose a framework to refine and improve your {artifact?.artifactType.replace('-', ' ')}
 				{:else}
-					Choose a strategy to generate a refined prompt for your content idea
+					Choose a thinking framework to develop your content idea
 				{/if}
 			</Dialog.Description>
 		</Dialog.Header>
@@ -161,19 +196,19 @@
 		<div class="mb-4 rounded-lg border bg-muted/50 p-3">
 			{#if isArtifactContext}
 				<p class="text-sm">
-					<span class="font-semibold">✨ Refining: {artifact?.artifactType.replace('-', ' ')}</span
+					<span class="font-semibold">✨ Polishing: {artifact?.artifactType.replace('-', ' ')}</span
 					><br />
-					Use AI to improve hooks, add CTAs, optimize length, and more
+					Strengthen hooks, add CTAs, optimize length, and more
 				</p>
 			{:else if !hasContent}
 				<p class="text-sm">
-					<span class="font-semibold">💡 No master content yet</span><br />
-					Start by expanding your idea into a full post
+					<span class="font-semibold">💡 Starting fresh</span><br />
+					Use frameworks to structure your thinking and develop your ideas
 				</p>
 			{:else}
 				<p class="text-sm">
-					<span class="font-semibold">✅ Master content ready</span><br />
-					Create platform-specific versions or engagement content
+					<span class="font-semibold">✅ Content ready</span><br />
+					Adapt to platforms, refine messaging, or boost engagement
 				</p>
 			{/if}
 		</div>
@@ -193,13 +228,13 @@
 					</div>
 				{/if}
 
-				{#if expandStrategies.length > 0}
+				{#if structureStrategies.length > 0}
 					<div>
 						<h3 class="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-							Expand Your Idea ({expandStrategies.length})
+							Structure Your Thinking ({structureStrategies.length})
 						</h3>
 						<div class="space-y-2">
-							{#each expandStrategies as strategy (strategy.id)}
+							{#each structureStrategies as strategy (strategy.id)}
 								<button
 									onclick={() => handleSelectStrategy(strategy.id)}
 									class="w-full rounded-lg border p-3 text-left transition-all hover:bg-accent {selectedStrategyId ===
@@ -347,7 +382,7 @@
 					<div class="flex flex-1 items-center justify-center text-center">
 						<div class="max-w-xs">
 							<p class="text-muted-foreground">
-								Select a strategy on the left to see the generated prompt
+								Select a framework on the left to see your personalized thinking prompt
 							</p>
 						</div>
 					</div>

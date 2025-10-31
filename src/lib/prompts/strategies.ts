@@ -1,79 +1,41 @@
 import type { PromptStrategy } from './types';
+import type { ContentIdea, ContentArtifact } from '$lib/zero/zero-schema.gen';
+
+// Helper to format past artifacts as examples
+function formatArtifactExamples(artifacts: ContentArtifact[], limit = 2): string {
+	if (!artifacts || artifacts.length === 0) return '';
+
+	const examples = artifacts
+		.filter((a) => a.content && a.content.trim().length > 50)
+		.slice(0, limit)
+		.map((artifact, i) => {
+			const preview = artifact.content!.substring(0, 500);
+			return `### Your Past Example ${i + 1}:\n${preview}${artifact.content!.length > 500 ? '...' : ''}`;
+		});
+
+	if (examples.length === 0) return '';
+
+	return `\n\n## YOUR AUTHENTIC VOICE - Past Examples\n\nHere are examples from your past ${artifacts[0]?.artifactType} content. Use these to match your authentic voice, tone, and style:\n\n${examples.join('\n\n')}\n\n---\n\n`;
+}
+
+// Helper to format past ideas as examples
+function formatIdeaExamples(ideas: ContentIdea[], limit = 2): string {
+	if (!ideas || ideas.length === 0) return '';
+
+	const examples = ideas
+		.filter((idea) => idea.content && idea.content.trim().length > 100)
+		.slice(0, limit)
+		.map((idea, i) => {
+			const preview = idea.content!.substring(0, 400);
+			return `### Past Idea ${i + 1}: ${idea.oneLiner}\n${preview}${idea.content!.length > 400 ? '...' : ''}`;
+		});
+
+	if (examples.length === 0) return '';
+
+	return `\n\n## YOUR AUTHENTIC VOICE - Past Work\n\nHere are examples of how you typically develop ideas. Use these to match your authentic voice and thinking style:\n\n${examples.join('\n\n')}\n\n---\n\n`;
+}
 
 export const promptStrategies: PromptStrategy[] = [
-	{
-		id: 'expand-full-post',
-		name: 'Expand to Full Post',
-		description: 'Turn your one-liner into 3 different approaches (technical, story, actionable)',
-		category: 'expand',
-		icon: '📝',
-		requirements: {
-			needsOneLiner: true,
-			needsMasterContent: false // Should NOT have content yet
-		},
-		producesArtifact: false, // Updates idea.content field
-		generate: (ideaOrArtifact, settings) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
-			const hasSettings =
-				settings &&
-				(settings.targetAudience ||
-					settings.brandVoice ||
-					settings.contentPillars ||
-					settings.uniquePerspective);
-
-			if (hasSettings) {
-				return `You are a professional content writer creating content for ${settings.targetAudience || 'your audience'}.
-
-Brand Voice: ${settings.brandVoice || 'Professional and engaging'}
-Content Focus Areas: ${settings.contentPillars || 'Your expertise areas'}
-Unique Value: ${settings.uniquePerspective || 'High-quality insights'}
-
-Your one-liner idea: "${oneLiner}"
-
-${notes ? `Additional context and notes:\n${notes}\n\n` : ''}
-
-Create 3 different approaches to expand this idea into a full post:
-
-1. **Technical Deep-Dive Approach**
-   - Explain how it works under the hood
-   - Include implementation details or architecture
-   - Focus on the "why" behind technical decisions
-
-2. **Founder Story Approach**
-   - Share personal experience with this topic
-   - What you learned, mistakes made, lessons gained
-   - Make it relatable and vulnerable
-
-3. **Actionable Tips Approach**
-   - Practical steps readers can apply today
-   - Focus on concrete takeaways
-   - Include specific examples or frameworks
-
-For each approach, provide:
-- **Hook**: Compelling first 2 sentences to grab attention
-- **Main Points**: 3-4 key points with supporting details
-- **Call-to-Action**: Clear next step for the reader
-
-Keep each approach under 300 words (LinkedIn-ready). Match the brand voice described above and ensure content connects to your stated content focus areas.`;
-			}
-
-			// Fallback if no settings
-			return `You are a professional content writer.
-
-Your one-liner idea: "${oneLiner}"
-
-${notes ? `Additional context and notes:\n${notes}\n\n` : ''}
-
-Create 3 different approaches to expand this idea into a full post:
-
-1. **Technical Deep-Dive Approach** - Explain implementation and architecture
-2. **Story-Based Approach** - Share personal experience and lessons learned
-3. **Actionable Tips Approach** - Practical steps readers can apply
-
-For each approach, provide a compelling hook, 3-4 main points, and a call-to-action. Keep each under 300 words.`;
-		}
-	},
 	{
 		id: 'convert-thread',
 		name: 'Convert to Twitter Thread',
@@ -85,14 +47,19 @@ For each approach, provide a compelling hook, 3-4 main points, and a call-to-act
 		},
 		producesArtifact: true,
 		artifactType: 'thread',
-		generate: (ideaOrArtifact, settings) => {
+		generate: (ideaOrArtifact, settings, examples) => {
 			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
 			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
 			const contentSource = ideaOrArtifact.content || notes || oneLiner;
 
+			const pastThreadExamples = formatArtifactExamples(
+				examples?.pastArtifacts?.filter((a) => a.artifactType === 'thread') || [],
+				2
+			);
+
 			return `Convert this content into an engaging Twitter thread (8-10 tweets maximum).
 
-${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}Original content:
+${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}${pastThreadExamples}Original content:
 ${contentSource}
 
 Requirements:
@@ -101,7 +68,7 @@ Requirements:
 - **Formatting**: Use short sentences, line breaks for readability
 - **Final tweet**: Clear call-to-action (reply, follow, or share)
 - **Tone**: ${settings?.brandVoice || 'Engaging and conversational'}
-
+${pastThreadExamples ? '- **IMPORTANT**: Match the voice, structure, and style of the past examples above\n' : ''}
 Format as:
 1/X: [tweet content]
 2/X: [tweet content]
@@ -157,7 +124,7 @@ Each comment should be:
 		id: 'technical-outline',
 		name: 'Technical Deep-Dive Outline',
 		description: 'Structure a comprehensive technical tutorial or explanation',
-		category: 'expand',
+		category: 'structure',
 		icon: '🔧',
 		requirements: {
 			needsOneLiner: true,
@@ -209,24 +176,87 @@ Target: 800-1200 word blog post or LinkedIn article.`;
 		}
 	},
 	{
+		id: 'general-outline',
+		name: 'General Content Outline',
+		description: 'Structure your thinking with a flexible framework for any content type',
+		category: 'structure',
+		icon: '📋',
+		requirements: {
+			needsOneLiner: true,
+			needsMasterContent: false
+		},
+		producesArtifact: false,
+		generate: (ideaOrArtifact, settings, examples) => {
+			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
+			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
+
+			const pastIdeaExamples = formatIdeaExamples(examples?.pastIdeas || [], 2);
+
+			return `Help me develop this idea into a structured content outline.
+
+Topic: ${oneLiner}
+
+${notes ? `My Notes:\n${notes}\n\n` : ''}${settings?.targetAudience ? `Target Audience: ${settings.targetAudience}\n` : ''}${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}${pastIdeaExamples}Create an outline that helps me develop my thinking:
+
+**1. Core Message**
+   - What's the ONE key insight I want readers to take away?
+   - Why does this matter to them?
+   - What makes this perspective unique or valuable?
+
+**2. Opening Hook**
+   - How can I grab attention in the first sentence?
+   - What question, story, or statement will stop the scroll?
+   - What emotion or curiosity should I trigger?
+
+**3. Main Points to Develop** (3-5 key ideas)
+   For each point, consider:
+   - What's the specific insight or takeaway?
+   - What example, data, or story supports this?
+   - How does this connect to my reader's experience?
+   - What questions might they have?
+
+**4. Your Authentic Angle**
+   - What's my personal experience with this?
+   - What mistakes did I make or lessons did I learn?
+   - What would I tell my younger self or a friend?
+   - Where can I be vulnerable or contrarian?
+
+**5. Actionable Takeaway**
+   - What can readers DO with this information?
+   - What's the next step they should take?
+   - How can they apply this today?
+
+**6. Call-to-Action**
+   - What response do I want from readers?
+   - Question for comments? Follow for more? Share their experience?
+   - Keep it natural and conversational
+
+${pastIdeaExamples ? '\n**IMPORTANT**: Look at how you naturally structure content in the examples above. Match that authentic style and depth.\n' : ''}
+Focus on YOUR voice and authentic perspective. This is a thinking tool, not a template to fill.`;
+		}
+	},
+	{
 		id: 'founder-story',
 		name: 'Founder Story Framework',
 		description: 'Turn your experience into a relatable, engaging founder narrative',
-		category: 'expand',
+		category: 'structure',
 		icon: '📖',
 		requirements: {
 			needsOneLiner: true,
 			needsMasterContent: false
 		},
 		producesArtifact: false,
-		generate: (ideaOrArtifact, settings) => {
+		generate: (ideaOrArtifact, settings, examples) => {
 			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
 			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
+
+			const pastIdeaExamples = formatIdeaExamples(examples?.pastIdeas || [], 2);
+
 			return `Help me structure a compelling founder story post.
 
 Experience/Lesson: ${oneLiner}
 
-${notes ? `Context:\n${notes}\n\n` : ''}${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}Use this proven framework:
+${notes ? `Context:\n${notes}\n\n` : ''}${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}${pastIdeaExamples}Use this proven framework:
 
 1. **The Situation** (Set the Scene)
    - Where were you when this happened?
@@ -332,14 +362,19 @@ SLIDE 2:
 		},
 		producesArtifact: true,
 		artifactType: 'short-post',
-		generate: (ideaOrArtifact, settings) => {
+		generate: (ideaOrArtifact, settings, examples) => {
 			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
 			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
 			const contentSource = ideaOrArtifact.content || notes || oneLiner;
 
+			const pastPostExamples = formatArtifactExamples(
+				examples?.pastArtifacts?.filter((a) => a.artifactType === 'short-post') || [],
+				2
+			);
+
 			return `Convert this content into a short, punchy LinkedIn post (under 1300 characters).
 
-${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}Original content:
+${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}${pastPostExamples}Original content:
 ${contentSource}
 
 Requirements:
@@ -366,85 +401,9 @@ Formatting tips:
 - Front-load the value - assume they'll only read the first 3 lines
 
 Tone: ${settings?.brandVoice || 'Professional but conversational, like talking to a colleague'}
-
+${pastPostExamples ? '**IMPORTANT**: Match the voice, formatting, and style of the past examples above\n\n' : ''}
 Maximum length: 1300 characters (LinkedIn shows "see more" after this)
 Aim for: 800-1200 characters for optimal engagement`;
-		}
-	},
-	{
-		id: 'blog-post-expansion',
-		name: 'Blog Post Expansion',
-		description: 'Expand your idea into a comprehensive 800-1200 word blog post',
-		category: 'expand',
-		icon: '📰',
-		requirements: {
-			needsOneLiner: true,
-			needsMasterContent: false
-		},
-		producesArtifact: true,
-		artifactType: 'blog-post',
-		generate: (ideaOrArtifact, settings) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
-			return `Expand this idea into a comprehensive blog post (800-1200 words).
-
-Topic: ${oneLiner}
-
-${notes ? `Context and research:\n${notes}\n\n` : ''}${settings?.targetAudience ? `Target Audience: ${settings.targetAudience}\n` : ''}${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}
-Structure:
-
-**Title** (SEO-optimized, 50-60 characters)
-- Include the main keyword
-- Make it compelling and benefit-driven
-- Example format: "How to [Achieve Benefit]: [Number] [Method/Tips]"
-
-**Introduction** (100-150 words)
-- Hook with a relatable problem or surprising stat
-- Establish why this matters to the reader
-- Preview what they'll learn
-- Keep paragraphs short (2-3 sentences)
-
-**Main Content** (500-800 words)
-Break into 3-4 main sections with H2 headings:
-
-1. **[Section 1]**: Foundation/Context
-   - Explain the core concept
-   - Why traditional approaches fall short
-   - Set up the solution
-
-2. **[Section 2]**: The Method/Framework
-   - Step-by-step explanation
-   - Include code examples, screenshots, or diagrams (note where they'd go)
-   - Real-world examples
-
-3. **[Section 3]**: Best Practices
-   - Tips for implementation
-   - Common mistakes to avoid
-   - Performance/security considerations
-
-4. **[Section 4]**: Advanced Topics (optional)
-   - Scaling considerations
-   - Edge cases
-   - Future trends
-
-**Conclusion** (100-150 words)
-- Recap the key takeaways (3-4 bullet points)
-- Reinforce the value/benefits
-- Clear next step or call-to-action
-
-**SEO Elements to include:**
-- Meta description (150-160 characters)
-- 3-5 relevant keywords naturally incorporated
-- Internal linking suggestions (link to related content)
-- External linking suggestions (authoritative sources)
-
-Writing guidelines:
-- Use active voice
-- Break long paragraphs (3-4 sentences max)
-- Include subheadings (H3) within main sections
-- Use bullet points and numbered lists for scannability
-- Write for a ${settings?.targetAudience || 'technical but accessible'} audience
-- Tone: ${settings?.brandVoice || 'Professional, informative, and practical'}`;
 		}
 	},
 	{
