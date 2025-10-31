@@ -228,11 +228,12 @@
 {#if idea}
 	<div class="overflow-x-hidden p-4 sm:p-8">
 		<div class="mx-auto max-w-7xl">
+			<h1 class="sr-only">{idea.oneLiner || 'Untitled Idea'}</h1>
 			<div class="mb-6 flex max-w-[1224px] border-b pb-6">
 				<Input
 					bind:value={form.values.oneLiner}
 					placeholder="Idea title..."
-					class="flex-1 border-0 px-0 text-2xl font-bold shadow-none focus-visible:ring-0"
+					class="flex-1 typography-h1"
 				/>
 			</div>
 
@@ -314,7 +315,7 @@
 						id="content"
 						bind:value={form.values.content}
 						placeholder="Write or paste your content here..."
-						class="min-h-[calc(100vh-24rem)] resize-y font-mono text-sm"
+						class="min-h-[calc(100vh-24rem)] resize-y text-sm"
 					/>
 				</div>
 			</div>
@@ -322,7 +323,7 @@
 			<div class="mt-12 max-w-[1224px] border-t pt-8">
 				<div class="mb-6 flex items-center justify-between gap-3">
 					<div class="min-w-0 flex-1">
-						<h2 class="text-xl font-semibold">
+						<h2 class="typography-h2">
 							Artifacts
 							<span class="ml-2 text-sm font-normal text-muted-foreground">
 								({artifacts.length})

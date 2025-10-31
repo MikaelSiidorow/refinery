@@ -87,7 +87,7 @@
 	);
 </script>
 
-<div class="group rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50">
+<div class="group hover-lift rounded-lg border interactive-surface bg-card p-4 shadow-sm">
 	<div class="flex items-start justify-between gap-3">
 		<div class="flex flex-1 items-start gap-3">
 			<div class="rounded-lg bg-muted p-2">

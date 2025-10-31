@@ -5,8 +5,8 @@
   "description": "Capture and refine content ideas on the go",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#09090b",
+  "background_color": "#fcfcfd",
+  "theme_color": "#67a5a5",
   "orientation": "portrait-primary",
   "scope": "/",
   "screenshots": [

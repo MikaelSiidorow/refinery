@@ -141,7 +141,7 @@
 	<div class="mb-8">
 		<div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 			<div>
-				<h1 class="text-3xl font-bold tracking-tight">Content Timeline</h1>
+				<h1 class="typography-h1">Content Timeline</h1>
 				<p class="mt-2 text-sm text-muted-foreground">
 					{#if isNonEmpty(groupedArtifacts.overdue)}
 						{groupedArtifacts.overdue.length} overdue ·
@@ -256,7 +256,7 @@
 						{@const Icon = artifactIcons[artifact.artifactType]}
 						<button
 							onclick={() => navigateToArtifact(artifact)}
-							class="group w-full rounded-lg border bg-card p-4 text-left transition-colors hover:bg-accent"
+							class="group w-full rounded-lg border focus-ring interactive-surface bg-card p-4 text-left"
 						>
 							<div class="flex items-start gap-3">
 								<div class="rounded-lg bg-muted p-2">
@@ -293,7 +293,7 @@
 						{@const Icon = artifactIcons[artifact.artifactType]}
 						<button
 							onclick={() => navigateToArtifact(artifact)}
-							class="group w-full rounded-lg border bg-card p-4 text-left transition-colors hover:bg-accent"
+							class="group w-full rounded-lg border focus-ring interactive-surface bg-card p-4 text-left"
 						>
 							<div class="flex items-start gap-3">
 								<div class="rounded-lg bg-muted p-2">
@@ -338,7 +338,7 @@
 						{@const Icon = artifactIcons[artifact.artifactType]}
 						<button
 							onclick={() => navigateToArtifact(artifact)}
-							class="group w-full rounded-lg border bg-card p-4 text-left transition-colors hover:bg-accent"
+							class="group w-full rounded-lg border focus-ring interactive-surface bg-card p-4 text-left"
 						>
 							<div class="flex items-start gap-3">
 								<div class="rounded-lg bg-muted p-2">
@@ -380,7 +380,7 @@
 						{@const Icon = artifactIcons[artifact.artifactType]}
 						<button
 							onclick={() => navigateToArtifact(artifact)}
-							class="group w-full rounded-lg border bg-card p-4 text-left transition-colors hover:bg-accent"
+							class="group w-full rounded-lg border focus-ring interactive-surface bg-card p-4 text-left"
 						>
 							<div class="flex items-start gap-3">
 								<div class="rounded-lg bg-muted p-2">
@@ -414,7 +414,7 @@
 		{#if artifacts.length === 0}
 			<div class="rounded-lg border border-dashed bg-muted/20 p-12 text-center">
 				<Calendar class="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="mb-2 text-lg font-semibold">No scheduled content</h3>
+				<h2 class="mb-2 text-lg font-semibold">No scheduled content</h2>
 				<p class="mb-4 text-sm text-muted-foreground">
 					Set planned publish dates on your artifacts to see them here.<br />
 					This helps you plan your content calendar and stay organized.

@@ -1,6 +1,76 @@
 import type { UuidV7 } from '$lib/utils';
 import type { DrizzleDB } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
+
+// Demo user ID - fixed for development
+export const DEMO_USER_ID = '01936f42-0000-7000-8000-000000000000' as UuidV7;
+
+/**
+ * Create or update demo user for development
+ * Only call in development environment
+ */
+export async function seedDemoUser(db: DrizzleDB) {
+	const now = Date.now();
+
+	// Create demo user with otter avatar
+	await db
+		.insert(table.user)
+		.values({
+			id: DEMO_USER_ID,
+			githubId: -1, // Special ID for demo user
+			username: 'Otto the Otter',
+			email: 'otto@refinery.local',
+			avatarUrl: '/images/otto.png',
+			createdAt: new Date(now - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+			updatedAt: new Date(now)
+		})
+		.onConflictDoUpdate({
+			target: table.user.id,
+			set: {
+				updatedAt: new Date(now)
+			}
+		});
+
+	// Create demo user settings
+	await db
+		.insert(table.contentSettings)
+		.values({
+			id: '01936f42-0001-7000-8000-000000000000' as UuidV7,
+			userId: DEMO_USER_ID,
+			targetAudience:
+				'Developers, indie hackers, and founders building in public. People who create technical content and want authentic, practical advice.',
+			brandVoice:
+				'Conversational yet precise. Technical but accessible. Shares real experiences, not generic advice. Values clarity and authenticity over polish.',
+			contentPillars:
+				'Local-first software, productivity tools, content creation workflows, SvelteKit & modern web development',
+			uniquePerspective:
+				'I help developers build better tools by sharing what actually works. Real workflows, real problems, real solutions.',
+			createdAt: new Date(now - 30 * 24 * 60 * 60 * 1000),
+			updatedAt: new Date(now - 1 * 24 * 60 * 60 * 1000)
+		})
+		.onConflictDoUpdate({
+			target: table.contentSettings.userId,
+			set: {
+				targetAudience:
+					'Developers, indie hackers, and founders building in public. People who create technical content and want authentic, practical advice.',
+				brandVoice:
+					'Conversational yet precise. Technical but accessible. Shares real experiences, not generic advice. Values clarity and authenticity over polish.',
+				contentPillars:
+					'Local-first software, productivity tools, content creation workflows, SvelteKit & modern web development',
+				uniquePerspective:
+					'I help developers build better tools by sharing what actually works. Real workflows, real problems, real solutions.',
+				updatedAt: new Date(now - 1 * 24 * 60 * 60 * 1000)
+			}
+		});
+
+	// Delete existing demo content to avoid duplicates
+	await db.delete(table.contentArtifact).where(eq(table.contentArtifact.userId, DEMO_USER_ID));
+	await db.delete(table.contentIdea).where(eq(table.contentIdea.userId, DEMO_USER_ID));
+
+	// Seed demo user's content
+	await seedUserData(db, DEMO_USER_ID);
+}
 
 /**
  * Seed example data for new users

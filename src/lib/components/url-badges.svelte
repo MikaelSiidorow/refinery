@@ -27,7 +27,7 @@
 				href={url}
 				target="_blank"
 				rel="noopener noreferrer"
-				class="inline-block transition-opacity hover:opacity-80"
+				class="inline-block rounded-md focus-ring transition-calm hover:opacity-80"
 				onclick={(e) => e.stopPropagation()}
 			>
 				<Badge {variant} class="{sizeClasses[size]} flex items-center gap-1">

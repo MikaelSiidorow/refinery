@@ -181,7 +181,7 @@
 	<div class="mx-auto max-w-4xl px-4 py-4 sm:p-8">
 		<div class="mb-6 space-y-4 border-b pb-6">
 			<div class="flex items-center justify-between">
-				<h1 class="text-2xl font-bold">Edit Artifact</h1>
+				<h1 class="typography-h1">Edit Artifact</h1>
 				<div class="flex items-center gap-4">
 					<div class="flex min-w-[60px] items-center gap-1">
 						{#if form.status === 'saved'}
@@ -255,7 +255,7 @@
 					id="artifact-content"
 					bind:value={form.values.content}
 					placeholder="Write your content here..."
-					class="min-h-[400px] font-mono text-sm"
+					class="min-h-[400px] text-sm"
 				/>
 			</div>
 
@@ -289,7 +289,7 @@
 
 			{#if form.values.status === 'published'}
 				<div class="space-y-4 rounded-lg border bg-muted/50 p-4">
-					<h4 class="text-sm font-semibold">Publishing Information</h4>
+					<h2 class="text-sm font-semibold">Publishing Information</h2>
 
 					<div class="space-y-2">
 						<label for="published-url" class="text-sm font-medium">Published URL</label>

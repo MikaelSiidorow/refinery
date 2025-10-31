@@ -73,7 +73,7 @@
 
 <div class="mx-auto max-w-7xl p-4 sm:p-8">
 	<div class="mb-8">
-		<h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
+		<h1 class="typography-h1">Dashboard</h1>
 		<p class="mt-2 text-sm text-muted-foreground">
 			{groupedIdeas.inbox.length} Inbox · {groupedIdeas.developing.length} Developing · {groupedIdeas
 				.ready.length} Ready · {groupedIdeas.published.length} Published
@@ -93,9 +93,9 @@
 							selectedTags = [...selectedTags, tag];
 						}
 					}}
-					class="rounded-md px-2 py-1 text-xs transition-opacity {getTagColor(tag)} {isSelected
-						? 'opacity-100'
-						: 'opacity-60 hover:opacity-80'}"
+					class="rounded-md focus-ring px-2 py-1 text-xs transition-calm {getTagColor(
+						tag
+					)} {isSelected ? 'opacity-100' : 'opacity-60 hover:opacity-80'}"
 				>
 					{tag}
 				</button>
@@ -105,7 +105,7 @@
 					onclick={() => {
 						selectedTags = [];
 					}}
-					class="rounded-md border border-dashed px-2 py-1 text-xs hover:bg-accent"
+					class="rounded-md border border-dashed focus-ring px-2 py-1 text-xs transition-calm hover:bg-accent"
 				>
 					Clear
 				</button>
@@ -131,7 +131,7 @@
 						{@const cleanText = urls.length > 0 ? removeUrls(idea.oneLiner) : idea.oneLiner}
 						<button
 							onclick={() => navigateToIdea(idea.id)}
-							class="group w-full rounded-lg border bg-card p-3 text-left transition-colors hover:bg-accent"
+							class="group w-full rounded-lg border focus-ring interactive-surface bg-card p-3 text-left"
 							type="button"
 						>
 							<div class="mb-2 flex items-start justify-between gap-2">

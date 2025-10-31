@@ -237,7 +237,7 @@
 							{#each structureStrategies as strategy (strategy.id)}
 								<button
 									onclick={() => handleSelectStrategy(strategy.id)}
-									class="w-full rounded-lg border p-3 text-left transition-all hover:bg-accent {selectedStrategyId ===
+									class="w-full rounded-lg border focus-ring interactive-item p-3 text-left {selectedStrategyId ===
 									strategy.id
 										? 'border-primary bg-accent'
 										: 'bg-card'}"
@@ -266,7 +266,7 @@
 							{#each adaptStrategies as strategy (strategy.id)}
 								<button
 									onclick={() => handleSelectStrategy(strategy.id)}
-									class="w-full rounded-lg border p-3 text-left transition-all hover:bg-accent {selectedStrategyId ===
+									class="w-full rounded-lg border focus-ring interactive-item p-3 text-left {selectedStrategyId ===
 									strategy.id
 										? 'border-primary bg-accent'
 										: 'bg-card'}"
@@ -295,7 +295,7 @@
 							{#each engageStrategies as strategy (strategy.id)}
 								<button
 									onclick={() => handleSelectStrategy(strategy.id)}
-									class="w-full rounded-lg border p-3 text-left transition-all hover:bg-accent {selectedStrategyId ===
+									class="w-full rounded-lg border focus-ring interactive-item p-3 text-left {selectedStrategyId ===
 									strategy.id
 										? 'border-primary bg-accent'
 										: 'bg-card'}"
@@ -324,7 +324,7 @@
 							{#each refineStrategies as strategy (strategy.id)}
 								<button
 									onclick={() => handleSelectStrategy(strategy.id)}
-									class="w-full rounded-lg border p-3 text-left transition-all hover:bg-accent {selectedStrategyId ===
+									class="w-full rounded-lg border focus-ring interactive-item p-3 text-left {selectedStrategyId ===
 									strategy.id
 										? 'border-primary bg-accent'
 										: 'bg-card'}"
@@ -357,7 +357,7 @@
 
 					<div class="mb-3 flex-1 overflow-y-auto rounded-lg border bg-muted/50 p-4">
 						<pre
-							class="font-mono text-xs leading-relaxed whitespace-pre-wrap">{generatedPrompt}</pre>
+							class="font-mono text-xs leading-relaxed whitespace-pre-wrap outline-none">{generatedPrompt}</pre>
 					</div>
 
 					<div class="flex gap-2 self-end">

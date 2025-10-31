@@ -21,7 +21,12 @@
 	<span>
 		{value}
 	</span>
-	<button type="button" {disabled} onclick={() => onDelete(value)}>
+	<button
+		type="button"
+		{disabled}
+		onclick={() => onDelete(value)}
+		class="rounded-sm focus-ring transition-calm hover:opacity-70"
+	>
 		<XIcon class="size-4" />
 	</button>
 </div>

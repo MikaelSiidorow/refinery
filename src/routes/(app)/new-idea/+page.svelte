@@ -226,7 +226,7 @@
 >
 	<div class="min-w-0 lg:order-1">
 		<div class="mb-8">
-			<h1 class="text-3xl font-bold tracking-tight">Quick Capture</h1>
+			<h1 class="typography-h1">Quick Capture</h1>
 			<p class="mt-2 text-muted-foreground md:hidden">
 				Rapidly capture content ideas. Tap Add to queue, then submit all at once.
 			</p>

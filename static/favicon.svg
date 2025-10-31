@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Teal background -->
+  <rect width="100" height="100" fill="#67a5a5"/>
+
+  <!-- White letter R in Fraunces style -->
+  <text
+    x="50"
+    y="50"
+    font-family="'Fraunces', serif"
+    font-size="70"
+    font-weight="600"
+    fill="#ffffff"
+    text-anchor="middle"
+    dominant-baseline="central"
+    style="font-variation-settings: 'wght' 600;">R</text>
+</svg>

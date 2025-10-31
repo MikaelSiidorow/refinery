@@ -46,7 +46,7 @@
 			<Separator orientation="vertical" class="mr-2 h-4" />
 			<AppBreadcrumb />
 			<button
-				class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground md:hidden"
+				class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md focus-ring text-muted-foreground transition-calm hover:bg-accent/15 md:hidden"
 				onclick={() => (commandPaletteOpen = true)}
 				aria-label="Open command palette"
 				type="button"

@@ -207,7 +207,7 @@
 
 <div
 	class={cn(
-		'flex min-h-9 w-full flex-wrap place-items-center gap-1 rounded-md border border-input bg-background py-0.5 pr-1 pl-1 selection:bg-primary disabled:opacity-50 aria-disabled:cursor-not-allowed dark:bg-input/30',
+		'flex min-h-9 w-full flex-wrap place-items-center gap-1 rounded-md border border-input bg-background py-0.5 pr-1 pl-1 transition-calm selection:bg-primary focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 disabled:opacity-50 aria-disabled:cursor-not-allowed dark:bg-input/30',
 		className
 	)}
 	aria-disabled={disabled}

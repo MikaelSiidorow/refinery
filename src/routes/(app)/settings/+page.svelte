@@ -175,11 +175,12 @@
 </svelte:head>
 
 <div class="mx-auto max-w-3xl space-y-12 p-4 sm:p-8">
+	<h1 class="sr-only">Settings</h1>
 	<!-- Connected Accounts Section -->
 	<section>
 		<div class="mb-6 flex items-center justify-between border-b pb-4">
 			<div>
-				<h2 class="text-2xl font-bold">Connected Accounts</h2>
+				<h2 class="typography-h2">Connected Accounts</h2>
 				<p class="mt-1 text-sm text-muted-foreground">
 					Import your existing posts to learn your authentic voice
 				</p>
@@ -295,7 +296,7 @@
 	<section>
 		<div class="mb-6 flex items-center justify-between border-b pb-4">
 			<div>
-				<h2 class="text-2xl font-bold">Content Settings</h2>
+				<h2 class="typography-h2">Content Settings</h2>
 				<p class="mt-1 text-sm text-muted-foreground">
 					Define your brand voice to personalize thinking frameworks
 				</p>
