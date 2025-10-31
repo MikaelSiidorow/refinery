@@ -54,7 +54,11 @@ async function takeScreenshots(): Promise<void> {
 
 	try {
 		// Wide screenshot for PWA manifest (1280x720)
-		await takeScreenshotsForViewport(browser, { width: 1280, height: 720 }, 'screenshot-desktop.png');
+		await takeScreenshotsForViewport(
+			browser,
+			{ width: 1280, height: 720 },
+			'screenshot-desktop.png'
+		);
 
 		// Narrow screenshot for PWA manifest (540x720)
 		await takeScreenshotsForViewport(browser, { width: 540, height: 720 }, 'screenshot-mobile.png');
