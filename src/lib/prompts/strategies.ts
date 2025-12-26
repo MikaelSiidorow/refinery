@@ -1,16 +1,16 @@
 import type { PromptStrategy } from './types';
-import type { ContentIdea, ContentArtifact } from '$lib/zero/zero-schema.gen';
+import type { Row } from '@rocicorp/zero';
 
 // Helper to format past artifacts as examples
-function formatArtifactExamples(artifacts: ContentArtifact[], limit = 2): string {
+function formatArtifactExamples(artifacts: Row['contentArtifact'][], limit = 2): string {
 	if (!artifacts || artifacts.length === 0) return '';
 
 	const examples = artifacts
 		.filter((a) => a.content && a.content.trim().length > 50)
 		.slice(0, limit)
 		.map((artifact, i) => {
-			const preview = artifact.content!.substring(0, 500);
-			return `### Your Past Example ${i + 1}:\n${preview}${artifact.content!.length > 500 ? '...' : ''}`;
+			const preview = artifact.content.substring(0, 500);
+			return `### Your Past Example ${i + 1}:\n${preview}${artifact.content.length > 500 ? '...' : ''}`;
 		});
 
 	if (examples.length === 0) return '';
@@ -19,15 +19,15 @@ function formatArtifactExamples(artifacts: ContentArtifact[], limit = 2): string
 }
 
 // Helper to format past ideas as examples
-function formatIdeaExamples(ideas: ContentIdea[], limit = 2): string {
+function formatIdeaExamples(ideas: Row['contentIdea'][], limit = 2): string {
 	if (!ideas || ideas.length === 0) return '';
 
 	const examples = ideas
 		.filter((idea) => idea.content && idea.content.trim().length > 100)
 		.slice(0, limit)
 		.map((idea, i) => {
-			const preview = idea.content!.substring(0, 400);
-			return `### Past Idea ${i + 1}: ${idea.oneLiner}\n${preview}${idea.content!.length > 400 ? '...' : ''}`;
+			const preview = idea.content.substring(0, 400);
+			return `### Past Idea ${i + 1}: ${idea.oneLiner}\n${preview}${idea.content.length > 400 ? '...' : ''}`;
 		});
 
 	if (examples.length === 0) return '';

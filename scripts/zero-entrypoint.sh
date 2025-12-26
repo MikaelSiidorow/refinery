@@ -44,7 +44,6 @@ fi
 
 echo "Deploying Zero permissions..."
 pnpm exec zero-deploy-permissions \
-    --schema-path src/lib/zero/schema.ts \
     --upstream-db "$ZERO_UPSTREAM_DB" \
     --app-id "${ZERO_APP_ID:-refinery}" \
     --log-level info

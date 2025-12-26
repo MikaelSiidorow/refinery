@@ -3,9 +3,8 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
-	import { assert, type UuidV7 } from '$lib/utils';
-	import { createParameterizedQuery } from '$lib/zero/use-query.svelte';
-	import * as queries from '$lib/zero/queries';
+	import { type UuidV7 } from '$lib/utils';
+	import { queries } from '$lib/zero/queries';
 
 	const z = get_z();
 
@@ -43,30 +42,17 @@
 		return { type: 'dashboard' as const };
 	});
 
-	const ideaQuery = createParameterizedQuery(
-		z,
-		queries.ideaById,
-		() => {
-			assert(
-				routeInfo.type === 'idea' || routeInfo.type === 'artifact',
-				'Idea ID should be available'
-			);
-			return [routeInfo.ideaId];
-		},
-		() => routeInfo.type === 'idea' || routeInfo.type === 'artifact'
+	const ideaQuery = $derived(
+		routeInfo.type === 'idea' || routeInfo.type === 'artifact'
+			? z.q(queries.ideaById(routeInfo.ideaId))
+			: null
 	);
-	const idea = $derived(ideaQuery.data[0]);
+	const idea = $derived(ideaQuery?.data[0]);
 
-	const artifactQuery = createParameterizedQuery(
-		z,
-		queries.artifactById,
-		() => {
-			assert(routeInfo.type === 'artifact', 'Artifact ID should be available');
-			return [routeInfo.artifactId];
-		},
-		() => routeInfo.type === 'artifact'
+	const artifactQuery = $derived(
+		routeInfo.type === 'artifact' ? z.q(queries.artifactById(routeInfo.artifactId)) : null
 	);
-	const artifact = $derived(artifactQuery.data[0]);
+	const artifact = $derived(artifactQuery?.data[0]);
 
 	const artifactDisplayName = $derived.by(() => {
 		if (!artifact) return 'Artifact';
@@ -104,7 +90,7 @@
 	<Breadcrumb.Root>
 		<Breadcrumb.List>
 			<Breadcrumb.Item>
-				<Breadcrumb.Page class="max-w-[150px] truncate sm:max-w-[300px] md:max-w-[500px]">
+				<Breadcrumb.Page class="max-w-37.5 truncate sm:max-w-75 md:max-w-125">
 					{idea.oneLiner}
 				</Breadcrumb.Page>
 			</Breadcrumb.Item>
@@ -116,14 +102,14 @@
 			<Breadcrumb.Item>
 				<Breadcrumb.Link
 					href={resolve(`/idea/${idea.id}`)}
-					class="max-w-[100px] truncate sm:max-w-[200px] md:max-w-[300px]"
+					class="max-w-25 truncate sm:max-w-50 md:max-w-75"
 				>
 					{idea.oneLiner}
 				</Breadcrumb.Link>
 			</Breadcrumb.Item>
 			<Breadcrumb.Separator />
 			<Breadcrumb.Item>
-				<Breadcrumb.Page class="max-w-[100px] truncate sm:max-w-[200px] md:max-w-[300px]">
+				<Breadcrumb.Page class="max-w-25 truncate sm:max-w-50 md:max-w-75">
 					{artifactDisplayName}
 				</Breadcrumb.Page>
 			</Breadcrumb.Item>

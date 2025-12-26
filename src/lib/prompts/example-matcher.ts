@@ -1,15 +1,15 @@
 import Fuse from 'fuse.js';
-import type { ContentIdea, ContentArtifact } from '$lib/zero/zero-schema.gen';
+import type { Row } from '@rocicorp/zero';
 import type { ArtifactType } from '$lib/server/db/schema';
 
 /**
  * Find the most relevant past ideas based on tags, content, and topic similarity
  */
 export function findRelevantIdeas(
-	currentIdea: ContentIdea,
-	allIdeas: ContentIdea[],
+	currentIdea: Row['contentIdea'],
+	allIdeas: Row['contentIdea'][],
 	limit = 2
-): ContentIdea[] {
+): Row['contentIdea'][] {
 	// Filter to ideas with substantial content
 	const ideasWithContent = allIdeas.filter(
 		(idea) => idea.id !== currentIdea.id && idea.content && idea.content.trim().length > 100
@@ -56,9 +56,9 @@ export function findRelevantIdeas(
 export function findRelevantArtifacts(
 	artifactType: ArtifactType,
 	currentContent: string,
-	allArtifacts: ContentArtifact[],
+	allArtifacts: Row['contentArtifact'][],
 	limit = 2
-): ContentArtifact[] {
+): Row['contentArtifact'][] {
 	// Filter to artifacts of the same type with substantial content
 	const relevantArtifacts = allArtifacts.filter(
 		(artifact) =>

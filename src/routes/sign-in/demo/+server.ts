@@ -12,7 +12,7 @@ import { error, redirect } from '@sveltejs/kit';
 export async function GET(event: RequestEvent): Promise<Response> {
 	// Only allow in development
 	if (!dev) {
-		throw error(404, 'Not found');
+		error(404, 'Not found');
 	}
 
 	try {
@@ -25,9 +25,9 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		setSessionTokenCookie(event, sessionToken, session.expiresAt);
 	} catch (e) {
 		console.error('Demo sign-in failed:', e);
-		throw error(500, 'Failed to sign in as demo user');
+		error(500, 'Failed to sign in as demo user');
 	}
 
 	// Redirect to dashboard
-	throw redirect(302, '/');
+	redirect(302, '/');
 }

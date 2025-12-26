@@ -59,7 +59,7 @@ self.addEventListener('fetch', (event) => {
 			const isSuccess = response.status === 200;
 
 			if (isNotExtension && isSuccess) {
-				cache.put(event.request, response.clone());
+				void cache.put(event.request, response.clone());
 			}
 
 			return response;

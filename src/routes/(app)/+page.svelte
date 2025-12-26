@@ -9,18 +9,17 @@
 	import UrlBadges from '$lib/components/url-badges.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { isNonEmpty } from '$lib/utils';
-	import { createQuery } from '$lib/zero/use-query.svelte';
-	import * as queries from '$lib/zero/queries';
+	import { queries } from '$lib/zero/queries';
 
 	const z = get_z();
 
-	const allIdeas = createQuery(z, queries.allIdeas);
+	const allIdeasQuery = z.q(queries.allIdeas());
 
 	let selectedTags = $state<string[]>([]);
 
 	const allUniqueTags = $derived.by(() => {
 		const tagSet = new SvelteSet<string>();
-		allIdeas.data.forEach((idea) => {
+		allIdeasQuery.data.forEach((idea) => {
 			if (isNonEmpty(idea.tags)) {
 				idea.tags.forEach((tag) => tagSet.add(tag));
 			}
@@ -29,8 +28,8 @@
 	});
 
 	const filteredIdeas = $derived.by(() => {
-		if (selectedTags.length === 0) return allIdeas.data;
-		return allIdeas.data.filter((idea) => {
+		if (selectedTags.length === 0) return allIdeasQuery.data;
+		return allIdeasQuery.data.filter((idea) => {
 			const tags = idea.tags;
 			return isNonEmpty(tags) && selectedTags.some((tag) => tags.includes(tag));
 		});
@@ -63,7 +62,7 @@
 	};
 
 	function navigateToIdea(id: string) {
-		goto(resolve(`/idea/${id}`));
+		void goto(resolve(`/idea/${id}`));
 	}
 </script>
 
@@ -115,7 +114,7 @@
 
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		{#each Object.entries(statusConfig) as [status, config] (status)}
-			<div class="flex min-h-[400px] flex-col">
+			<div class="flex min-h-100 flex-col">
 				<div class="mb-3 flex items-center justify-between">
 					<h2 class="text-sm font-semibold text-muted-foreground">
 						{config.label}

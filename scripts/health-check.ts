@@ -26,11 +26,16 @@ console.log('');
 /**
  * Check HTTP status of a service
  */
-async function checkService(name, url, expectedStatus = 200, authHeader = null) {
+async function checkService(
+	name: string,
+	url: string,
+	expectedStatus = 200,
+	authHeader: string | null = null
+) {
 	process.stdout.write(`Checking ${name}... `);
 
 	try {
-		const headers = {};
+		const headers: Record<string, string> = {};
 		if (authHeader) {
 			headers['Authorization'] = authHeader;
 		}
@@ -46,7 +51,11 @@ async function checkService(name, url, expectedStatus = 200, authHeader = null) 
 			return false;
 		}
 	} catch (error) {
-		console.log(`${colors.red}✗ FAILED${colors.nc} (${error.message})`);
+		if (error instanceof Error) {
+			console.log(`${colors.red}✗ FAILED${colors.nc} (${error.message})`);
+		} else {
+			console.log(`${colors.red}✗ FAILED${colors.nc} (Unknown error)`);
+		}
 		return false;
 	}
 }

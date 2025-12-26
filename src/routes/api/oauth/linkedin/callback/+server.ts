@@ -41,7 +41,11 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 			throw new Error('Failed to fetch LinkedIn profile');
 		}
 
-		const profile = await profileResponse.json();
+		const profile = (await profileResponse.json()) as {
+			sub: string;
+			name: string;
+			email?: string;
+		};
 
 		const existing = await db
 			.select()
@@ -68,7 +72,9 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 		} else {
 			await db.insert(connectedAccount).values({
 				id: generateId(),
-				...accountData
+				...accountData,
+				createdAt: new Date(),
+				updatedAt: new Date()
 			});
 		}
 

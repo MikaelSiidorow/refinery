@@ -3,7 +3,7 @@ import { generateState } from 'arctic';
 import { github } from '$lib/server/oauth';
 import type { RequestEvent } from '@sveltejs/kit';
 
-export async function GET(event: RequestEvent): Promise<Response> {
+export function GET(event: RequestEvent): Promise<Response> {
 	const state = generateState();
 	const url = github.createAuthorizationURL(state, ['user:email']);
 
@@ -14,5 +14,5 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		sameSite: 'lax'
 	});
 
-	return redirect(302, url.toString());
+	redirect(302, url.toString());
 }

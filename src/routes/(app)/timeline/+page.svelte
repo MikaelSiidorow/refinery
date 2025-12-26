@@ -18,8 +18,7 @@
 	} from '@lucide/svelte';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { isNonEmpty } from '$lib/utils';
-	import { createQuery } from '$lib/zero/use-query.svelte';
-	import * as queries from '$lib/zero/queries';
+	import { queries } from '$lib/zero/queries';
 
 	const z = get_z();
 
@@ -28,7 +27,7 @@
 		'all' | 'blog-post' | 'thread' | 'carousel' | 'newsletter' | 'email' | 'short-post' | 'comment'
 	>('all');
 
-	const artifactsQuery = createQuery(z, queries.scheduledArtifacts);
+	const artifactsQuery = z.q(queries.scheduledArtifacts());
 
 	const artifacts = $derived.by(() => {
 		// Filter for artifacts with planned dates
@@ -129,7 +128,7 @@
 	}
 
 	function navigateToArtifact(artifact: (typeof artifacts)[number]) {
-		goto(resolve(`/idea/${artifact.ideaId}/artifact/${artifact.id}`));
+		void goto(resolve(`/idea/${artifact.ideaId}/artifact/${artifact.id}`));
 	}
 </script>
 
@@ -158,7 +157,7 @@
 				<span class="text-sm text-muted-foreground">Filters:</span>
 			</div>
 			<Select.Root type="single" bind:value={statusFilter}>
-				<Select.Trigger class="h-9 w-[140px]">
+				<Select.Trigger class="h-9 w-35">
 					Status: {statusFilter === 'all' ? 'All' : statusFilter}
 				</Select.Trigger>
 				<Select.Content>
@@ -419,7 +418,7 @@
 					Set planned publish dates on your artifacts to see them here.<br />
 					This helps you plan your content calendar and stay organized.
 				</p>
-				<Button onclick={() => goto(resolve('/'))}>Go to Dashboard</Button>
+				<Button onclick={() => void goto(resolve('/'))}>Go to Dashboard</Button>
 			</div>
 		{/if}
 	</div>

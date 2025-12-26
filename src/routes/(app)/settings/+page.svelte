@@ -8,8 +8,8 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { CircleCheck, Link2, Unlink } from '@lucide/svelte';
-	import { createQuery } from '$lib/zero/use-query.svelte';
-	import * as queries from '$lib/zero/queries';
+	import { queries } from '$lib/zero/queries';
+	import { mutators } from '$lib/zero/mutators';
 	import { toast } from 'svelte-sonner';
 	import { createAutosaveForm } from '$lib/autosave-form.svelte';
 	import {
@@ -24,7 +24,7 @@
 
 	const z = get_z();
 
-	const settingsQuery = createQuery(z, queries.userSettings);
+	const settingsQuery = z.q(queries.userSettings());
 	const settings = $derived(settingsQuery.data[0]);
 
 	const form = createAutosaveForm({
@@ -53,12 +53,14 @@
 		}),
 
 		onSave: async (values) => {
-			const write = z.mutate.contentSettings.upsert({
-				targetAudience: values.targetAudience,
-				brandVoice: values.brandVoice,
-				contentPillars: values.contentPillars,
-				uniquePerspective: values.uniquePerspective
-			});
+			const write = z.mutate(
+				mutators.contentSettings.upsert({
+					targetAudience: values.targetAudience,
+					brandVoice: values.brandVoice,
+					contentPillars: values.contentPillars,
+					uniquePerspective: values.uniquePerspective
+				})
+			);
 			await write.client;
 		}
 	});
@@ -73,11 +75,11 @@
 	$effect(() => {
 		if (page.url.searchParams.get('linkedin_connected') === 'true') {
 			toast.success('Connected to LinkedIn successfully!');
-			goto(resolve('/settings'), { replaceState: true });
-			accountsQuery.refresh();
+			void goto(resolve('/settings'), { replaceState: true });
+			void accountsQuery.refresh();
 		} else if (page.url.searchParams.get('linkedin_error') === 'true') {
 			toast.error('Failed to connect to LinkedIn');
-			goto(resolve('/settings'), { replaceState: true });
+			void goto(resolve('/settings'), { replaceState: true });
 		}
 	});
 
@@ -158,10 +160,10 @@
 		}
 	}
 
-	function openImportDialog(platform: 'bluesky' | 'linkedin') {
+	async function openImportDialog(platform: 'bluesky' | 'linkedin') {
 		importPlatform = platform;
 		importDialogOpen = true;
-		handleImportPosts(platform);
+		await handleImportPosts(platform);
 	}
 
 	function openDisconnectDialog(platform: 'bluesky' | 'linkedin') {
@@ -218,7 +220,7 @@
 								Connected as <strong>@{blueskyAccount.username}</strong>
 							</p>
 							<div class="flex gap-2">
-								<Button onclick={() => openImportDialog('bluesky')} size="sm">
+								<Button onclick={async () => await openImportDialog('bluesky')} size="sm">
 									Import All Posts
 								</Button>
 								<Button variant="outline" size="sm" onclick={() => openDisconnectDialog('bluesky')}>
@@ -271,7 +273,7 @@
 								</p>
 							</div>
 							<div class="flex gap-2">
-								<Button onclick={() => openImportDialog('linkedin')} size="sm">
+								<Button onclick={async () => await openImportDialog('linkedin')} size="sm">
 									Import All Posts
 								</Button>
 								<Button
@@ -301,7 +303,7 @@
 					Define your brand voice to personalize thinking frameworks
 				</p>
 			</div>
-			<div class="flex min-w-[60px] items-center gap-1">
+			<div class="flex min-w-15 items-center gap-1">
 				{#if form.status === 'saved'}
 					<CircleCheck class="h-4 w-4 text-green-600" />
 					<span class="text-sm text-green-600">Saved</span>
@@ -373,9 +375,9 @@
 
 		<div class="mt-8 rounded-lg border bg-muted/50 p-4">
 			<p class="text-sm text-muted-foreground">
-				💡 <strong>Tip:</strong> These settings personalize thinking frameworks to match your unique
-				voice and perspective. The more specific you are, the better frameworks will guide you toward
-				authentic, on-brand content.
+				💡 <strong>Tip:</strong> These settings personalize thinking frameworks to match your unique voice
+				and perspective. The more specific you are, the better frameworks will guide you toward authentic,
+				on-brand content.
 			</p>
 		</div>
 	</section>

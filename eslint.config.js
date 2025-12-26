@@ -10,21 +10,32 @@ import svelteConfig from './svelte.config.js';
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
+// IMPORTANT: extraFileExtensions must be consistent across all configs
+// to prevent TypeScript project reloads between file types
+const extraFileExtensions = ['.svelte'];
+
 export default defineConfig(
 	includeIgnoreFile(gitignorePath),
 	js.configs.recommended,
-	...ts.configs.recommended,
+	...ts.configs.recommendedTypeChecked,
 	...svelte.configs.recommended,
 	prettier,
 	...svelte.configs.prettier,
 	{
 		languageOptions: {
-			globals: { ...globals.browser, ...globals.node }
+			globals: { ...globals.browser, ...globals.node },
+			parserOptions: {
+				projectService: {
+					allowDefaultProject: ['src/service-worker.ts']
+				},
+				extraFileExtensions
+			}
 		},
 		rules: {
 			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
 			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-			'no-undef': 'off'
+			'no-undef': 'off',
+			'@typescript-eslint/no-deprecated': ['warn']
 		}
 	},
 	{
@@ -32,10 +43,21 @@ export default defineConfig(
 		languageOptions: {
 			parserOptions: {
 				projectService: true,
-				extraFileExtensions: ['.svelte'],
 				parser: ts.parser,
-				svelteConfig
+				svelteConfig,
+				extraFileExtensions
 			}
+		},
+		// Disable type-aware rules that don't work well with Svelte files
+		// See: https://github.com/sveltejs/svelte/issues/16264
+		rules: {
+			// These rules produce false positives due to .svelte import type resolution issues
+			'@typescript-eslint/no-unsafe-argument': 'off',
+			'@typescript-eslint/no-unsafe-assignment': 'off',
+			'@typescript-eslint/no-unsafe-call': 'off',
+			'@typescript-eslint/no-unsafe-member-access': 'off',
+			'@typescript-eslint/no-unsafe-return': 'off',
+			'@typescript-eslint/no-unnecessary-type-assertion': 'off'
 		}
 	}
 );

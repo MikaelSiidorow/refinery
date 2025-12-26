@@ -1,100 +1,85 @@
 import type { contentIdea } from '$lib/server/db/schema';
-import type { Transaction } from '@rocicorp/zero/server';
-import { assertIsSignedIn, assertIsOwner, type AuthData } from './auth';
-import type { Schema } from './schema';
+import { assertIsOwner } from './context';
+import { zql } from './schema';
 import { isNonEmpty, type UuidV7 } from '$lib/utils';
 import { z } from 'zod';
+import { defineMutator, defineMutators } from '@rocicorp/zero';
+import { zUuidV7 } from '$lib/utils/validators';
+import { IDEA_STATUSES } from '$lib/constants/idea-statuses';
+import { ARTIFACT_TYPES } from '$lib/constants/artifact-types';
+import { ARTIFACT_STATUSES } from '$lib/constants/artifact-statuses';
 
 const zShortString = z.string().min(1).max(256);
 
-export type CreateContentIdeaArgs = Omit<typeof contentIdea.$inferInsert, 'userId'>;
+const createContentIdeaSchema = z.object({
+	id: zUuidV7(),
+	oneLiner: zShortString
+}) satisfies z.ZodType<Partial<Omit<typeof contentIdea.$inferInsert, 'userId'>>>;
 
-export type UpdateContentIdeaArgs = {
-	id: UuidV7;
-	oneLiner?: string;
-	status?: 'inbox' | 'developing' | 'ready' | 'published' | 'archived' | 'cancelled';
-	content?: string;
-	notes?: string;
-	tags?: string[];
-};
+const updateContentIdeaSchema = z.object({
+	id: zUuidV7(),
+	oneLiner: zShortString.optional(),
+	status: z.enum(IDEA_STATUSES).optional(),
+	content: z.string().optional(),
+	notes: z.string().optional(),
+	tags: z.array(z.string()).optional()
+}) satisfies z.ZodType<Partial<Omit<typeof contentIdea.$inferInsert, 'userId'>>>;
 
-export type UpsertContentSettingsArgs = {
-	targetAudience: string;
-	brandVoice: string;
-	contentPillars: string;
-	uniquePerspective: string;
-};
+const upsertContentSettingsSchema = z.object({
+	targetAudience: z.string(),
+	brandVoice: z.string(),
+	contentPillars: z.string(),
+	uniquePerspective: z.string()
+});
 
-export type CreateContentArtifactArgs = {
-	id: UuidV7;
-	ideaId: UuidV7;
-	title?: string;
-	content: string;
-	artifactType:
-		| 'blog-post'
-		| 'thread'
-		| 'carousel'
-		| 'newsletter'
-		| 'email'
-		| 'short-post'
-		| 'comment';
-	platform?: string;
-	plannedPublishDate?: number;
-};
+const createContentArtifactSchema = z.object({
+	id: zUuidV7(),
+	ideaId: zUuidV7(),
+	title: z.string().optional(),
+	content: z.string(),
+	artifactType: z.enum(ARTIFACT_TYPES),
+	platform: z.string().optional(),
+	plannedPublishDate: z.number().optional()
+});
 
-export type UpdateContentArtifactArgs = {
-	id: UuidV7;
-	title?: string;
-	content?: string;
-	artifactType?:
-		| 'blog-post'
-		| 'thread'
-		| 'carousel'
-		| 'newsletter'
-		| 'email'
-		| 'short-post'
-		| 'comment';
-	platform?: string;
-	status?: 'draft' | 'ready' | 'published';
-	plannedPublishDate?: number;
-	publishedAt?: number;
-	publishedUrl?: string;
-	impressions?: number;
-	likes?: number;
-	comments?: number;
-	shares?: number;
-	notes?: string;
-};
+const updateContentArtifactSchema = z.object({
+	id: zUuidV7(),
+	title: z.string().optional(),
+	content: z.string().optional(),
+	artifactType: z.enum(ARTIFACT_TYPES).optional(),
+	platform: z.string().optional(),
+	status: z.enum(ARTIFACT_STATUSES).optional(),
+	plannedPublishDate: z.number().optional(),
+	publishedAt: z.number().optional(),
+	publishedUrl: z.string().optional(),
+	impressions: z.number().optional(),
+	likes: z.number().optional(),
+	comments: z.number().optional(),
+	shares: z.number().optional(),
+	notes: z.string().optional()
+});
 
-export function createMutators(authData: AuthData | undefined) {
-	return {
-		contentIdea: {
-			async create(tx: Transaction<Schema>, { id, oneLiner }: CreateContentIdeaArgs) {
-				assertIsSignedIn(authData);
-				const userId = authData.sub;
-
-				zShortString.parse(oneLiner);
-
-				await tx.mutate.contentIdea.insert({
-					id,
-					oneLiner,
-					userId,
-					status: 'inbox',
-					content: '',
-					notes: '',
-					createdAt: Date.now(),
-					updatedAt: Date.now()
-				});
-			},
-			async update(
-				tx: Transaction<Schema>,
-				{ id, oneLiner, status, content, notes, tags }: UpdateContentIdeaArgs
-			) {
-				await assertIsOwner(authData, tx.query.contentIdea, id);
-
-				if (oneLiner !== undefined) {
-					zShortString.parse(oneLiner);
-				}
+export const mutators = defineMutators({
+	contentIdea: {
+		create: defineMutator(createContentIdeaSchema, async ({ tx, ctx, args: { id, oneLiner } }) => {
+			const userId = ctx.userID;
+			await tx.mutate.contentIdea.insert({
+				id,
+				oneLiner,
+				userId,
+				status: 'inbox',
+				content: '',
+				notes: '',
+				tags: [],
+				createdAt: Date.now(),
+				updatedAt: Date.now()
+			});
+		}),
+		update: defineMutator(
+			updateContentIdeaSchema,
+			async ({ tx, ctx, args: { id, oneLiner, status, content, notes, tags } }) => {
+				const entity = await tx.run(zql.contentIdea.where('id', id).one());
+				assertIsOwner(ctx, entity, id);
 
 				const updateData: {
 					id: UuidV7;
@@ -117,17 +102,22 @@ export function createMutators(authData: AuthData | undefined) {
 
 				await tx.mutate.contentIdea.update(updateData);
 			}
-		},
-		contentSettings: {
-			async upsert(
-				tx: Transaction<Schema>,
-				{ targetAudience, brandVoice, contentPillars, uniquePerspective }: UpsertContentSettingsArgs
-			) {
-				assertIsSignedIn(authData);
-				const userId = authData.sub;
-
-				// Check if settings exist for this user
-				const existing = await tx.query.contentSettings.where('userId', '=', userId).run();
+		)
+	},
+	contentSettings: {
+		/**
+		 * Upsert user content settings.
+		 * Updates existing settings if found, otherwise creates new ones.
+		 */
+		upsert: defineMutator(
+			upsertContentSettingsSchema,
+			async ({
+				tx,
+				ctx,
+				args: { targetAudience, brandVoice, contentPillars, uniquePerspective }
+			}) => {
+				const userId = ctx.userID;
+				const existing = await tx.run(zql.contentSettings.where('userId', userId));
 
 				const now = Date.now();
 
@@ -141,7 +131,6 @@ export function createMutators(authData: AuthData | undefined) {
 						updatedAt: now
 					});
 				} else {
-					// Insert new settings
 					const { v7: uuidv7 } = await import('uuid');
 					await tx.mutate.contentSettings.insert({
 						id: uuidv7() as UuidV7,
@@ -155,35 +144,29 @@ export function createMutators(authData: AuthData | undefined) {
 					});
 				}
 			}
-		},
-		contentArtifact: {
-			async create(
-				tx: Transaction<Schema>,
-				{
-					id,
-					ideaId,
-					title,
-					content,
-					artifactType,
-					platform,
-					plannedPublishDate
-				}: CreateContentArtifactArgs
-			) {
-				assertIsSignedIn(authData);
-				const userId = authData.sub;
-
+		)
+	},
+	contentArtifact: {
+		create: defineMutator(
+			createContentArtifactSchema,
+			async ({
+				tx,
+				ctx,
+				args: { id, ideaId, title, content, artifactType, platform, plannedPublishDate }
+			}) => {
+				const userId = ctx.userID;
 				const now = Date.now();
 
 				await tx.mutate.contentArtifact.insert({
 					id,
 					userId,
 					ideaId,
-					title: title || null,
+					title: title ?? null,
 					content,
 					artifactType,
-					platform: platform || null,
+					platform: platform ?? null,
 					status: 'draft',
-					plannedPublishDate: plannedPublishDate || null,
+					plannedPublishDate: plannedPublishDate ?? null,
 					publishedAt: null,
 					publishedUrl: null,
 					impressions: null,
@@ -194,10 +177,14 @@ export function createMutators(authData: AuthData | undefined) {
 					createdAt: now,
 					updatedAt: now
 				});
-			},
-			async update(
-				tx: Transaction<Schema>,
-				{
+			}
+		),
+		update: defineMutator(
+			updateContentArtifactSchema,
+			async ({
+				tx,
+				ctx,
+				args: {
 					id,
 					title,
 					content,
@@ -212,61 +199,36 @@ export function createMutators(authData: AuthData | undefined) {
 					comments,
 					shares,
 					notes
-				}: UpdateContentArtifactArgs
-			) {
-				await assertIsOwner(authData, tx.query.contentArtifact, id);
+				}
+			}) => {
+				const entity = await tx.run(zql.contentArtifact.where('id', id).one());
+				assertIsOwner(ctx, entity, id);
 
-				const updateData: {
-					id: UuidV7;
-					title?: string | null;
-					content?: string;
-					artifactType?:
-						| 'blog-post'
-						| 'thread'
-						| 'carousel'
-						| 'newsletter'
-						| 'email'
-						| 'short-post'
-						| 'comment';
-					platform?: string | null;
-					status?: 'draft' | 'ready' | 'published';
-					plannedPublishDate?: number | null;
-					publishedAt?: number | null;
-					publishedUrl?: string | null;
-					impressions?: number | null;
-					likes?: number | null;
-					comments?: number | null;
-					shares?: number | null;
-					notes?: string | null;
-					updatedAt: number;
-				} = {
+				await tx.mutate.contentArtifact.update({
 					id,
-					updatedAt: Date.now()
-				};
-
-				if (title !== undefined) updateData.title = title || null;
-				if (content !== undefined) updateData.content = content;
-				if (artifactType !== undefined) updateData.artifactType = artifactType;
-				if (platform !== undefined) updateData.platform = platform || null;
-				if (status !== undefined) updateData.status = status;
-				if (plannedPublishDate !== undefined)
-					updateData.plannedPublishDate = plannedPublishDate || null;
-				if (publishedAt !== undefined) updateData.publishedAt = publishedAt;
-				if (publishedUrl !== undefined) updateData.publishedUrl = publishedUrl || null;
-				if (impressions !== undefined) updateData.impressions = impressions;
-				if (likes !== undefined) updateData.likes = likes;
-				if (comments !== undefined) updateData.comments = comments;
-				if (shares !== undefined) updateData.shares = shares;
-				if (notes !== undefined) updateData.notes = notes || null;
-
-				await tx.mutate.contentArtifact.update(updateData);
-			},
-			async delete(tx: Transaction<Schema>, id: UuidV7) {
-				await assertIsOwner(authData, tx.query.contentArtifact, id);
-				await tx.mutate.contentArtifact.delete({ id });
+					updatedAt: Date.now(),
+					...(title !== undefined && { title: title ?? null }),
+					...(content !== undefined && { content }),
+					...(artifactType !== undefined && { artifactType }),
+					...(platform !== undefined && { platform: platform ?? null }),
+					...(status !== undefined && { status }),
+					...(plannedPublishDate !== undefined && {
+						plannedPublishDate: plannedPublishDate ?? null
+					}),
+					...(publishedAt !== undefined && { publishedAt }),
+					...(publishedUrl !== undefined && { publishedUrl: publishedUrl ?? null }),
+					...(impressions !== undefined && { impressions }),
+					...(likes !== undefined && { likes }),
+					...(comments !== undefined && { comments }),
+					...(shares !== undefined && { shares }),
+					...(notes !== undefined && { notes: notes ?? null })
+				});
 			}
-		}
-	} as const;
-}
-
-export type Mutators = ReturnType<typeof createMutators>;
+		),
+		delete: defineMutator(zUuidV7(), async ({ tx, ctx, args: id }) => {
+			const entity = await tx.run(zql.contentArtifact.where('id', id).one());
+			assertIsOwner(ctx, entity, id);
+			await tx.mutate.contentArtifact.delete({ id });
+		})
+	}
+});

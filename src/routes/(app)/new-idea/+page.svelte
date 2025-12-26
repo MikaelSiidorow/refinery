@@ -11,8 +11,8 @@
 	import { formatRelativeTime } from '$lib/utils/date';
 	import { cmdOrCtrl } from '$lib/hooks/is-mac.svelte';
 	import { ZodError } from 'zod';
-	import { createQuery } from '$lib/zero/use-query.svelte';
-	import * as queries from '$lib/zero/queries';
+	import { queries } from '$lib/zero/queries';
+	import { mutators } from '$lib/zero/mutators';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -23,10 +23,10 @@
 	const z = get_z();
 
 	// Query all ideas for duplicate detection
-	const allIdeas = createQuery(z, queries.allIdeas);
+	const allIdeasQuery = z.q(queries.allIdeas());
 
 	// Query inbox ideas for display (sorted by newest first)
-	const inboxIdeas = createQuery(z, queries.inboxIdeas);
+	const inboxIdeasQuery = z.q(queries.inboxIdeas());
 
 	let inputValue = $state('');
 	let queuedIdeas = $state<Array<{ id: UuidV7; text: string; isDuplicate: boolean }>>([]);
@@ -44,7 +44,7 @@
 	};
 
 	function checkDuplicate(text: string): boolean {
-		const fuse = new Fuse(allIdeas.data, fuseOptions);
+		const fuse = new Fuse(allIdeasQuery.data, fuseOptions);
 		const results = fuse.search(text);
 		return isNonEmpty(results) && (results[0].score ?? 0) < 0.4;
 	}
@@ -55,7 +55,7 @@
 			addIdeaToQueue();
 		} else if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
 			event.preventDefault();
-			submitAllIdeas();
+			void submitAllIdeas();
 		}
 	}
 
@@ -84,7 +84,7 @@
 		}
 	}
 
-	async function handlePaste(event: ClipboardEvent) {
+	function handlePaste(event: ClipboardEvent) {
 		const pastedText = event.clipboardData?.getData('text');
 		if (!pastedText) return;
 
@@ -150,10 +150,12 @@
 		isSubmitting = true;
 		try {
 			for (const idea of queuedIdeas) {
-				const write = z.mutate.contentIdea.create({
-					id: idea.id,
-					oneLiner: idea.text
-				});
+				const write = z.mutate(
+					mutators.contentIdea.create({
+						id: idea.id,
+						oneLiner: idea.text
+					})
+				);
 				await write.client;
 			}
 
@@ -180,10 +182,12 @@
 			ideaSchema.parse(editValue.trim());
 			saveStatus[id] = 'saving';
 
-			const write = z.mutate.contentIdea.update({
-				id: id as UuidV7,
-				oneLiner: editValue.trim()
-			});
+			const write = z.mutate(
+				mutators.contentIdea.update({
+					id: id as UuidV7,
+					oneLiner: editValue.trim()
+				})
+			);
 			await write.client;
 
 			saveStatus[id] = 'saved';
@@ -211,7 +215,7 @@
 		const sharedContent = $page.url.searchParams.get('shared');
 		if (sharedContent) {
 			inputValue = sharedContent.slice(0, 256);
-			goto(resolve('/new-idea'), { replaceState: true });
+			void goto(resolve('/new-idea'), { replaceState: true });
 		}
 	});
 </script>
@@ -356,31 +360,36 @@
 			<h2 class="mb-4 text-lg font-semibold">
 				Inbox Ideas
 				<span class="ml-2 text-sm font-normal text-muted-foreground">
-					({inboxIdeas.data.length})
+					({inboxIdeasQuery.data.length})
 				</span>
 			</h2>
 
-			{#if inboxIdeas.data.length === 0}
+			{#if inboxIdeasQuery.data.length === 0}
 				<p class="text-sm text-muted-foreground">No ideas yet. Create one above!</p>
 			{:else}
 				<div class="space-y-2 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pr-2">
-					{#each inboxIdeas.data as idea (idea.id)}
+					{#each inboxIdeasQuery.data as idea (idea.id)}
 						<div class="group relative rounded-lg border bg-card p-3 transition-colors">
 							{#if editingId === idea.id}
 								<div class="flex items-center gap-2">
 									<Input
 										bind:value={editValue}
 										class="flex-1 text-sm"
-										onkeydown={(e) => {
+										onkeydown={async (e) => {
 											if (e.key === 'Enter') {
 												e.preventDefault();
-												saveEdit(idea.id);
+												await saveEdit(idea.id);
 											} else if (e.key === 'Escape') {
 												cancelEdit();
 											}
 										}}
 									/>
-									<Button onclick={() => saveEdit(idea.id)} size="sm" variant="ghost" class="gap-1">
+									<Button
+										onclick={async () => await saveEdit(idea.id)}
+										size="sm"
+										variant="ghost"
+										class="gap-1"
+									>
 										<CircleCheck class="h-4 w-4" />
 									</Button>
 									<Button onclick={cancelEdit} size="sm" variant="ghost">

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
-	import type { ContentArtifact } from '$lib/zero/zero-schema.gen';
+	import type { Row } from '@rocicorp/zero';
 	import { formatRelativeTime } from '$lib/utils/date';
 	import { extractUrls, removeUrls } from '$lib/utils/url';
 	import UrlBadges from '$lib/components/url-badges.svelte';
@@ -24,7 +24,7 @@
 		onDelete,
 		onCopy
 	}: {
-		artifact: ContentArtifact;
+		artifact: Row['contentArtifact'];
 		onEdit?: (id: string) => void;
 		onDelete?: (id: string) => void;
 		onCopy?: (content: string) => void;

@@ -56,7 +56,6 @@ echo -e "${GREEN}Step 2: Deploying Zero permissions...${NC}"
 
 # Run zero-deploy-permissions
 pnpm exec zero-deploy-permissions \
-    --schema-path src/lib/zero/schema.ts \
     --upstream-db "$ZERO_UPSTREAM_DB" \
     --app-id "$ZERO_APP_ID" \
     --log-level info

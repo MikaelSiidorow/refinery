@@ -1,4 +1,4 @@
-import type { ContentIdea, ContentArtifact, ContentSetting } from '$lib/zero/zero-schema.gen';
+import type { Row } from '@rocicorp/zero';
 import type { ArtifactType } from '$lib/server/db/schema';
 
 export type PromptCategory = 'structure' | 'adapt' | 'engage' | 'analyze' | 'refine';
@@ -12,8 +12,8 @@ export interface StrategyRequirements {
 }
 
 export interface ExampleContent {
-	pastIdeas?: ContentIdea[];
-	pastArtifacts?: ContentArtifact[];
+	pastIdeas?: Row['contentIdea'][];
+	pastArtifacts?: Row['contentArtifact'][];
 }
 
 export interface PromptStrategy {
@@ -27,8 +27,8 @@ export interface PromptStrategy {
 	artifactType?: ArtifactType; // What type of artifact it creates
 	targetArtifactTypes?: ArtifactType[]; // Which artifact types this strategy applies to (for refine category)
 	generate: (
-		ideaOrArtifact: ContentIdea | ContentArtifact,
-		settings?: ContentSetting,
+		ideaOrArtifact: Row['contentIdea'] | Row['contentArtifact'],
+		settings?: Row['contentSettings'],
 		examples?: ExampleContent
 	) => string;
 }

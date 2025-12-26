@@ -21,6 +21,7 @@ export function assert(b: unknown, msg: string | (() => string) = 'Assertion fai
 
 export function must<T>(v: T | undefined | null, msg?: string): T {
 	if (v == null) {
+		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- we want to allow any type here for better error messages
 		throw new Error(msg ?? `Unexpected ${v} value`);
 	}
 	return v;

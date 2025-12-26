@@ -3,7 +3,9 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from '$lib/components/ui/sonner';
-	let { children } = $props();
+	import type { Snippet } from 'svelte';
+
+	let { children }: { children: Snippet } = $props();
 </script>
 
 <svelte:head>
@@ -14,4 +16,4 @@
 <ModeWatcher />
 <Toaster position="top-center" />
 
-{@render children?.()}
+{@render children()}

@@ -1,37 +1,31 @@
 import type { RequestHandler } from './$types';
-import { PushProcessor, ZQLDatabase, PostgresJSConnection } from '@rocicorp/zero/pg';
-import postgres from 'postgres';
-import { schema } from '$lib/zero/schema';
-import { createMutators } from '$lib/zero/mutators';
-import type { AuthData } from '$lib/zero/auth';
-import { env } from '$env/dynamic/private';
-
-// Create postgres connection (reuse across requests)
-const sql = postgres(env.ZERO_UPSTREAM_DB!);
-
-// Create processor (reuse across requests)
-const processor = new PushProcessor(new ZQLDatabase(new PostgresJSConnection(sql), schema));
+import { handleMutateRequest } from '@rocicorp/zero/server';
+import { mustGetMutator } from '@rocicorp/zero';
+import { dbProvider } from '$lib/zero/db-provider.server';
+import { mutators } from '$lib/zero/mutators';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
+	if (!locals.user) {
+		return Response.json({ error: 'Unauthorized' }, { status: 401 });
+	}
+
 	try {
-		// Get auth data from session (via cookies)
-		let authData: AuthData | undefined;
+		const ctx = { userID: locals.user.id };
 
-		if (locals.user) {
-			authData = { sub: locals.user.id };
-		}
-
-		// Process the push request
-		const result = await processor.process(createMutators(authData), request);
+		const result = await handleMutateRequest(
+			dbProvider,
+			async (transact) => {
+				return await transact(async (tx, name, args) => {
+					const mutator = mustGetMutator(mutators, name);
+					return await mutator.fn({ tx, ctx, args });
+				});
+			},
+			request
+		);
 
 		return Response.json(result);
 	} catch (error) {
 		console.error('Push processing error:', error);
-		return Response.json(
-			{ error: 'Internal server error' },
-			{
-				status: 500
-			}
-		);
+		return Response.json({ error: 'Internal server error' }, { status: 500 });
 	}
 };

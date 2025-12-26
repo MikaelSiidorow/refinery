@@ -7,25 +7,24 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
 	import { CircleCheck, Sparkles } from '@lucide/svelte';
-	import { createParameterizedQuery, createQuery } from '$lib/zero/use-query.svelte';
-	import * as queries from '$lib/zero/queries';
+	import { queries } from '$lib/zero/queries';
+	import { mutators } from '$lib/zero/mutators';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import PromptSelector from '$lib/components/prompt-selector.svelte';
 	import { createAutosaveForm } from '$lib/autosave-form.svelte';
+	import type { UuidV7 } from '$lib/utils';
 
 	const z = get_z();
 
 	const { params } = $props();
 
-	const artifactQuery = createParameterizedQuery(z, queries.artifactById, () => [
-		params.artifactId
-	]);
+	const artifactQuery = $derived(z.q(queries.artifactById(params.artifactId as UuidV7)));
 	const artifact = $derived(artifactQuery.data[0]);
 
-	const ideaQuery = createParameterizedQuery(z, queries.ideaById, () => [params.ideaId]);
+	const ideaQuery = $derived(z.q(queries.ideaById(params.ideaId as UuidV7)));
 	const idea = $derived(ideaQuery.data[0]);
 
-	const settingsQuery = createQuery(z, queries.userSettings);
+	const settingsQuery = z.q(queries.userSettings());
 	const settings = $derived(settingsQuery.data[0]);
 
 	let promptSelectorOpen = $state(false);
@@ -110,24 +109,26 @@
 		onSave: async (values) => {
 			if (!artifact) return;
 
-			const write = z.mutate.contentArtifact.update({
-				id: artifact.id,
-				title: values.title || undefined,
-				content: values.content.trim() || '',
-				artifactType: values.artifactType,
-				platform: values.platform || undefined,
-				status: values.status,
-				plannedPublishDate: values.plannedPublishDate
-					? new Date(values.plannedPublishDate).getTime()
-					: undefined,
-				publishedUrl: values.publishedUrl || undefined,
-				publishedAt: values.publishedAt ? new Date(values.publishedAt).getTime() : undefined,
-				impressions: values.impressions ? parseInt(values.impressions) : undefined,
-				likes: values.likes ? parseInt(values.likes) : undefined,
-				comments: values.comments ? parseInt(values.comments) : undefined,
-				shares: values.shares ? parseInt(values.shares) : undefined,
-				notes: values.notes || undefined
-			});
+			const write = z.mutate(
+				mutators.contentArtifact.update({
+					id: artifact.id,
+					title: values.title || undefined,
+					content: values.content.trim() || '',
+					artifactType: values.artifactType,
+					platform: values.platform || undefined,
+					status: values.status,
+					plannedPublishDate: values.plannedPublishDate
+						? new Date(values.plannedPublishDate).getTime()
+						: undefined,
+					publishedUrl: values.publishedUrl || undefined,
+					publishedAt: values.publishedAt ? new Date(values.publishedAt).getTime() : undefined,
+					impressions: values.impressions ? parseInt(values.impressions) : undefined,
+					likes: values.likes ? parseInt(values.likes) : undefined,
+					comments: values.comments ? parseInt(values.comments) : undefined,
+					shares: values.shares ? parseInt(values.shares) : undefined,
+					notes: values.notes || undefined
+				})
+			);
 			await write.client;
 		}
 	});
@@ -140,33 +141,33 @@
 		if (!artifact) return;
 
 		try {
-			const write = z.mutate.contentArtifact.delete(artifact.id);
+			const write = z.mutate(mutators.contentArtifact.delete(artifact.id));
 			await write.client;
 			deleteDialogOpen = false;
-			goBack();
+			await goBack();
 		} catch (error) {
 			console.error('Failed to delete artifact:', error);
 		}
 	}
 
-	function handleKeydown(event: KeyboardEvent) {
+	async function handleKeydown(event: KeyboardEvent) {
 		const isInputFocused = ['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement)?.tagName);
 
 		if (event.key === 's' && (event.metaKey || event.ctrlKey)) {
 			event.preventDefault();
-			form.save();
+			await form.save();
 			return;
 		}
 
 		if (event.key === 'Escape' && !isInputFocused) {
 			event.preventDefault();
-			goBack();
+			await goBack();
 		}
 	}
 
-	function goBack() {
+	async function goBack() {
 		if (idea) {
-			goto(resolve(`/idea/${idea.id}`));
+			await goto(resolve(`/idea/${idea.id}`));
 		}
 	}
 </script>
@@ -183,7 +184,7 @@
 			<div class="flex items-center justify-between">
 				<h1 class="typography-h1">Edit Artifact</h1>
 				<div class="flex items-center gap-4">
-					<div class="flex min-w-[60px] items-center gap-1">
+					<div class="flex min-w-15 items-center gap-1">
 						{#if form.status === 'saved'}
 							<CircleCheck class="h-3.5 w-3.5 text-green-600" />
 							<span class="text-xs text-green-600">Saved</span>
@@ -255,7 +256,7 @@
 					id="artifact-content"
 					bind:value={form.values.content}
 					placeholder="Write your content here..."
-					class="min-h-[400px] text-sm"
+					class="min-h-100 text-sm"
 				/>
 			</div>
 
@@ -350,7 +351,7 @@
 					id="artifact-notes"
 					bind:value={form.values.notes}
 					placeholder="Any additional notes about this artifact..."
-					class="min-h-[100px]"
+					class="min-h-25"
 				/>
 			</div>
 		</div>

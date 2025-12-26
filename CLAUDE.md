@@ -31,11 +31,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **This file (CLAUDE.md)** - Quick reference for development workflow, conventions, and common patterns
 
 **For deep dives, see:**
+
 - **`docs/ARCHITECTURE.md`** - Database schema, Zero sync patterns, query examples, type safety
 - **`docs/DEPLOY.md`** - Production deployment on Coolify/Hetzner with Docker
 - **`docs/DESIGN_SYSTEM.md`** - UI/UX philosophy ("Calm Flow"), typography, interaction patterns
 
 **When to reference:**
+
 - Building features → This file + ARCHITECTURE.md
 - Styling/UI work → DESIGN_SYSTEM.md
 - Deploying to production → DEPLOY.md
@@ -44,28 +46,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Codebase Map
 
 **Data Layer:**
+
 - `src/lib/server/db/schema.ts` - Drizzle schema (source of truth)
-- `src/lib/zero/schema.ts` - Zero permissions and builder
+- `src/lib/zero/schema.ts` - Zero schema exports (zql query builder)
 - `src/lib/zero/queries.ts` - Synced query definitions
 - `src/lib/zero/mutators.ts` - Server-side mutations with auth
 
 **UI System:**
+
 - `src/lib/components/ui/` - shadcn-svelte components
 - `src/app.css` - Design tokens (typography, colors, transitions)
 - `src/lib/components/` - Custom application components
 
 **Content System:**
+
 - `src/lib/prompts/strategies.ts` - AI prompt templates
 - `src/lib/prompts/example-matcher.ts` - Few-shot learning with Fuse.js
 - `src/lib/constants/artifact-types.ts` - Content format definitions
 
 **Authentication & Routes:**
+
 - `src/hooks.server.ts` - Session validation middleware
 - `src/routes/sign-in/` - GitHub OAuth flow
 - `src/lib/server/auth.ts` - Auth utilities (session management)
 - `src/routes/(app)/` - Protected routes (requires auth)
 
 **Utilities:**
+
 - `src/lib/utils/` - Type-safe helpers (must, assert, isNonEmpty)
 - `src/lib/z.svelte.ts` - Zero context access helper
 
@@ -131,34 +138,39 @@ Zero provides local-first data sync with:
   - `userID`: For IndexedDB namespacing (multi-user browser support)
   - `schema`: Zero schema with permissions
   - `mutators`: Custom mutation functions with auth checks
+  - `context`: ZeroContext with userID for query/mutator authorization
 - **Context Access**: Use `get_z()` helper from `src/lib/z.svelte.ts` to access Zero in components
 - **Server**: Zero cache server runs on `PUBLIC_SERVER` (default: http://127.0.0.1:4848)
-- **Mutators**: Custom server-side functions for all data modifications, with built-in authorization using `assertIsSignedIn()` and `assertIsOwner()` helpers
+- **Mutators**: Custom server-side functions for all data modifications, with built-in authorization using `assertIsOwner()` helper
 - **Cookie Auth**: Zero automatically forwards cookies to the push endpoint, enabling standard cookie-based authentication
 
 The app layout within `(app)` route group has `ssr = false` to support client-side Zero sync.
 
 #### Synced Queries Pattern
 
-The application uses **synced queries** for all data fetching, which provides:
+The application uses **synced queries** for all data fetching:
 
-1. **Server-side query definitions** (`src/lib/zero/queries.ts`): Centralized query definitions using `syncedQuery` with userId as the first parameter
-2. **Get queries endpoint** (`src/routes/api/get-queries/+server.ts`): Server endpoint that injects userId and handles synced query requests
-3. **Svelte helpers** (`src/lib/zero/use-query.svelte.ts`): Reactive query wrappers that automatically inject userId from the Z instance and work with Svelte 5's fine-grained reactivity
+1. **Server-side query definitions** (`src/lib/zero/queries.ts`): Centralized query definitions using `defineQueries`/`defineQuery` with context-based authorization
+2. **Get queries endpoint** (`src/routes/api/zero/get-queries/+server.ts`): Server endpoint that handles synced query requests
 
 **Defining queries** (`src/lib/zero/queries.ts`):
 
 ```typescript
-import { syncedQuery } from '@rocicorp/zero';
-import { builder } from './schema';
+import { defineQueries, defineQuery } from '@rocicorp/zero';
+import { zql } from './schema';
+import { zUuidV7 } from '$lib/utils/validators';
 
-export const ideaById = syncedQuery(
-	'ideaById',
-	z.tuple([z.string(), z.string()]),
-	(userId: string, ideaId: string) => {
-		return builder.contentIdea.where('userId', userId as UuidV7).where('id', ideaId as UuidV7);
-	}
-);
+export const queries = defineQueries({
+	// Query without parameters (uses ctx.userID automatically)
+	allIdeas: defineQuery(({ ctx }) => {
+		return zql.contentIdea.where('userId', ctx.userID).orderBy('createdAt', 'desc');
+	}),
+
+	// Query with parameters (Zod schema for validation)
+	ideaById: defineQuery(zUuidV7(), ({ ctx, args: ideaId }) => {
+		return zql.contentIdea.where('userId', ctx.userID).where('id', ideaId);
+	})
+});
 ```
 
 **Using queries in components**:
@@ -166,40 +178,43 @@ export const ideaById = syncedQuery(
 ```svelte
 <script lang="ts">
 	import { get_z } from '$lib/z.svelte';
-	import { createQuery, createParameterizedQuery } from '$lib/zero/use-query.svelte';
-	import * as queries from '$lib/zero/queries';
+	import { queries } from '$lib/zero/queries';
 
 	const z = get_z();
 
-	// Static query
-	const settingsQuery = createQuery(z, queries.userSettings());
+	// Static query (no parameters)
+	const settingsQuery = z.q(queries.userSettings());
 	const settings = $derived(settingsQuery.data[0]);
 
-	// Parameterized query with reactive parameters
-	const ideaQuery = createParameterizedQuery(z, queries.ideaById, () => [
-		page.params.ideaId as UuidV7
-	]);
+	// Parameterized query - use $derived for reactivity
+	const ideaQuery = $derived(z.q(queries.ideaById(page.params.ideaId)));
 	const idea = $derived(ideaQuery.data[0]);
+</script>
+```
 
-	// Conditionally enabled query
-	const artifactQuery = createParameterizedQuery(
-		z,
-		queries.artifactById,
-		() => [routeInfo.artifactId || ('00000000-0000-0000-0000-000000000000' as UuidV7)],
-		() => routeInfo.type === 'artifact' // Only enable when artifact route
-	);
+**Using mutations in components**:
+
+```svelte
+<script lang="ts">
+	import { get_z } from '$lib/z.svelte';
+	import { mutators } from '$lib/zero/mutators';
+
+	const z = get_z();
+
+	function handleUpdate() {
+		z.mutate(mutators.contentIdea.update({ id: ideaId, oneLiner: 'Updated!' }));
+	}
 </script>
 ```
 
 **Key patterns**:
 
-- All queries defined in `src/lib/zero/queries.ts` using `syncedQuery` with userId as first parameter
-- Helpers automatically inject userId from `z.userID`
-- Use `createQuery()` for static queries (userId-only parameter)
-- Use `createParameterizedQuery()` for queries with additional reactive parameters
-- Pass query function directly (not wrapped) and use functions for `getArgs` and `getEnabled` for reactivity
-- Access results via `.data` property (not `.current`)
-- Helpers handle Svelte 5 reactivity constraints (avoid `state_unsafe_mutation` errors)
+- All queries defined using `defineQueries`/`defineQuery` with `zql` query builder
+- Context (`ctx.userID`) is automatically available in query functions
+- Use `z.q(queries.queryName())` for queries without parameters
+- Use `$derived(z.q(queries.queryName(param)))` for reactive parameterized queries
+- Use `z.mutate(mutators.table.action({...}))` for mutations
+- Access results via `.data` property
 
 ### Authentication
 
@@ -218,6 +233,7 @@ Uses shadcn-svelte configured in `components.json`:
 - TailwindCSS v4 with design tokens in `src/app.css`
 
 **Design System**: See `docs/DESIGN_SYSTEM.md` for:
+
 - Typography (Fraunces display, Inter sans, Geist mono)
 - "Calm Flow" interaction philosophy
 - Color palette (teal primary, purple secondary, amber accents)
@@ -231,8 +247,8 @@ Required environment variables (see `.env.example`):
 - `ZERO_UPSTREAM_DB`: PostgreSQL connection for Zero cache server
 - `ZERO_REPLICA_FILE`: Path for Zero's local SQLite replica
 - `ZERO_MUTATE_URL`: URL for Zero mutations endpoint
-- `ZERO_GET_QUERIES_URL`: URL for synced queries endpoint (e.g., `http://127.0.0.1:5173/api/get-queries`)
-- `ZERO_GET_QUERIES_FORWARD_COOKIES`: Enable cookie forwarding for queries (set to `true`)
+- `ZERO_QUERY_URL`: URL for synced queries endpoint (e.g., `http://127.0.0.1:5173/api/zero/get-queries`)
+- `ZERO_QUERY_FORWARD_COOKIES`: Enable cookie forwarding for queries (set to `true`)
 - `ZERO_MUTATE_FORWARD_COOKIES`: Enable cookie forwarding for mutations (set to `true`)
 - `PUBLIC_SERVER`: Zero cache server URL (exposed to client)
 - `GITHUB_CLIENT_ID`: GitHub OAuth application client ID

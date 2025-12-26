@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { linkedin } from '$lib/server/oauth';
 import { generateState } from 'arctic';
 
-export const GET: RequestHandler = async ({ cookies, locals }) => {
+export const GET: RequestHandler = ({ cookies, locals }) => {
 	if (!locals.user) {
 		return new Response('Unauthorized', { status: 401 });
 	}

@@ -3,12 +3,11 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { promptStrategies } from '$lib/prompts/strategies';
-	import type { ContentIdea, ContentArtifact, ContentSetting } from '$lib/zero/zero-schema.gen';
+	import type { Row } from '@rocicorp/zero';
 	import type { ExampleContent } from '$lib/prompts/types';
 	import { Copy, Check } from '@lucide/svelte';
 	import { get_z } from '$lib/z.svelte';
-	import { createQuery } from '$lib/zero/use-query.svelte';
-	import * as queries from '$lib/zero/queries';
+	import { queries } from '$lib/zero/queries';
 	import { findRelevantIdeas, findRelevantArtifacts } from '$lib/prompts/example-matcher';
 
 	let {
@@ -19,16 +18,16 @@
 		onCreateArtifact
 	}: {
 		open?: boolean;
-		idea?: ContentIdea;
-		artifact?: ContentArtifact;
-		settings?: ContentSetting;
+		idea?: Row['contentIdea'];
+		artifact?: Row['contentArtifact'];
+		settings?: Row['contentSettings'];
 		onCreateArtifact?: (artifactType: string) => void;
 	} = $props();
 
 	const z = get_z();
 
 	// Fetch past content for examples
-	const pastIdeasQuery = createQuery(z, queries.recentIdeasWithContent);
+	const pastIdeasQuery = z.q(queries.recentIdeasWithContent());
 	const pastIdeas = $derived(pastIdeasQuery.data);
 
 	let selectedStrategyId = $state<string | null>(null);
@@ -101,7 +100,7 @@
 	);
 
 	// Fetch all past artifacts for examples
-	const allArtifactsQuery = createQuery(z, queries.allArtifacts);
+	const allArtifactsQuery = z.q(queries.allArtifacts());
 	const allArtifacts = $derived(allArtifactsQuery.data);
 
 	// Prepare examples for prompts using intelligent matching
@@ -140,7 +139,7 @@
 
 	function handleCopyPrompt() {
 		if (generatedPrompt && selectedStrategyId) {
-			navigator.clipboard.writeText(generatedPrompt);
+			void navigator.clipboard.writeText(generatedPrompt);
 			copiedStrategyId = selectedStrategyId;
 
 			if (copiedTimeout) {
@@ -156,7 +155,7 @@
 	function handleCopyAndCreateArtifact() {
 		if (generatedPrompt && selectedStrategy?.artifactType) {
 			// Copy to clipboard
-			navigator.clipboard.writeText(generatedPrompt);
+			void navigator.clipboard.writeText(generatedPrompt);
 
 			// Trigger artifact creation with pre-filled type
 			onCreateArtifact?.(selectedStrategy.artifactType);

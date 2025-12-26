@@ -2,8 +2,7 @@
 	import type { WithChildren } from 'bits-ui';
 	import { Z } from 'zero-svelte';
 	import { env } from '$env/dynamic/public';
-	import type { AuthData } from '$lib/zero/auth';
-	import { createMutators } from '$lib/zero/mutators';
+	import { mutators } from '$lib/zero/mutators';
 	import { schema, type Schema } from '$lib/zero/schema';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Separator } from '$lib/components/ui/separator';
@@ -16,16 +15,16 @@
 
 	let { data, children }: WithChildren<{ data: LayoutData }> = $props();
 
-	const authData: AuthData = {
-		sub: data.user.id
-	};
-
 	set_z(
-		new Z<Schema, ReturnType<typeof createMutators>>({
+		new Z<Schema>({
 			userID: data.user.id,
 			server: env.PUBLIC_SERVER!,
+			queryURL: env.PUBLIC_QUERY_URL!,
 			schema,
-			mutators: createMutators(authData)
+			mutators,
+			context: {
+				userID: data.user.id
+			}
 		})
 	);
 

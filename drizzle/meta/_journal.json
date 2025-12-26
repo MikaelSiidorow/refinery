@@ -15,6 +15,13 @@
       "when": 1761765502442,
       "tag": "0001_nosy_jocasta",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766778713874,
+      "tag": "0002_orange_iron_lad",
+      "breakpoints": true
     }
   ]
 }

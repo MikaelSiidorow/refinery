@@ -254,7 +254,7 @@
 				sidebar.toggle();
 			}
 		} else {
-			goto(resolve(item.url));
+			void goto(resolve(item.url));
 		}
 		open = false;
 		searchQuery = '';

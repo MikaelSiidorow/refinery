@@ -149,20 +149,20 @@ export function setupAppShortcuts() {
 
 	// Single key shortcuts
 	shortcuts.registerSingleKey('c', () => {
-		goto(resolve('/new-idea'));
+		void goto(resolve('/new-idea'));
 	});
 
 	// G+key navigation sequences
 	shortcuts.registerSequence(['g', 'd'], () => {
-		goto(resolve('/'));
+		void goto(resolve('/'));
 	});
 
 	shortcuts.registerSequence(['g', 'n'], () => {
-		goto(resolve('/new-idea'));
+		void goto(resolve('/new-idea'));
 	});
 
 	shortcuts.registerSequence(['g', 's'], () => {
-		goto(resolve('/settings'));
+		void goto(resolve('/settings'));
 	});
 
 	// Sign out: Alt+Shift+Q

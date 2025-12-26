@@ -219,11 +219,11 @@ DATABASE_URL=postgres://refinery:<password>@postgres:5432/refinery
 ZERO_UPSTREAM_DB=postgres://refinery:<password>@postgres:5432/refinery
 ZERO_REPLICA_FILE=/tmp/sync-replica.db
 ZERO_MUTATE_URL=https://app.yourdomain.com/api/zero/mutate
-ZERO_GET_QUERIES_URL=https://app.yourdomain.com/api/zero/get-queries
+ZERO_QUERY_URL=https://app.yourdomain.com/api/zero/get-queries
 PUBLIC_SERVER=https://zero.yourdomain.com
 
 # Zero cookie forwarding
-ZERO_GET_QUERIES_FORWARD_COOKIES=true
+ZERO_QUERY_FORWARD_COOKIES=true
 ZERO_MUTATE_FORWARD_COOKIES=true
 
 # Cookie domain (enables cookie sharing between app and zero subdomains)
@@ -278,7 +278,7 @@ export ZERO_URL="https://zero.yourdomain.com"
 export ZERO_ADMIN_PASSWORD="<your-admin-password>"
 
 # Run health check
-node scripts/health-check.mjs
+node scripts/health-check.ts
 ```
 
 Expected output:
@@ -370,7 +370,7 @@ The deployment workflow:
 
 1. Verify `COOKIE_DOMAIN=.yourdomain.com` is set in SvelteKit app
 2. Check that Zero Cache and SvelteKit app use same domain suffix
-3. Ensure `ZERO_GET_QUERIES_FORWARD_COOKIES=true` and `ZERO_MUTATE_FORWARD_COOKIES=true`
+3. Ensure `ZERO_QUERY_FORWARD_COOKIES=true` and `ZERO_MUTATE_FORWARD_COOKIES=true`
 4. Clear browser cookies and test again
 
 ### Issue: Zero Cache fails to connect to PostgreSQL

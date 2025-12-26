@@ -1,17 +1,17 @@
 import type { UuidV7 } from '../../utils';
-import { relations, sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import { integer, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import type { Encrypted } from '../crypto';
 import { ARTIFACT_TYPES } from '../../constants/artifact-types';
+import { IDEA_STATUSES } from '$lib/constants/idea-statuses';
+import { ARTIFACT_STATUSES } from '$lib/constants/artifact-statuses';
 
+/**
+ * Defaults must be handled by Zero Mutators. See: https://github.com/rocicorp/drizzle-zero/issues/197
+ */
 const timestamps = {
-	createdAt: timestamp()
-		.$defaultFn(() => new Date())
-		.notNull(),
-	updatedAt: timestamp()
-		.$defaultFn(() => new Date())
-		.notNull()
-		.$onUpdateFn(() => new Date())
+	createdAt: timestamp().notNull(),
+	updatedAt: timestamp().notNull()
 };
 
 export const user = pgTable('user', {
@@ -57,18 +57,11 @@ export const connectedAccountRelations = relations(connectedAccount, ({ one }) =
 	})
 }));
 
-export const ideaStatusEnum = pgEnum('idea_status', [
-	'inbox',
-	'developing',
-	'ready',
-	'published',
-	'archived',
-	'cancelled'
-]);
+export const ideaStatusEnum = pgEnum('idea_status', IDEA_STATUSES);
 
 export const artifactTypeEnum = pgEnum('artifact_type', ARTIFACT_TYPES);
 
-export const artifactStatusEnum = pgEnum('artifact_status', ['draft', 'ready', 'published']);
+export const artifactStatusEnum = pgEnum('artifact_status', ARTIFACT_STATUSES);
 
 export const contentIdea = pgTable('content_idea', {
 	id: uuid().primaryKey().$type<UuidV7>(),
@@ -77,13 +70,10 @@ export const contentIdea = pgTable('content_idea', {
 		.references(() => user.id)
 		.$type<UuidV7>(),
 	oneLiner: text().notNull(),
-	status: ideaStatusEnum().notNull().default('inbox'),
-	content: text().notNull().default(''),
-	notes: text().notNull().default(''),
-	tags: text()
-		.array()
-		.notNull()
-		.default(sql`'{}'::text[]`),
+	status: ideaStatusEnum().notNull(),
+	content: text().notNull(),
+	notes: text().notNull(),
+	tags: text().array().notNull(),
 	...timestamps
 });
 
@@ -101,10 +91,10 @@ export const contentSettings = pgTable('content_settings', {
 		.unique()
 		.references(() => user.id)
 		.$type<UuidV7>(),
-	targetAudience: text().notNull().default(''),
-	brandVoice: text().notNull().default(''),
-	contentPillars: text().notNull().default(''),
-	uniquePerspective: text().notNull().default(''),
+	targetAudience: text().notNull(),
+	brandVoice: text().notNull(),
+	contentPillars: text().notNull(),
+	uniquePerspective: text().notNull(),
 	...timestamps
 });
 
@@ -129,7 +119,7 @@ export const contentArtifact = pgTable('content_artifact', {
 	content: text().notNull(),
 	artifactType: artifactTypeEnum().notNull(),
 	platform: text(),
-	status: artifactStatusEnum().notNull().default('draft'),
+	status: artifactStatusEnum().notNull(),
 	plannedPublishDate: timestamp(),
 	publishedAt: timestamp(),
 	publishedUrl: text(),

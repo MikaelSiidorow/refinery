@@ -79,7 +79,9 @@ export const connectBluesky = command(
 		} else {
 			await db.insert(connectedAccount).values({
 				id: generateId(),
-				...accountData
+				...accountData,
+				createdAt: new Date(),
+				updatedAt: new Date()
 			});
 		}
 
@@ -196,7 +198,9 @@ async function importBlueskyPosts(userId: UuidV7) {
 			content: thread.combinedText,
 			status: 'published',
 			notes: `Imported thread (${thread.posts.length} posts) from Bluesky on ${new Date().toISOString()}`,
-			tags: ['bluesky', 'imported', 'thread']
+			tags: ['bluesky', 'imported', 'thread'],
+			createdAt: new Date(),
+			updatedAt: new Date()
 		});
 
 		await db.insert(contentArtifact).values({
@@ -213,7 +217,9 @@ async function importBlueskyPosts(userId: UuidV7) {
 			comments: thread.replyCount,
 			shares: thread.repostCount,
 			importedFrom: 'bluesky',
-			externalId: thread.rootPost.uri
+			externalId: thread.rootPost.uri,
+			createdAt: new Date(),
+			updatedAt: new Date()
 		});
 
 		imported++;
@@ -249,7 +255,9 @@ async function importBlueskyPosts(userId: UuidV7) {
 			content: post.text,
 			status: 'published',
 			notes: `Imported from Bluesky on ${new Date().toISOString()}`,
-			tags: ['bluesky', 'imported']
+			tags: ['bluesky', 'imported'],
+			createdAt: new Date(),
+			updatedAt: new Date()
 		});
 
 		await db.insert(contentArtifact).values({
@@ -266,7 +274,9 @@ async function importBlueskyPosts(userId: UuidV7) {
 			comments: post.replyCount || 0,
 			shares: post.repostCount || 0,
 			importedFrom: 'bluesky',
-			externalId: post.uri
+			externalId: post.uri,
+			createdAt: new Date(),
+			updatedAt: new Date()
 		});
 
 		imported++;
@@ -328,7 +338,19 @@ async function importLinkedInPosts(userId: UuidV7) {
 		error(500, `LinkedIn API error: ${response.status} ${response.statusText}`);
 	}
 
-	const data = await response.json();
+	const data = (await response.json()) as {
+		elements: {
+			id: string;
+			commentary: string;
+			createdAt: string;
+			permalink: string;
+			socialMetadata?: {
+				reactionCount?: number;
+				commentCount?: number;
+				shareCount?: number;
+			};
+		}[];
+	};
 	const posts = data.elements || [];
 
 	let imported = 0;
@@ -368,7 +390,9 @@ async function importLinkedInPosts(userId: UuidV7) {
 			content: postText,
 			status: 'published',
 			notes: `Imported from LinkedIn on ${new Date().toISOString()}`,
-			tags: ['linkedin', 'imported']
+			tags: ['linkedin', 'imported'],
+			createdAt: new Date(),
+			updatedAt: new Date()
 		});
 
 		await db.insert(contentArtifact).values({
@@ -385,7 +409,9 @@ async function importLinkedInPosts(userId: UuidV7) {
 			comments: post.socialMetadata?.commentCount || 0,
 			shares: post.socialMetadata?.shareCount || 0,
 			importedFrom: 'linkedin',
-			externalId: postUrn
+			externalId: postUrn,
+			createdAt: new Date(),
+			updatedAt: new Date()
 		});
 
 		imported++;

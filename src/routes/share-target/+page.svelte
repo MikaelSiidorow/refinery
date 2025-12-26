@@ -16,9 +16,9 @@
 		if (sharedContent) {
 			const params = new URLSearchParams({ shared: sharedContent });
 			// eslint-disable-next-line svelte/no-navigation-without-resolve -- Path is resolved via basePath variable
-			goto(`${basePath}?${params.toString()}`, { replaceState: true });
+			void goto(`${basePath}?${params.toString()}`, { replaceState: true });
 		} else {
-			goto(basePath, { replaceState: true });
+			void goto(basePath, { replaceState: true });
 		}
 	});
 </script>

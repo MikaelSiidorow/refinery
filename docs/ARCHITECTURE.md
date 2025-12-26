@@ -211,21 +211,21 @@ All user data is protected with row-level permissions:
 
 ```typescript
 const allowIfOwner = (authData: AuthData, { cmp }: ExpressionBuilder) =>
-  cmp('userId', authData.sub);
+	cmp('userId', authData.sub);
 
 return {
-  contentIdea: {
-    row: {
-      select: [allowIfOwner],
-      insert: [allowIfOwner],
-      update: {
-        preMutation: [allowIfOwner],
-        postMutation: [allowIfOwner]
-      },
-      delete: [allowIfOwner]
-    }
-  },
-  // ... similar for contentSettings, contentArtifact
+	contentIdea: {
+		row: {
+			select: [allowIfOwner],
+			insert: [allowIfOwner],
+			update: {
+				preMutation: [allowIfOwner],
+				postMutation: [allowIfOwner]
+			},
+			delete: [allowIfOwner]
+		}
+	}
+	// ... similar for contentSettings, contentArtifact
 };
 ```
 
@@ -235,13 +235,14 @@ return {
 
 Zero uses cookie forwarding instead of JWT:
 
-```typescript
+```sh
 // Environment variables
-ZERO_GET_QUERIES_FORWARD_COOKIES=true
+ZERO_QUERY_FORWARD_COOKIES=true
 ZERO_MUTATE_FORWARD_COOKIES=true
 ```
 
 **How it works**:
+
 1. User authenticates via GitHub OAuth
 2. SvelteKit sets session cookie
 3. Zero automatically forwards cookies to push endpoint
@@ -250,48 +251,53 @@ ZERO_MUTATE_FORWARD_COOKIES=true
 
 ### Synced Queries Pattern
 
-All queries use Zero's synced query system:
+All queries use Zero's synced query system with `defineQueries`/`defineQuery`:
 
 **Defining queries** (`src/lib/zero/queries.ts`):
 
 ```typescript
-import { syncedQuery } from '@rocicorp/zero';
-import { builder } from './schema';
+import { defineQueries, defineQuery } from '@rocicorp/zero';
+import { zql } from './schema';
+import { zUuidV7 } from '$lib/utils/validators';
 
-export const ideaById = syncedQuery(
-  'ideaById',
-  z.tuple([z.string(), z.string()]),
-  (userId: string, ideaId: string) => {
-    return builder.contentIdea
-      .where('userId', userId as UuidV7)
-      .where('id', ideaId as UuidV7);
-  }
-);
+export const queries = defineQueries({
+	// Query without parameters
+	allIdeas: defineQuery(({ ctx }) => {
+		return zql.contentIdea.where('userId', ctx.userID).orderBy('createdAt', 'desc');
+	}),
+
+	// Query with Zod-validated parameter
+	ideaById: defineQuery(zUuidV7(), ({ ctx, args: ideaId }) => {
+		return zql.contentIdea.where('userId', ctx.userID).where('id', ideaId);
+	})
+});
 ```
 
 **Using in components**:
 
 ```svelte
 <script lang="ts">
-  import { get_z } from '$lib/z.svelte';
-  import { createParameterizedQuery } from '$lib/zero/use-query.svelte';
-  import * as queries from '$lib/zero/queries';
+	import { get_z } from '$lib/z.svelte';
+	import { queries } from '$lib/zero/queries';
 
-  const z = get_z();
+	const z = get_z();
 
-  const ideaQuery = createParameterizedQuery(z, queries.ideaById, () => [
-    page.params.ideaId as UuidV7
-  ]);
+	// Static query
+	const ideasQuery = z.q(queries.allIdeas());
+	const ideas = $derived(ideasQuery.data);
 
-  const idea = $derived(ideaQuery.data[0]);
+	// Parameterized query with reactivity
+	const ideaQuery = $derived(z.q(queries.ideaById(page.params.ideaId)));
+	const idea = $derived(ideaQuery.data[0]);
 </script>
 ```
 
 **Benefits**:
-- Automatic userId injection
-- Svelte 5 fine-grained reactivity
-- Server-side query definitions
-- Type-safe parameters
+
+- Context-based authorization (`ctx.userID` automatically available)
+- Zod validation for query parameters
+- Svelte 5 fine-grained reactivity with `$derived`
+- Type-safe queries and results
 
 ## Common Query Patterns
 
@@ -299,41 +305,31 @@ export const ideaById = syncedQuery(
 
 ```typescript
 // In src/lib/zero/queries.ts
-export const ideasByStatus = syncedQuery(
-  'ideasByStatus',
-  z.tuple([z.string()]),
-  (userId: string) => {
-    return builder.contentIdea
-      .where('userId', userId as UuidV7)
-      .orderBy('updatedAt', 'desc');
-  }
-);
+export const queries = defineQueries({
+	allIdeas: defineQuery(({ ctx }) => {
+		return zql.contentIdea.where('userId', ctx.userID).orderBy('updatedAt', 'desc');
+	})
+});
 ```
 
 Client-side grouping by status happens in the component.
 
-### Timeline - Upcoming Artifacts
+### Timeline - Scheduled Artifacts
 
 ```typescript
-export const upcomingArtifacts = syncedQuery(
-  'upcomingArtifacts',
-  z.tuple([z.string()]),
-  (userId: string) => {
-    return builder.contentArtifact
-      .where('userId', userId as UuidV7)
-      .where('status', 'ready')
-      .orderBy('plannedPublishDate', 'asc');
-  }
-);
+export const queries = defineQueries({
+	scheduledArtifacts: defineQuery(({ ctx }) => {
+		return zql.contentArtifact.where('userId', ctx.userID).orderBy('plannedPublishDate', 'asc');
+	})
+});
 ```
 
 ### Tag Filtering
 
 ```typescript
 // Filter happens client-side after query
-const ideas = ideaQuery.data.filter(idea =>
-  selectedTags.length === 0 ||
-  selectedTags.some(tag => idea.tags.includes(tag))
+const ideas = ideaQuery.data.filter(
+	(idea) => selectedTags.length === 0 || selectedTags.some((tag) => idea.tags.includes(tag))
 );
 ```
 
@@ -347,8 +343,8 @@ Uses Fuse.js for client-side fuzzy search:
 import Fuse from 'fuse.js';
 
 const fuse = new Fuse(ideas, {
-  keys: ['oneLiner', 'content', 'notes', 'tags'],
-  threshold: 0.3
+	keys: ['oneLiner', 'content', 'notes', 'tags'],
+	threshold: 0.3
 });
 
 const results = fuse.search(searchTerm);
@@ -367,9 +363,9 @@ export type ContentArtifact = typeof contentArtifact.$inferSelect;
 
 // ❌ Don't manually define
 type ContentIdea = {
-  id: string;
-  userId: string;
-  // ...
+	id: string;
+	userId: string;
+	// ...
 };
 ```
 
@@ -390,7 +386,7 @@ const id = generateId(); // Returns UuidV7
 ```typescript
 // ✅ Type-safe non-empty check
 if (isNonEmpty(ideas)) {
-  // ideas is Idea[], not Idea[] | []
+	// ideas is Idea[], not Idea[] | []
 }
 
 // ✅ Non-null assertion with runtime check
@@ -435,6 +431,7 @@ But for personal content management? Perfect fit.
 ### Planned Additions
 
 1. **Version History** - Track content evolution
+
    ```typescript
    content_idea_version {
      id: uuid (PK),
@@ -495,6 +492,7 @@ vim src/lib/zero/schema.ts
 **Symptom**: "Column not found" or "Table does not exist" errors
 
 **Fix**:
+
 ```bash
 pnpm db:push          # Sync database
 pnpm zero:generate    # Regenerate Zero schema
@@ -507,6 +505,7 @@ pnpm zero:generate    # Regenerate Zero schema
 **Cause**: Permission mismatch or cookie not forwarded
 
 **Debug**:
+
 1. Check `ZERO_MUTATE_FORWARD_COOKIES=true`
 2. Verify `authData.sub` matches user ID
 3. Check cookie domain configuration
@@ -516,6 +515,7 @@ pnpm zero:generate    # Regenerate Zero schema
 **Symptom**: Client shows stale or wrong data
 
 **Fix**:
+
 ```typescript
 // Clear IndexedDB (client-side)
 await z.clear();

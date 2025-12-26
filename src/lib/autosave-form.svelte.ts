@@ -49,7 +49,7 @@ export function createAutosaveForm<T extends Record<string, unknown>, S = unknow
 		if (debounceTimeout) clearTimeout(debounceTimeout);
 
 		debounceTimeout = setTimeout(() => {
-			save();
+			void save();
 		}, debounceMs);
 	});
 

@@ -72,4 +72,4 @@ async function takeScreenshots(): Promise<void> {
 	}
 }
 
-takeScreenshots();
+await takeScreenshots();

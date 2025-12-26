@@ -87,5 +87,10 @@ async function getGitHubUser(accessToken: string) {
 			Authorization: `Bearer ${accessToken}`
 		}
 	});
-	return await response.json();
+	return (await response.json()) as {
+		id: number;
+		login: string;
+		avatar_url: string;
+		email: string | null;
+	};
 }

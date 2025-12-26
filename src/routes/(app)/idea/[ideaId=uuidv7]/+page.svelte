@@ -13,8 +13,8 @@
 	import PromptSelector from '$lib/components/prompt-selector.svelte';
 	import ArtifactCard from '$lib/components/artifact-card.svelte';
 	import { TagsInput } from '$lib/components/ui/tags-input';
-	import { createParameterizedQuery, createQuery } from '$lib/zero/use-query.svelte';
-	import * as queries from '$lib/zero/queries';
+	import { queries } from '$lib/zero/queries';
+	import { mutators } from '$lib/zero/mutators';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { toast } from 'svelte-sonner';
 	import { createAutosaveForm } from '$lib/autosave-form.svelte';
@@ -23,15 +23,14 @@
 
 	const { params } = $props();
 
-	const ideasQuery = createParameterizedQuery(z, queries.ideaById, () => [params.ideaId]);
+	// Parameterized queries with reactive args using $derived
+	const ideasQuery = $derived(z.q(queries.ideaById(params.ideaId as UuidV7)));
 	const idea = $derived(ideasQuery.data[0]);
 
-	const settingsQuery = createQuery(z, queries.userSettings);
+	const settingsQuery = z.q(queries.userSettings());
 	const settings = $derived(settingsQuery.data[0]);
 
-	const artifactsQuery = createParameterizedQuery(z, queries.artifactsByIdeaId, () => [
-		params.ideaId
-	]);
+	const artifactsQuery = $derived(z.q(queries.artifactsByIdeaId(params.ideaId as UuidV7)));
 	const artifacts = $derived(artifactsQuery.data);
 
 	let promptSelectorOpen = $state(false);
@@ -78,14 +77,16 @@
 		onSave: async (values) => {
 			if (!idea) return;
 
-			const write = z.mutate.contentIdea.update({
-				id: idea.id,
-				oneLiner: values.oneLiner,
-				status: values.status,
-				notes: values.notes,
-				content: values.content,
-				tags: values.tags
-			});
+			const write = z.mutate(
+				mutators.contentIdea.update({
+					id: idea.id,
+					oneLiner: values.oneLiner,
+					status: values.status,
+					notes: values.notes,
+					content: values.content,
+					tags: values.tags
+				})
+			);
 			await write.client;
 		}
 	});
@@ -94,12 +95,12 @@
 		promptSelectorOpen = true;
 	}
 
-	function handleKeydown(event: KeyboardEvent) {
+	async function handleKeydown(event: KeyboardEvent) {
 		const isInputFocused = ['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement)?.tagName);
 
 		if (event.key === 's' && (event.metaKey || event.ctrlKey)) {
 			event.preventDefault();
-			form.save();
+			await form.save();
 			return;
 		}
 
@@ -107,18 +108,18 @@
 			const hasOpenDialog = document.querySelector('[role="dialog"]');
 			if (!hasOpenDialog && !promptSelectorOpen) {
 				event.preventDefault();
-				goBack();
+				await goBack();
 			}
 		}
 	}
 
-	function goBack() {
-		goto(resolve('/'));
+	async function goBack() {
+		await goto(resolve('/'));
 	}
 
 	function handleEditArtifact(id: string) {
 		if (!idea) return;
-		goto(resolve(`/idea/${idea.id}/artifact/${id}`));
+		void goto(resolve(`/idea/${idea.id}/artifact/${id}`));
 	}
 
 	async function handleCreateArtifact() {
@@ -126,17 +127,19 @@
 
 		try {
 			const artifactId = generateId();
-			const write = z.mutate.contentArtifact.create({
-				id: artifactId,
-				ideaId: idea.id,
-				title: undefined,
-				content: '',
-				artifactType: 'thread',
-				platform: undefined
-			});
+			const write = z.mutate(
+				mutators.contentArtifact.create({
+					id: artifactId,
+					ideaId: idea.id,
+					title: undefined,
+					content: '',
+					artifactType: 'thread',
+					platform: undefined
+				})
+			);
 			await write.client;
 
-			goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
+			void goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
 		} catch (error) {
 			console.error('Failed to create artifact:', error);
 		}
@@ -147,24 +150,26 @@
 
 		try {
 			const artifactId = generateId();
-			const write = z.mutate.contentArtifact.create({
-				id: artifactId,
-				ideaId: idea.id,
-				title: undefined,
-				content: '',
-				artifactType: artifactType as
-					| 'blog-post'
-					| 'thread'
-					| 'carousel'
-					| 'newsletter'
-					| 'email'
-					| 'short-post'
-					| 'comment',
-				platform: undefined
-			});
+			const write = z.mutate(
+				mutators.contentArtifact.create({
+					id: artifactId,
+					ideaId: idea.id,
+					title: undefined,
+					content: '',
+					artifactType: artifactType as
+						| 'blog-post'
+						| 'thread'
+						| 'carousel'
+						| 'newsletter'
+						| 'email'
+						| 'short-post'
+						| 'comment',
+					platform: undefined
+				})
+			);
 			await write.client;
 
-			goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
+			void goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
 		} catch (error) {
 			console.error('Failed to create artifact:', error);
 		}
@@ -179,7 +184,7 @@
 		if (!artifactToDelete) return;
 
 		try {
-			const write = z.mutate.contentArtifact.delete(artifactToDelete as UuidV7);
+			const write = z.mutate(mutators.contentArtifact.delete(artifactToDelete as UuidV7));
 			await write.client;
 			deleteDialogOpen = false;
 			artifactToDelete = null;
@@ -203,6 +208,7 @@
 			textarea.style.opacity = '0';
 			document.body.appendChild(textarea);
 			textarea.select();
+			// eslint-disable-next-line @typescript-eslint/no-deprecated -- Needed for fallback
 			const success = document.execCommand('copy');
 			document.body.removeChild(textarea);
 
@@ -229,7 +235,7 @@
 	<div class="overflow-x-hidden p-4 sm:p-8">
 		<div class="mx-auto max-w-7xl">
 			<h1 class="sr-only">{idea.oneLiner || 'Untitled Idea'}</h1>
-			<div class="mb-6 flex max-w-[1224px] border-b pb-6">
+			<div class="mb-6 flex max-w-306 border-b pb-6">
 				<Input
 					bind:value={form.values.oneLiner}
 					placeholder="Idea title..."
@@ -237,13 +243,13 @@
 				/>
 			</div>
 
-			<div class="mb-6 max-w-[1224px]">
+			<div class="mb-6 max-w-306">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2 text-sm">
 						<div class="flex items-center gap-2">
 							<span class="text-muted-foreground">Status:</span>
 							<Select.Root type="single" bind:value={form.values.status}>
-								<Select.Trigger class="h-8 w-[100px] sm:w-[140px]">
+								<Select.Trigger class="h-8 w-25 sm:w-35">
 									{statusOptions.find((o) => o.value === form.values.status)?.label ||
 										'Select status'}
 								</Select.Trigger>
@@ -261,7 +267,7 @@
 							>Updated {formatRelativeTime(idea.updatedAt)}</span
 						>
 					</div>
-					<div class="flex min-w-[60px] shrink-0 items-center gap-1">
+					<div class="flex min-w-15 shrink-0 items-center gap-1">
 						{#if form.status === 'saved'}
 							<CircleCheck class="h-3.5 w-3.5 text-green-600" />
 							<span class="text-xs text-green-600">Saved</span>
@@ -270,7 +276,7 @@
 				</div>
 			</div>
 
-			<div class="mb-6 max-w-[1224px] space-y-2">
+			<div class="mb-6 max-w-306 space-y-2">
 				<label for="tags" class="text-sm font-semibold">Tags</label>
 				<p class="text-xs text-muted-foreground">
 					Organize your ideas with tags (use comma, semicolon, or Enter to add)
@@ -282,9 +288,7 @@
 				/>
 			</div>
 
-			<div
-				class="grid max-w-[1224px] grid-cols-1 gap-6 lg:grid-cols-[minmax(0,600px)_minmax(0,600px)]"
-			>
+			<div class="grid max-w-306 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,600px)_minmax(0,600px)]">
 				<div class="min-w-0 space-y-2">
 					<label for="notes" class="text-sm font-semibold">Notes</label>
 					<p class="text-xs text-muted-foreground">
@@ -320,7 +324,7 @@
 				</div>
 			</div>
 
-			<div class="mt-12 max-w-[1224px] border-t pt-8">
+			<div class="mt-12 max-w-306 border-t pt-8">
 				<div class="mb-6 flex items-center justify-between gap-3">
 					<div class="min-w-0 flex-1">
 						<h2 class="typography-h2">
