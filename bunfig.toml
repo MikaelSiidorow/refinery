@@ -1,0 +1,7 @@
+[install]
+# Only install package versions published at least 3 days ago
+# This helps protect against supply chain attacks by avoiding very new releases
+minimumReleaseAge = 259200
+
+# These packages will bypass the 3-day minimum age requirement
+minimumReleaseAgeExcludes = ["@types/bun", "typescript"]

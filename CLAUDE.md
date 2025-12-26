@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Authentication**: GitHub OAuth with session-based auth (Oslo libraries)
 - **Styling**: TailwindCSS v4 with mode-watcher for dark mode
 - **Search/Matching**: Fuse.js for client-side fuzzy search and example matching
-- **Package Manager**: pnpm
+- **Package Manager**: Bun
 
 ## Documentation
 
@@ -74,36 +74,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Running the application
 
 ```bash
-pnpm dev           # Start development server
-pnpm dev -- --open # Start dev server and open in browser
-pnpm build         # Build for production
-pnpm preview       # Preview production build
+bun dev           # Start development server
+bun dev -- --open # Start dev server and open in browser
+bun run build     # Build for production
+bun run preview   # Preview production build
 ```
 
 ### Database (Drizzle ORM - Server-side)
 
 ```bash
-pnpm db:start      # Start PostgreSQL via docker compose
-pnpm db:push       # Push schema changes to database
-pnpm db:generate   # Generate migration files
-pnpm db:migrate    # Run migrations
-pnpm db:studio     # Open Drizzle Studio UI
+bun run db:start      # Start PostgreSQL via docker compose
+bun run db:push       # Push schema changes to database
+bun run db:generate   # Generate migration files
+bun run db:migrate    # Run migrations
+bun run db:studio     # Open Drizzle Studio UI
 ```
 
 ### Zero (Local-first sync)
 
 ```bash
-pnpm zero:generate # Generate Zero schema from Drizzle schema
-pnpm zero:start    # Start Zero cache server for development
+bun run zero:generate # Generate Zero schema from Drizzle schema
+bun run zero:start    # Start Zero cache server for development
 ```
 
 ### Code Quality
 
 ```bash
-pnpm check         # Type-check with svelte-check
-pnpm check:watch   # Type-check in watch mode
-pnpm lint          # Run prettier and eslint
-pnpm format        # Format code with prettier
+bun run check         # Type-check with svelte-check
+bun run check:watch   # Type-check in watch mode
+bun run lint          # Run prettier and eslint
+bun run format        # Format code with prettier
 ```
 
 ## Architecture
@@ -113,15 +113,15 @@ pnpm format        # Format code with prettier
 The application uses both Drizzle ORM (server-side) and Zero (client-side local-first sync):
 
 1. **Drizzle Schema** (`src/lib/server/db/schema.ts`): Source of truth for PostgreSQL tables
-2. **Zero Schema** (`src/lib/zero/zero-schema.gen.ts`): Auto-generated from Drizzle schema via `pnpm zero:generate`
+2. **Zero Schema** (`src/lib/zero/zero-schema.gen.ts`): Auto-generated from Drizzle schema via `bun run zero:generate`
 3. **Zero Permissions** (`src/lib/zero/schema.ts`): Defines row-level permissions using Zero's permission system
 4. **Zero Mutators** (`src/lib/zero/mutators.ts`): Server-side mutation functions with authorization checks
 
 **Important workflow**: When modifying database schema:
 
 1. Update `src/lib/server/db/schema.ts` (Drizzle schema)
-2. Run `pnpm db:push` to sync with PostgreSQL
-3. Run `pnpm zero:generate` to regenerate Zero schema
+2. Run `bun run db:push` to sync with PostgreSQL
+3. Run `bun run zero:generate` to regenerate Zero schema
 
 ### Zero Integration
 

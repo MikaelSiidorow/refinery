@@ -1,36 +1,33 @@
 # Dockerfile for SvelteKit App
 # Multi-stage build for optimized production image
 
-# Stage 1: Build
-FROM node:24-slim AS builder
+ARG BUN_VERSION=1.3.3
 
-# Enable pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+# Stage 1: Build
+FROM oven/bun:${BUN_VERSION} AS builder
 
 WORKDIR /app
 
 # Copy dependency files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 
-# Install dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+# Install dependencies with cache mount
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Generate Zero schema from Drizzle schema
-RUN pnpm zero:generate
+RUN bun run zero:generate
 
 # Build application
-RUN pnpm build
+RUN bun run build
 
 # Prune dev dependencies
-RUN pnpm prune --prod
+RUN rm -rf node_modules && bun install --frozen-lockfile --production
 
 # Stage 2: Production
-FROM node:24-slim
+FROM oven/bun:${BUN_VERSION}-slim
 
 WORKDIR /app
 
@@ -49,10 +46,10 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node --eval "fetch('http://localhost:3000/').then(r => r.ok || process.exit(1)).catch(() => process.exit(1))"
+  CMD bun --eval "fetch('http://localhost:3000/').then(r => r.ok || process.exit(1)).catch(() => process.exit(1))"
 
 # Set environment
 ENV NODE_ENV=production
 
 # Start server
-CMD ["node", "build"]
+CMD ["bun", "run", "./build"]

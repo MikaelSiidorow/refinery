@@ -42,7 +42,7 @@ echo -e "${GREEN}Step 1: Running Drizzle migrations...${NC}"
 
 # Run Drizzle migrations first
 export DATABASE_URL="$ZERO_UPSTREAM_DB"
-pnpm exec drizzle-kit migrate
+bunx drizzle-kit migrate
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}✗ Drizzle migration failed${NC}"
@@ -55,7 +55,7 @@ echo ""
 echo -e "${GREEN}Step 2: Deploying Zero permissions...${NC}"
 
 # Run zero-deploy-permissions
-pnpm exec zero-deploy-permissions \
+bunx zero-deploy-permissions \
     --schema-path src/lib/zero/schema.ts \
     --upstream-db "$ZERO_UPSTREAM_DB" \
     --app-id "$ZERO_APP_ID" \

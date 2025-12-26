@@ -1,6 +1,7 @@
 # Dependencies
 node_modules
 .pnpm-store
+.bun
 
 # Build outputs
 build
@@ -56,6 +57,7 @@ logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
+bun-debug.log*
 
 # Temporary files
 tmp

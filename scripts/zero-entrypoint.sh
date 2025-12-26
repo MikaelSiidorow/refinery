@@ -33,7 +33,7 @@ echo "✓ /data directory is writable"
 
 echo "Running database migrations..."
 export DATABASE_URL="$ZERO_UPSTREAM_DB"
-pnpm exec drizzle-kit migrate
+bunx drizzle-kit migrate
 
 if [ $? -eq 0 ]; then
     echo "✓ Migrations completed successfully"
@@ -43,7 +43,7 @@ else
 fi
 
 echo "Deploying Zero permissions..."
-pnpm exec zero-deploy-permissions \
+bunx zero-deploy-permissions \
     --schema-path src/lib/zero/schema.ts \
     --upstream-db "$ZERO_UPSTREAM_DB" \
     --app-id "${ZERO_APP_ID:-refinery}" \
@@ -69,4 +69,4 @@ echo "  ZERO_ADMIN_PASSWORD: ${ZERO_ADMIN_PASSWORD:+[set]}"
 
 # Start zero-cache with environment variables
 # CVR_DB and CHANGE_DB default to ZERO_UPSTREAM_DB if not set
-exec pnpm exec zero-cache
+exec bunx zero-cache
