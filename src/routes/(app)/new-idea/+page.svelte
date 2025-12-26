@@ -59,7 +59,7 @@
 		}
 	}
 
-	function addIdeaToQueue() {
+	async function addIdeaToQueue() {
 		const trimmed = inputValue.trim();
 		if (!trimmed) return;
 
@@ -68,11 +68,32 @@
 			inputError = null; // Clear any previous errors
 
 			const isDuplicate = checkDuplicate(trimmed);
-			queuedIdeas.push({
-				id: generateId(),
-				text: trimmed,
-				isDuplicate
+			const id = generateId();
+
+			// Create immediately without queue
+			const write = z.mutate.contentIdea.create({
+				id,
+				oneLiner: trimmed
 			});
+			await write.client;
+
+			// Show success toast with optional link to view
+			if (isDuplicate) {
+				toast.success('Idea added to inbox', {
+					description: 'Similar to an existing idea',
+					action: {
+						label: 'View',
+						onClick: () => goto(`/idea/${id}`)
+					}
+				});
+			} else {
+				toast.success('Idea added to inbox', {
+					action: {
+						label: 'View',
+						onClick: () => goto(`/idea/${id}`)
+					}
+				});
+			}
 
 			inputValue = '';
 		} catch (error) {
@@ -80,6 +101,10 @@
 				// Get the first error message from Zod
 				const firstError = error.issues[0];
 				inputError = firstError?.message || 'Invalid input';
+			} else {
+				toast.error('Failed to create idea', {
+					description: 'Please try again or check your connection.'
+				});
 			}
 		}
 	}
@@ -232,12 +257,11 @@
 		<div class="mb-8">
 			<h1 class="typography-h1">Quick Capture</h1>
 			<p class="mt-2 text-muted-foreground md:hidden">
-				Rapidly capture content ideas. Tap Add to queue, then submit all at once.
+				Rapidly capture content ideas. Each idea is added immediately to your inbox.
 			</p>
 			<p class="mt-2 hidden text-muted-foreground md:block">
-				Rapidly capture content ideas. Press <Kbd.Root>Enter</Kbd.Root> to queue, <Kbd.Root
-					>{cmdOrCtrl}+Enter</Kbd.Root
-				> to submit.
+				Rapidly capture content ideas. Press <Kbd.Root>Enter</Kbd.Root> to add. Paste multiple
+				lines to review before adding.
 			</p>
 		</div>
 
