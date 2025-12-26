@@ -71,10 +71,12 @@
 			const id = generateId();
 
 			// Create immediately without queue
-			const write = z.mutate.contentIdea.create({
-				id,
-				oneLiner: trimmed
-			});
+			const write = z.mutate(
+				mutators.contentIdea.create({
+					id,
+					oneLiner: trimmed
+				})
+			);
 			await write.client;
 
 			// Show success toast with optional link to view
