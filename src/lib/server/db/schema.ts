@@ -3,8 +3,8 @@ import { relations } from 'drizzle-orm';
 import { integer, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import type { Encrypted } from '../crypto';
 import { ARTIFACT_TYPES } from '../../constants/artifact-types';
-import { IDEA_STATUSES } from '$lib/constants/idea-statuses';
-import { ARTIFACT_STATUSES } from '$lib/constants/artifact-statuses';
+import { IDEA_STATUSES } from '../../constants/idea-statuses';
+import { ARTIFACT_STATUSES } from '../../constants/artifact-statuses';
 
 /**
  * Defaults must be handled by Zero Mutators. See: https://github.com/rocicorp/drizzle-zero/issues/197
