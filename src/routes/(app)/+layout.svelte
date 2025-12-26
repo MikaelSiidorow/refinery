@@ -9,6 +9,7 @@
 	import AppSidebar from '$lib/components/layout/app-sidebar.svelte';
 	import AppBreadcrumb from '$lib/components/layout/app-breadcrumb.svelte';
 	import CommandPalette from '$lib/components/layout/command-palette.svelte';
+	import BottomNav from '$lib/components/layout/bottom-nav.svelte';
 	import { setupAppShortcuts } from '$lib/hooks/use-keyboard-shortcuts.svelte';
 	import type { LayoutData } from './$types';
 	import { set_z } from '$lib/z.svelte';
@@ -37,7 +38,7 @@
 <Sidebar.Provider>
 	<CommandPalette bind:open={commandPaletteOpen} />
 	<AppSidebar user={data.user} />
-	<Sidebar.Inset>
+	<Sidebar.Inset class="pb-16 md:pb-0">
 		<header
 			class="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4"
 		>
@@ -68,4 +69,5 @@
 		</header>
 		{@render children?.()}
 	</Sidebar.Inset>
+	<BottomNav />
 </Sidebar.Provider>
