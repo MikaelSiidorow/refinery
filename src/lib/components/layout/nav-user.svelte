@@ -6,9 +6,11 @@
 	import type { User } from '$lib/server/db/schema';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
+	import { handleBuildInfoClick } from '$lib/utils/build-info';
+
 	let { user }: { user: Pick<User, 'username' | 'avatarUrl'> } = $props();
 	const sidebar = useSidebar();
-	const initials = user.username.slice(0, 2).toUpperCase();
+	const initials = $derived(user.username.slice(0, 2).toUpperCase());
 </script>
 
 <Sidebar.Menu>
@@ -39,7 +41,12 @@
 				sideOffset={4}
 			>
 				<DropdownMenu.Label class="p-0 font-normal">
-					<div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+					<!-- Hidden build info trigger: tap 5 times -->
+					<button
+						type="button"
+						class="flex w-full items-center gap-2 px-1 py-1.5 text-left text-sm"
+						onclick={handleBuildInfoClick}
+					>
 						<Avatar.Root class="size-8 rounded-lg">
 							<Avatar.Image src={user.avatarUrl} alt={user.username} />
 							<Avatar.Fallback class="rounded-lg">{initials}</Avatar.Fallback>
@@ -47,7 +54,7 @@
 						<div class="grid flex-1 text-left text-sm leading-tight">
 							<span class="truncate font-medium">{user.username}</span>
 						</div>
-					</div>
+					</button>
 				</DropdownMenu.Label>
 				<DropdownMenu.Separator />
 				<form method="POST" action="/sign-out">
