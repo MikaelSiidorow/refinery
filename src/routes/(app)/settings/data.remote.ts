@@ -1,7 +1,7 @@
 import { query, command } from '$app/server';
 import { getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
-import { z } from 'zod';
+import * as v from 'valibot';
 import { db } from '$lib/server/db';
 import { connectedAccount, contentIdea, contentArtifact } from '$lib/server/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -37,9 +37,9 @@ export const getConnectedAccounts = query(async () => {
 });
 
 export const connectBluesky = command(
-	z.object({
-		identifier: z.string().min(1),
-		password: z.string().min(1)
+	v.object({
+		identifier: v.pipe(v.string(), v.minLength(1)),
+		password: v.pipe(v.string(), v.minLength(1))
 	}),
 	async ({ identifier, password }) => {
 		const { locals } = getRequestEvent();
@@ -93,8 +93,8 @@ export const connectBluesky = command(
 );
 
 export const disconnectAccount = command(
-	z.object({
-		platform: z.enum(['bluesky', 'linkedin'])
+	v.object({
+		platform: v.picklist(['bluesky', 'linkedin'])
 	}),
 	async ({ platform }) => {
 		const { locals } = getRequestEvent();
@@ -114,8 +114,8 @@ export const disconnectAccount = command(
 );
 
 export const importPosts = command(
-	z.object({
-		platform: z.enum(['bluesky', 'linkedin'])
+	v.object({
+		platform: v.picklist(['bluesky', 'linkedin'])
 	}),
 	async ({ platform }) => {
 		const { locals } = getRequestEvent();

@@ -1,8 +1,9 @@
-import { z } from 'zod';
+import * as v from 'valibot';
 
-export const ideaSchema = z
-	.string()
-	.min(1, { message: 'Idea cannot be empty' })
-	.max(256, { message: 'Max 256 characters' });
+export const ideaSchema = v.pipe(
+	v.string(),
+	v.minLength(1, 'Idea cannot be empty'),
+	v.maxLength(256, 'Max 256 characters')
+);
 
-export type IdeaSchema = z.infer<typeof ideaSchema>;
+export type IdeaSchema = v.InferOutput<typeof ideaSchema>;

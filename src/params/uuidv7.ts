@@ -1,6 +1,7 @@
 import type { UuidV7 } from '$lib/utils';
-import { zUuidV7 } from '$lib/utils/validators';
+import { vUuidV7 } from '$lib/utils/validators';
+import * as v from 'valibot';
 
 export function match(value: string): value is UuidV7 {
-	return zUuidV7().safeParse(value).success;
+	return v.safeParse(vUuidV7(), value).success;
 }

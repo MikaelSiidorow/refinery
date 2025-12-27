@@ -1,7 +1,7 @@
 import { defineQueries, defineQuery } from '@rocicorp/zero';
-import { z } from 'zod';
+import * as v from 'valibot';
 import { zql } from './schema';
-import { zUuidV7 } from '$lib/utils/validators';
+import { vUuidV7 } from '$lib/utils/validators';
 import { ARTIFACT_TYPES } from '$lib/constants/artifact-types';
 
 export const queries = defineQueries({
@@ -17,18 +17,18 @@ export const queries = defineQueries({
 			.orderBy('createdAt', 'desc');
 	}),
 	/** Single idea by ID  */
-	ideaById: defineQuery(zUuidV7(), ({ ctx, args: ideaId }) => {
+	ideaById: defineQuery(vUuidV7(), ({ ctx, args: ideaId }) => {
 		return zql.contentIdea.where('userId', ctx.userID).where('id', ideaId);
 	}),
 	/** Artifacts for a specific idea */
-	artifactsByIdeaId: defineQuery(zUuidV7(), ({ ctx, args: ideaId }) => {
+	artifactsByIdeaId: defineQuery(vUuidV7(), ({ ctx, args: ideaId }) => {
 		return zql.contentArtifact
 			.where('userId', ctx.userID)
 			.where('ideaId', ideaId)
 			.orderBy('createdAt', 'desc');
 	}),
 	/** Single artifact by ID */
-	artifactById: defineQuery(zUuidV7(), ({ ctx, args: artifactId }) => {
+	artifactById: defineQuery(vUuidV7(), ({ ctx, args: artifactId }) => {
 		return zql.contentArtifact.where('userId', ctx.userID).where('id', artifactId);
 	}),
 	/** User's content settings */
@@ -40,7 +40,7 @@ export const queries = defineQueries({
 		return zql.contentArtifact.where('userId', ctx.userID).orderBy('plannedPublishDate', 'asc');
 	}),
 	/** Recent artifacts by type (for few-shot examples in prompts) */
-	recentArtifactsByType: defineQuery(z.enum(ARTIFACT_TYPES), ({ ctx, args: artifactType }) => {
+	recentArtifactsByType: defineQuery(v.picklist(ARTIFACT_TYPES), ({ ctx, args: artifactType }) => {
 		return zql.contentArtifact
 			.where('userId', ctx.userID)
 			.where('artifactType', artifactType)

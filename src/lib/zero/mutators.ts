@@ -1,62 +1,59 @@
-import type { contentIdea } from '$lib/server/db/schema';
 import { assertIsOwner } from './context';
 import { zql } from './schema';
 import { isNonEmpty, type UuidV7 } from '$lib/utils';
-import { z } from 'zod';
+import * as v from 'valibot';
 import { defineMutator, defineMutators } from '@rocicorp/zero';
-import { zUuidV7 } from '$lib/utils/validators';
+import { vShortString, vUuidV7 } from '$lib/utils/validators';
 import { IDEA_STATUSES } from '$lib/constants/idea-statuses';
 import { ARTIFACT_TYPES } from '$lib/constants/artifact-types';
 import { ARTIFACT_STATUSES } from '$lib/constants/artifact-statuses';
 
-const zShortString = z.string().min(1).max(256);
-
-const createContentIdeaSchema = z.object({
-	id: zUuidV7(),
-	oneLiner: zShortString
-}) satisfies z.ZodType<Partial<Omit<typeof contentIdea.$inferInsert, 'userId'>>>;
-
-const updateContentIdeaSchema = z.object({
-	id: zUuidV7(),
-	oneLiner: zShortString.optional(),
-	status: z.enum(IDEA_STATUSES).optional(),
-	content: z.string().optional(),
-	notes: z.string().optional(),
-	tags: z.array(z.string()).optional()
-}) satisfies z.ZodType<Partial<Omit<typeof contentIdea.$inferInsert, 'userId'>>>;
-
-const upsertContentSettingsSchema = z.object({
-	targetAudience: z.string(),
-	brandVoice: z.string(),
-	contentPillars: z.string(),
-	uniquePerspective: z.string()
+const createContentIdeaSchema = v.object({
+	id: vUuidV7(),
+	oneLiner: vShortString()
 });
 
-const createContentArtifactSchema = z.object({
-	id: zUuidV7(),
-	ideaId: zUuidV7(),
-	title: z.string().optional(),
-	content: z.string(),
-	artifactType: z.enum(ARTIFACT_TYPES),
-	platform: z.string().optional(),
-	plannedPublishDate: z.number().optional()
+const updateContentIdeaSchema = v.object({
+	id: vUuidV7(),
+	oneLiner: v.optional(vShortString()),
+	status: v.optional(v.picklist(IDEA_STATUSES)),
+	content: v.optional(v.string()),
+	notes: v.optional(v.string()),
+	tags: v.optional(v.array(v.string()))
 });
 
-const updateContentArtifactSchema = z.object({
-	id: zUuidV7(),
-	title: z.string().optional(),
-	content: z.string().optional(),
-	artifactType: z.enum(ARTIFACT_TYPES).optional(),
-	platform: z.string().optional(),
-	status: z.enum(ARTIFACT_STATUSES).optional(),
-	plannedPublishDate: z.number().optional(),
-	publishedAt: z.number().optional(),
-	publishedUrl: z.string().optional(),
-	impressions: z.number().optional(),
-	likes: z.number().optional(),
-	comments: z.number().optional(),
-	shares: z.number().optional(),
-	notes: z.string().optional()
+const upsertContentSettingsSchema = v.object({
+	targetAudience: v.string(),
+	brandVoice: v.string(),
+	contentPillars: v.string(),
+	uniquePerspective: v.string()
+});
+
+const createContentArtifactSchema = v.object({
+	id: vUuidV7(),
+	ideaId: vUuidV7(),
+	title: v.optional(v.string()),
+	content: v.string(),
+	artifactType: v.picklist(ARTIFACT_TYPES),
+	platform: v.optional(v.string()),
+	plannedPublishDate: v.optional(v.number())
+});
+
+const updateContentArtifactSchema = v.object({
+	id: vUuidV7(),
+	title: v.optional(v.string()),
+	content: v.optional(v.string()),
+	artifactType: v.optional(v.picklist(ARTIFACT_TYPES)),
+	platform: v.optional(v.string()),
+	status: v.optional(v.picklist(ARTIFACT_STATUSES)),
+	plannedPublishDate: v.optional(v.number()),
+	publishedAt: v.optional(v.number()),
+	publishedUrl: v.optional(v.string()),
+	impressions: v.optional(v.number()),
+	likes: v.optional(v.number()),
+	comments: v.optional(v.number()),
+	shares: v.optional(v.number()),
+	notes: v.optional(v.string())
 });
 
 export const mutators = defineMutators({
@@ -225,7 +222,7 @@ export const mutators = defineMutators({
 				});
 			}
 		),
-		delete: defineMutator(zUuidV7(), async ({ tx, ctx, args: id }) => {
+		delete: defineMutator(vUuidV7(), async ({ tx, ctx, args: id }) => {
 			const entity = await tx.run(zql.contentArtifact.where('id', id).one());
 			assertIsOwner(ctx, entity, id);
 			await tx.mutate.contentArtifact.delete({ id });

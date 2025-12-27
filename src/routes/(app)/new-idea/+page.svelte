@@ -9,13 +9,12 @@
 	import { CircleCheck, CircleAlert, X, LoaderCircle, Copy, Trash2, Pencil } from '@lucide/svelte';
 	import type { UuidV7 } from '$lib/utils';
 	import { formatRelativeTime } from '$lib/utils/date';
-	import { ZodError } from 'zod';
+	import * as v from 'valibot';
 	import { queries } from '$lib/zero/queries';
 	import { mutators } from '$lib/zero/mutators';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 
@@ -63,7 +62,7 @@
 		if (!trimmed) return;
 
 		try {
-			ideaSchema.parse(trimmed);
+			v.parse(ideaSchema, trimmed);
 			inputError = null; // Clear any previous errors
 
 			const isDuplicate = checkDuplicate(trimmed);
@@ -98,8 +97,8 @@
 
 			inputValue = '';
 		} catch (error) {
-			if (error instanceof ZodError) {
-				// Get the first error message from Zod
+			if (v.isValiError(error)) {
+				// Get the first error message from Valibot
 				const firstError = error.issues[0];
 				inputError = firstError?.message || 'Invalid input';
 			} else {
@@ -133,7 +132,7 @@
 			let addedCount = 0;
 			lines.forEach((line) => {
 				try {
-					ideaSchema.parse(line);
+					v.parse(ideaSchema, line);
 					const isDuplicate = checkDuplicate(line);
 					queuedIdeas.push({
 						id: generateId(),
@@ -205,7 +204,7 @@
 		if (!editValue.trim()) return;
 
 		try {
-			ideaSchema.parse(editValue.trim());
+			v.parse(ideaSchema, editValue.trim());
 			saveStatus[id] = 'saving';
 
 			const write = z.mutate(
@@ -237,8 +236,8 @@
 	let isOverLimit = $derived(charCount > 256); // Red error over 256
 	let hasError = $derived(inputError !== null || isOverLimit);
 
-	onMount(() => {
-		const sharedContent = $page.url.searchParams.get('shared');
+	$effect(() => {
+		const sharedContent = page.url.searchParams.get('shared');
 		if (sharedContent) {
 			inputValue = sharedContent.slice(0, 256);
 			void goto(resolve('/new-idea'), { replaceState: true });
