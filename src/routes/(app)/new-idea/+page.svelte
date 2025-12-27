@@ -9,7 +9,6 @@
 	import { CircleCheck, CircleAlert, X, LoaderCircle, Copy, Trash2, Pencil } from '@lucide/svelte';
 	import type { UuidV7 } from '$lib/utils';
 	import { formatRelativeTime } from '$lib/utils/date';
-	import { cmdOrCtrl } from '$lib/hooks/is-mac.svelte';
 	import { ZodError } from 'zod';
 	import { queries } from '$lib/zero/queries';
 	import { mutators } from '$lib/zero/mutators';
@@ -52,7 +51,7 @@
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
-			addIdeaToQueue();
+			void addIdeaToQueue();
 		} else if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
 			event.preventDefault();
 			void submitAllIdeas();
@@ -85,14 +84,14 @@
 					description: 'Similar to an existing idea',
 					action: {
 						label: 'View',
-						onClick: () => goto(`/idea/${id}`)
+						onClick: () => goto(resolve(`/idea/${id}`))
 					}
 				});
 			} else {
 				toast.success('Idea added to inbox', {
 					action: {
 						label: 'View',
-						onClick: () => goto(`/idea/${id}`)
+						onClick: () => goto(resolve(`/idea/${id}`))
 					}
 				});
 			}
@@ -262,8 +261,8 @@
 				Rapidly capture content ideas. Each idea is added immediately to your inbox.
 			</p>
 			<p class="mt-2 hidden text-muted-foreground md:block">
-				Rapidly capture content ideas. Press <Kbd.Root>Enter</Kbd.Root> to add. Paste multiple
-				lines to review before adding.
+				Rapidly capture content ideas. Press <Kbd.Root>Enter</Kbd.Root> to add. Paste multiple lines to
+				review before adding.
 			</p>
 		</div>
 
