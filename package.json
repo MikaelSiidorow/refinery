@@ -68,6 +68,7 @@
 		"vaul-svelte": "1.0.0-next.7",
 		"vite": "^7.3.0",
 		"vite-plugin-devtools-json": "^1.0.0",
+		"vite-plugin-lucide-preprocess": "^1.4.6",
 		"zero-svelte": "^1.2.2",
 		"zod": "^4.2.1"
 	},
