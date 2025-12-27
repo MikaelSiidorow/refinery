@@ -4,6 +4,10 @@
 # Stage 1: Build
 FROM node:24-slim AS builder
 
+# Build metadata (passed from CI)
+ARG GITHUB_SHA=unknown
+ARG GITHUB_REF_NAME=unknown
+
 # Enable pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -23,7 +27,9 @@ COPY . .
 # Generate Zero schema from Drizzle schema
 RUN pnpm zero:generate
 
-# Build application
+# Build application with metadata
+ENV GITHUB_SHA=${GITHUB_SHA}
+ENV GITHUB_REF_NAME=${GITHUB_REF_NAME}
 RUN pnpm build
 
 # Prune dev dependencies
