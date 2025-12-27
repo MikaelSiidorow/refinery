@@ -10,6 +10,7 @@
 	import AppBreadcrumb from '$lib/components/layout/app-breadcrumb.svelte';
 	import CommandPalette from '$lib/components/layout/command-palette.svelte';
 	import BottomNav from '$lib/components/layout/bottom-nav.svelte';
+	import LoadingProvider from '$lib/components/loading-provider.svelte';
 	import { setupAppShortcuts } from '$lib/hooks/use-keyboard-shortcuts.svelte';
 	import type { LayoutData } from './$types';
 	import { set_z, get_z } from '$lib/z.svelte';
@@ -30,11 +31,13 @@
 		})
 	);
 
-	// Preload core queries immediately so data is ready when child routes mount
+	// Preload core queries and store promises for LoadingProvider
 	const z = get_z();
-	z.preload(queries.allIdeas());
-	z.preload(queries.userSettings());
-	z.preload(queries.allArtifacts());
+	const preloads = [
+		z.preload(queries.allIdeas()),
+		z.preload(queries.userSettings()),
+		z.preload(queries.allArtifacts())
+	];
 
 	let commandPaletteOpen = $state(false);
 	const shortcuts = setupAppShortcuts();
@@ -42,39 +45,41 @@
 
 <svelte:window onkeydown={shortcuts.handleKeydown} />
 
-<Sidebar.Provider>
-	<CommandPalette bind:open={commandPaletteOpen} />
-	<AppSidebar user={data.user} />
-	<Sidebar.Inset class="pb-16 md:pb-0">
-		<header
-			class="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4"
-		>
-			<Sidebar.Trigger class="-ml-1" />
-			<Separator orientation="vertical" class="mr-2 h-4" />
-			<AppBreadcrumb />
-			<button
-				class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md focus-ring text-muted-foreground transition-calm hover:bg-accent/15 md:hidden"
-				onclick={() => (commandPaletteOpen = true)}
-				aria-label="Open command palette"
-				type="button"
+<LoadingProvider {preloads}>
+	<Sidebar.Provider>
+		<CommandPalette bind:open={commandPaletteOpen} />
+		<AppSidebar user={data.user} />
+		<Sidebar.Inset class="pb-16 md:pb-0">
+			<header
+				class="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4"
 			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
+				<Sidebar.Trigger class="-ml-1" />
+				<Separator orientation="vertical" class="mr-2 h-4" />
+				<AppBreadcrumb />
+				<button
+					class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md focus-ring text-muted-foreground transition-calm hover:bg-accent/15 md:hidden"
+					onclick={() => (commandPaletteOpen = true)}
+					aria-label="Open command palette"
+					type="button"
 				>
-					<circle cx="11" cy="11" r="8"></circle>
-					<path d="m21 21-4.3-4.3"></path>
-				</svg>
-			</button>
-		</header>
-		{@render children?.()}
-	</Sidebar.Inset>
-	<BottomNav />
-</Sidebar.Provider>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="11" cy="11" r="8"></circle>
+						<path d="m21 21-4.3-4.3"></path>
+					</svg>
+				</button>
+			</header>
+			{@render children?.()}
+		</Sidebar.Inset>
+		<BottomNav />
+	</Sidebar.Provider>
+</LoadingProvider>

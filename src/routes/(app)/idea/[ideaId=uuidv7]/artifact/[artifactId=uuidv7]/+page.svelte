@@ -13,6 +13,8 @@
 	import PromptSelector from '$lib/components/prompt-selector.svelte';
 	import { createAutosaveForm } from '$lib/autosave-form.svelte';
 	import type { UuidV7 } from '$lib/utils';
+	import { isQueryLoading, shouldShow404 } from '$lib/zero/query-helpers';
+	import { ArtifactPageSkeleton } from '$lib/components/skeletons';
 
 	const z = get_z();
 
@@ -20,6 +22,8 @@
 
 	const artifactQuery = $derived(z.q(queries.artifactById(params.artifactId as UuidV7)));
 	const artifact = $derived(artifactQuery.data[0]);
+	const isLoading = $derived(isQueryLoading(artifactQuery));
+	const showNotFound = $derived(shouldShow404(artifact, artifactQuery));
 
 	const ideaQuery = $derived(z.q(queries.ideaById(params.ideaId as UuidV7)));
 	const idea = $derived(ideaQuery.data[0]);
@@ -175,10 +179,18 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <svelte:head>
-	<title>{artifact?.title || 'Edit Artifact'} - Refinery</title>
+	<title>{artifact?.title || (isLoading ? 'Loading...' : 'Not Found')} - Refinery</title>
 </svelte:head>
 
-{#if artifact && idea}
+{#if isLoading}
+	<ArtifactPageSkeleton />
+{:else if showNotFound}
+	<div class="flex min-h-96 flex-col items-center justify-center p-8">
+		<h1 class="mb-2 typography-h1">Artifact Not Found</h1>
+		<p class="mb-4 text-muted-foreground">The artifact you're looking for doesn't exist.</p>
+		<Button href="/" variant="outline">Back to Dashboard</Button>
+	</div>
+{:else if artifact && idea}
 	<div class="mx-auto max-w-4xl px-4 py-4 sm:p-8">
 		<div class="mb-6 space-y-4 border-b pb-6">
 			<div class="flex items-center justify-between">
@@ -355,10 +367,6 @@
 				/>
 			</div>
 		</div>
-	</div>
-{:else}
-	<div class="mx-auto max-w-4xl p-4 sm:p-8">
-		<p class="text-muted-foreground">Loading artifact...</p>
 	</div>
 {/if}
 

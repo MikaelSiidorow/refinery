@@ -18,6 +18,8 @@
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { toast } from 'svelte-sonner';
 	import { createAutosaveForm } from '$lib/autosave-form.svelte';
+	import { isQueryLoading, shouldShow404 } from '$lib/zero/query-helpers';
+	import { IdeaPageSkeleton } from '$lib/components/skeletons';
 
 	const z = get_z();
 
@@ -26,6 +28,8 @@
 	// Parameterized queries with reactive args using $derived
 	const ideasQuery = $derived(z.q(queries.ideaById(params.ideaId as UuidV7)));
 	const idea = $derived(ideasQuery.data[0]);
+	const isLoading = $derived(isQueryLoading(ideasQuery));
+	const showNotFound = $derived(shouldShow404(idea, ideasQuery));
 
 	const settingsQuery = z.q(queries.userSettings());
 	const settings = $derived(settingsQuery.data[0]);
@@ -228,10 +232,18 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <svelte:head>
-	<title>{idea?.oneLiner || 'Not Found'} - Refinery</title>
+	<title>{idea?.oneLiner || (isLoading ? 'Loading...' : 'Not Found')} - Refinery</title>
 </svelte:head>
 
-{#if idea}
+{#if isLoading}
+	<IdeaPageSkeleton />
+{:else if showNotFound}
+	<div class="flex min-h-96 flex-col items-center justify-center p-8">
+		<h1 class="mb-2 typography-h1">Idea Not Found</h1>
+		<p class="mb-4 text-muted-foreground">The idea you're looking for doesn't exist.</p>
+		<Button href="/" variant="outline">Back to Dashboard</Button>
+	</div>
+{:else if idea}
 	<div class="overflow-x-hidden p-4 sm:p-8">
 		<div class="mx-auto max-w-7xl">
 			<h1 class="sr-only">{idea.oneLiner || 'Untitled Idea'}</h1>

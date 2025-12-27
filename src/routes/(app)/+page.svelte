@@ -10,10 +10,13 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { isNonEmpty } from '$lib/utils';
 	import { queries } from '$lib/zero/queries';
+	import { isQueryLoading } from '$lib/zero/query-helpers';
+	import { DashboardSkeleton } from '$lib/components/skeletons';
 
 	const z = get_z();
 
 	const allIdeasQuery = z.q(queries.allIdeas());
+	const isLoading = $derived(isQueryLoading(allIdeasQuery));
 
 	let selectedTags = $state<string[]>([]);
 
@@ -70,120 +73,124 @@
 	<title>Dashboard - Refinery</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl p-4 sm:p-8">
-	<div class="mb-8">
-		<h1 class="typography-h1">Dashboard</h1>
-		<p class="mt-2 text-sm text-muted-foreground">
-			{groupedIdeas.inbox.length} Inbox · {groupedIdeas.developing.length} Developing · {groupedIdeas
-				.ready.length} Ready · {groupedIdeas.published.length} Published
-		</p>
-	</div>
-
-	{#if isNonEmpty(allUniqueTags)}
-		<div class="mb-6 flex flex-wrap gap-2">
-			<span class="text-sm text-muted-foreground">Filter by tags:</span>
-			{#each allUniqueTags as tag (tag)}
-				{@const isSelected = selectedTags.includes(tag)}
-				<button
-					onclick={() => {
-						if (isSelected) {
-							selectedTags = selectedTags.filter((t) => t !== tag);
-						} else {
-							selectedTags = [...selectedTags, tag];
-						}
-					}}
-					class="rounded-md focus-ring px-2 py-1 text-xs transition-calm {getTagColor(
-						tag
-					)} {isSelected ? 'opacity-100' : 'opacity-60 hover:opacity-80'}"
-				>
-					{tag}
-				</button>
-			{/each}
-			{#if isNonEmpty(selectedTags)}
-				<button
-					onclick={() => {
-						selectedTags = [];
-					}}
-					class="rounded-md border border-dashed focus-ring px-2 py-1 text-xs transition-calm hover:bg-accent"
-				>
-					Clear
-				</button>
-			{/if}
+{#if isLoading}
+	<DashboardSkeleton />
+{:else}
+	<div class="mx-auto max-w-7xl p-4 sm:p-8">
+		<div class="mb-8">
+			<h1 class="typography-h1">Dashboard</h1>
+			<p class="mt-2 text-sm text-muted-foreground">
+				{groupedIdeas.inbox.length} Inbox · {groupedIdeas.developing.length} Developing · {groupedIdeas
+					.ready.length} Ready · {groupedIdeas.published.length} Published
+			</p>
 		</div>
-	{/if}
 
-	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		{#each Object.entries(statusConfig) as [status, config] (status)}
-			<div class="flex min-h-100 flex-col">
-				<div class="mb-3 flex items-center justify-between">
-					<h2 class="text-sm font-semibold text-muted-foreground">
-						{config.label}
-					</h2>
-					<Badge class="{config.badgeClass} ml-2">
-						{groupedIdeas[status as keyof typeof groupedIdeas].length}
-					</Badge>
-				</div>
-
-				<div class="space-y-2">
-					{#each groupedIdeas[status as keyof typeof groupedIdeas] as idea (idea.id)}
-						{@const urls = extractUrls(idea.oneLiner)}
-						{@const cleanText = urls.length > 0 ? removeUrls(idea.oneLiner) : idea.oneLiner}
-						<button
-							onclick={() => navigateToIdea(idea.id)}
-							class="group w-full rounded-lg border focus-ring interactive-surface bg-card p-3 text-left"
-							type="button"
-						>
-							<div class="mb-2 flex items-start justify-between gap-2">
-								<p class="line-clamp-2 flex-1 text-sm leading-relaxed wrap-break-word">
-									{cleanText}
-								</p>
-							</div>
-							{#if urls.length > 0}
-								<div class="mb-2">
-									<UrlBadges {urls} variant="outline" size="sm" />
-								</div>
-							{/if}
-							{#if isNonEmpty(idea.tags)}
-								<div class="mt-1.5 flex flex-wrap gap-1">
-									{#each idea.tags.slice(0, 3) as tag (tag)}
-										<Badge class="{getTagColor(tag)} px-1.5 py-0 text-xs">
-											{tag}
-										</Badge>
-									{/each}
-									{#if idea.tags.length > 3}
-										<Badge variant="outline" class="px-1.5 py-0 text-xs">
-											+{idea.tags.length - 3}
-										</Badge>
-									{/if}
-								</div>
-							{/if}
-							<p class="text-xs text-muted-foreground">
-								{formatRelativeTime(idea.createdAt)}
-							</p>
-						</button>
-					{:else}
-						<div class="rounded-lg border border-dashed p-6 text-center">
-							{#if status === 'inbox'}
-								<p class="mb-1 text-sm font-medium">No ideas yet</p>
-								<p class="text-xs text-muted-foreground">Capture ideas as they come to you</p>
-							{:else if status === 'developing'}
-								<p class="mb-1 text-sm font-medium">Nothing in development</p>
-								<p class="text-xs text-muted-foreground">Move ideas here to expand them</p>
-							{:else if status === 'ready'}
-								<p class="mb-1 text-sm font-medium">No content ready</p>
-								<p class="text-xs text-muted-foreground">
-									Finish developing ideas to mark as ready
-								</p>
-							{:else}
-								<p class="mb-1 text-sm font-medium">Nothing published</p>
-								<p class="text-xs text-muted-foreground">
-									Share your content and track performance
-								</p>
-							{/if}
-						</div>
-					{/each}
-				</div>
+		{#if isNonEmpty(allUniqueTags)}
+			<div class="mb-6 flex flex-wrap gap-2">
+				<span class="text-sm text-muted-foreground">Filter by tags:</span>
+				{#each allUniqueTags as tag (tag)}
+					{@const isSelected = selectedTags.includes(tag)}
+					<button
+						onclick={() => {
+							if (isSelected) {
+								selectedTags = selectedTags.filter((t) => t !== tag);
+							} else {
+								selectedTags = [...selectedTags, tag];
+							}
+						}}
+						class="rounded-md focus-ring px-2 py-1 text-xs transition-calm {getTagColor(
+							tag
+						)} {isSelected ? 'opacity-100' : 'opacity-60 hover:opacity-80'}"
+					>
+						{tag}
+					</button>
+				{/each}
+				{#if isNonEmpty(selectedTags)}
+					<button
+						onclick={() => {
+							selectedTags = [];
+						}}
+						class="rounded-md border border-dashed focus-ring px-2 py-1 text-xs transition-calm hover:bg-accent"
+					>
+						Clear
+					</button>
+				{/if}
 			</div>
-		{/each}
+		{/if}
+
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			{#each Object.entries(statusConfig) as [status, config] (status)}
+				<div class="flex min-h-100 flex-col">
+					<div class="mb-3 flex items-center justify-between">
+						<h2 class="text-sm font-semibold text-muted-foreground">
+							{config.label}
+						</h2>
+						<Badge class="{config.badgeClass} ml-2">
+							{groupedIdeas[status as keyof typeof groupedIdeas].length}
+						</Badge>
+					</div>
+
+					<div class="space-y-2">
+						{#each groupedIdeas[status as keyof typeof groupedIdeas] as idea (idea.id)}
+							{@const urls = extractUrls(idea.oneLiner)}
+							{@const cleanText = urls.length > 0 ? removeUrls(idea.oneLiner) : idea.oneLiner}
+							<button
+								onclick={() => navigateToIdea(idea.id)}
+								class="group w-full rounded-lg border focus-ring interactive-surface bg-card p-3 text-left"
+								type="button"
+							>
+								<div class="mb-2 flex items-start justify-between gap-2">
+									<p class="line-clamp-2 flex-1 text-sm leading-relaxed wrap-break-word">
+										{cleanText}
+									</p>
+								</div>
+								{#if urls.length > 0}
+									<div class="mb-2">
+										<UrlBadges {urls} variant="outline" size="sm" />
+									</div>
+								{/if}
+								{#if isNonEmpty(idea.tags)}
+									<div class="mt-1.5 flex flex-wrap gap-1">
+										{#each idea.tags.slice(0, 3) as tag (tag)}
+											<Badge class="{getTagColor(tag)} px-1.5 py-0 text-xs">
+												{tag}
+											</Badge>
+										{/each}
+										{#if idea.tags.length > 3}
+											<Badge variant="outline" class="px-1.5 py-0 text-xs">
+												+{idea.tags.length - 3}
+											</Badge>
+										{/if}
+									</div>
+								{/if}
+								<p class="text-xs text-muted-foreground">
+									{formatRelativeTime(idea.createdAt)}
+								</p>
+							</button>
+						{:else}
+							<div class="rounded-lg border border-dashed p-6 text-center">
+								{#if status === 'inbox'}
+									<p class="mb-1 text-sm font-medium">No ideas yet</p>
+									<p class="text-xs text-muted-foreground">Capture ideas as they come to you</p>
+								{:else if status === 'developing'}
+									<p class="mb-1 text-sm font-medium">Nothing in development</p>
+									<p class="text-xs text-muted-foreground">Move ideas here to expand them</p>
+								{:else if status === 'ready'}
+									<p class="mb-1 text-sm font-medium">No content ready</p>
+									<p class="text-xs text-muted-foreground">
+										Finish developing ideas to mark as ready
+									</p>
+								{:else}
+									<p class="mb-1 text-sm font-medium">Nothing published</p>
+									<p class="text-xs text-muted-foreground">
+										Share your content and track performance
+									</p>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
 	</div>
-</div>
+{/if}
