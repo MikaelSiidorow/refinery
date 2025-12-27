@@ -12,7 +12,8 @@
 	import BottomNav from '$lib/components/layout/bottom-nav.svelte';
 	import { setupAppShortcuts } from '$lib/hooks/use-keyboard-shortcuts.svelte';
 	import type { LayoutData } from './$types';
-	import { set_z } from '$lib/z.svelte';
+	import { set_z, get_z } from '$lib/z.svelte';
+	import { queries } from '$lib/zero/queries';
 
 	let { data, children }: WithChildren<{ data: LayoutData }> = $props();
 
@@ -28,6 +29,12 @@
 			}
 		})
 	);
+
+	// Preload core queries immediately so data is ready when child routes mount
+	const z = get_z();
+	z.preload(queries.allIdeas());
+	z.preload(queries.userSettings());
+	z.preload(queries.allArtifacts());
 
 	let commandPaletteOpen = $state(false);
 	const shortcuts = setupAppShortcuts();
