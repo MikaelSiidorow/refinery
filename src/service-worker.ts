@@ -11,6 +11,7 @@
 /// <reference types="../.svelte-kit/ambient.d.ts" />
 
 import { build, files, version } from '$service-worker';
+import { isServiceWorkerMessage } from './lib/service-worker/messages';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -37,42 +38,76 @@ self.addEventListener('activate', (event) => {
 	event.waitUntil(deleteOldCaches());
 });
 
+// Handle messages from the client
+self.addEventListener('message', (event) => {
+	if (isServiceWorkerMessage(event.data, 'SKIP_WAITING')) {
+		void self.skipWaiting();
+	}
+});
+
 self.addEventListener('fetch', (event) => {
 	if (event.request.method !== 'GET') return;
 
-	async function respond() {
-		const url = new URL(event.request.url);
-		const cache = await caches.open(CACHE);
+	const url = new URL(event.request.url);
 
-		if (ASSETS.includes(url.pathname)) {
-			const response = await cache.match(url.pathname);
+	// Network-first for navigation requests (HTML pages)
+	// This ensures users always get the latest app shell
+	if (event.request.mode === 'navigate') {
+		event.respondWith(
+			(async () => {
+				try {
+					const response = await fetch(event.request);
 
-			if (response) {
-				return response;
-			}
-		}
+					if (response.status === 200) {
+						const cache = await caches.open(CACHE);
+						void cache.put(event.request, response.clone());
+					}
 
-		try {
-			const response = await fetch(event.request);
+					return response;
+				} catch {
+					// Offline fallback - serve from cache
+					const cached = await caches.match(event.request);
+					if (cached) return cached;
 
-			const isNotExtension = url.protocol === 'http:' || url.protocol === 'https:';
-			const isSuccess = response.status === 200;
+					// Last resort - return cached index
+					const indexCache = await caches.match('/');
+					if (indexCache) return indexCache;
 
-			if (isNotExtension && isSuccess) {
-				void cache.put(event.request, response.clone());
-			}
-
-			return response;
-		} catch {
-			const response = await cache.match(url.pathname);
-
-			if (response) {
-				return response;
-			}
-
-			throw new Error('Network request failed and no cache available');
-		}
+					throw new Error('Offline and no cached page available');
+				}
+			})()
+		);
+		return;
 	}
 
-	event.respondWith(respond());
+	// Cache-first for static assets (JS, CSS, images, fonts)
+	event.respondWith(
+		(async () => {
+			const cache = await caches.open(CACHE);
+
+			// Check if it's a known static asset
+			if (ASSETS.includes(url.pathname)) {
+				const cached = await cache.match(url.pathname);
+				if (cached) return cached;
+			}
+
+			try {
+				const response = await fetch(event.request);
+
+				const isNotExtension = url.protocol === 'http:' || url.protocol === 'https:';
+				const isSuccess = response.status === 200;
+
+				if (isNotExtension && isSuccess) {
+					void cache.put(event.request, response.clone());
+				}
+
+				return response;
+			} catch {
+				const cached = await cache.match(event.request);
+				if (cached) return cached;
+
+				throw new Error('Network request failed and no cache available');
+			}
+		})()
+	);
 });
