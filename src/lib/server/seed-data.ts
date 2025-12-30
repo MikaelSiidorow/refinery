@@ -103,8 +103,11 @@ I can capture an idea in 5 seconds on my phone, then develop it when I have time
 **What I'm doing now:**
 - Inbox has 15+ quick captures
 - Developing 3 pieces for next week
-- Ready to publish: thread about local-first tools`,
-		notes: `Possible angles:
+- Ready to publish: thread about local-first tools
+
+---
+
+Possible angles:
 - Full walkthrough tutorial
 - Before/after workflow comparison
 - Specific feature highlights (offline, share sheet, prompts)
@@ -273,8 +276,11 @@ Started with 5 random ideas in my Notes app. Now I have 20+ organized across dif
 - 5 artifacts ready to publish
 - Zero lost ideas
 
-This system actually works for me.`,
-		notes: `Could add:
+This system actually works for me.
+
+---
+
+Could add:
 - Screenshots of my dashboard
 - Before/after comparison
 - Specific examples of adapted content
@@ -387,8 +393,7 @@ Not affiliated, just sharing what works 🚀`,
 		userId,
 		oneLiner: 'First week with Refinery: 3 things I learned about my content habits',
 		status: 'inbox',
-		content: '',
-		notes: `Quick thoughts to explore:
+		content: `Quick thoughts to explore:
 
 1. I capture way more ideas than I thought
    - Had 20+ ideas in first 3 days
@@ -424,8 +429,7 @@ Maybe become: reflective blog post or lessons learned thread?`,
 		oneLiner:
 			'Interesting article about Zero https://zero.rocicorp.dev - local-first architecture deep dive',
 		status: 'inbox',
-		content: '',
-		notes: `Key takeaways:
+		content: `Key takeaways:
 - Zero handles offline-first sync automatically
 - Works with existing PostgreSQL databases
 - Real-time multi-user collaboration
