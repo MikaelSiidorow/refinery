@@ -4,11 +4,14 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
+	import * as Resizable from '$lib/components/ui/resizable';
 	import { CircleCheck, Sparkles } from '@lucide/svelte';
 	import { queries } from '$lib/zero/queries';
 	import { mutators } from '$lib/zero/mutators';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import PromptSelector from '$lib/components/prompt-selector.svelte';
+	import ArtifactContextPanel from '$lib/components/artifact-context-panel.svelte';
+	import AiCoachPanel from '$lib/components/ai-coach-panel.svelte';
 	import { createAutosaveForm } from '$lib/autosave-form.svelte';
 	import type { UuidV7 } from '$lib/utils';
 	import type { ContentArtifact } from '$lib/server/db/schema';
@@ -181,7 +184,9 @@
 			</div>
 		</div>
 
-		<div class="flex-1 space-y-6 overflow-y-auto p-6">
+		<Resizable.PaneGroup direction="horizontal" class="flex-1">
+			<Resizable.Pane defaultSize={65} minSize={40}>
+				<div class="h-full space-y-6 overflow-y-auto p-6">
 			<div class="space-y-2">
 				<label for="artifact-title" class="text-sm font-medium">
 					Title <span class="text-muted-foreground">(optional)</span>
@@ -226,6 +231,8 @@
 			<div class="space-y-2">
 				<div class="flex items-center justify-between">
 					<label for="artifact-content" class="text-sm font-medium">Content</label>
+					<!--
+					TODO: Polish & Refine moved to AI coach panel
 					<Button
 						variant="outline"
 						size="sm"
@@ -235,6 +242,7 @@
 						<Sparkles class="h-4 w-4" />
 						Polish & Refine
 					</Button>
+					-->
 				</div>
 				<Textarea
 					id="artifact-content"
@@ -338,7 +346,18 @@
 					class="min-h-25"
 				/>
 			</div>
-		</div>
+				</div>
+			</Resizable.Pane>
+
+			<Resizable.Handle withHandle />
+
+			<Resizable.Pane defaultSize={35} minSize={25} maxSize={50}>
+				<div class="flex h-full flex-col overflow-hidden border-l">
+					<ArtifactContextPanel {ideaId} />
+					<AiCoachPanel />
+				</div>
+			</Resizable.Pane>
+		</Resizable.PaneGroup>
 	</div>
 
 	<AlertDialog.Root bind:open={deleteDialogOpen}>
