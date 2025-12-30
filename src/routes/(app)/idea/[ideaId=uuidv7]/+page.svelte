@@ -2,16 +2,19 @@
 	import { get_z } from '$lib/z.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/stores';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import { Copy, CircleCheck, Plus } from '@lucide/svelte';
 	import { formatRelativeTime } from '$lib/utils/date';
 	import type { UuidV7 } from '$lib/utils';
 	import { generateId } from '$lib/utils';
 	import PromptSelector from '$lib/components/prompt-selector.svelte';
 	import ArtifactCard from '$lib/components/artifact-card.svelte';
+	import ArtifactEditor from '$lib/components/artifact-editor.svelte';
 	import { TagsInput } from '$lib/components/ui/tags-input';
 	import { queries } from '$lib/zero/queries';
 	import { mutators } from '$lib/zero/mutators';
@@ -24,6 +27,13 @@
 	const z = get_z();
 
 	const { params } = $props();
+
+	// Detect if we're showing an artifact in a sheet
+	const artifactIdFromUrl = $derived.by(() => {
+		const match = $page.url.pathname.match(/\/artifact\/([a-z0-9-]+)$/);
+		return match?.[1] as UuidV7 | undefined;
+	});
+	const showArtifactSheet = $derived(artifactIdFromUrl && $page.state.modal === true);
 
 	// Parameterized queries with reactive args using $derived
 	const ideasQuery = $derived(z.q(queries.ideaById(params.ideaId as UuidV7)));
@@ -110,6 +120,12 @@
 		}
 
 		if (event.key === 'Escape' && !isInputFocused) {
+			if (showArtifactSheet) {
+				event.preventDefault();
+				await closeArtifactSheet();
+				return;
+			}
+
 			const hasOpenDialog = document.querySelector('[role="dialog"]');
 			if (!hasOpenDialog && !promptSelectorOpen) {
 				event.preventDefault();
@@ -124,7 +140,20 @@
 
 	function handleEditArtifact(id: string) {
 		if (!idea) return;
-		void goto(resolve(`/idea/${idea.id}/artifact/${id}`));
+		void goto(resolve(`/idea/${idea.id}/artifact/${id}`), {
+			state: { modal: true }
+		});
+	}
+
+	async function closeArtifactSheet() {
+		if (!idea) return;
+		await goto(resolve(`/idea/${idea.id}`), {
+			state: {}
+		});
+	}
+
+	async function handleArtifactDelete() {
+		await closeArtifactSheet();
 	}
 
 	async function handleCreateArtifact() {
@@ -418,3 +447,22 @@
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>
+
+<Sheet.Root
+	open={showArtifactSheet}
+	onOpenChange={(open) => {
+		if (!open) {
+			void closeArtifactSheet();
+		}
+	}}
+>
+	<Sheet.Content side="right" class="w-full p-0 sm:max-w-2xl">
+		{#if artifactIdFromUrl && idea}
+			<ArtifactEditor
+				artifactId={artifactIdFromUrl}
+				ideaId={idea.id}
+				onDelete={handleArtifactDelete}
+			/>
+		{/if}
+	</Sheet.Content>
+</Sheet.Root>
