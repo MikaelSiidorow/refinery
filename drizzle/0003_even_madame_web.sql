@@ -1,0 +1,1 @@
+ALTER TABLE "content_idea" DROP COLUMN "notes";
