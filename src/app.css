@@ -232,6 +232,14 @@
 	}
 }
 
+@utility focus-ring-input {
+	outline: none;
+	&:focus-visible {
+		border-color: var(--color-ring);
+		box-shadow: 0 0 0 3px oklch(from var(--color-ring) l c h / 0.5);
+	}
+}
+
 @utility hover-lift {
 	transition-property:
 		color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow,
@@ -244,6 +252,28 @@
 	}
 }
 
+@utility hover-surface {
+	transition-property:
+		color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow,
+		transform;
+	transition-timing-function: var(--ease-out);
+	transition-duration: var(--duration-micro);
+	&:hover {
+		background-color: oklch(from var(--color-accent) l c h / 0.05);
+	}
+}
+
+@utility hover-item {
+	transition-property:
+		color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow,
+		transform;
+	transition-timing-function: var(--ease-out);
+	transition-duration: var(--duration-micro);
+	&:hover {
+		background-color: oklch(from var(--color-accent) l c h / 0.08);
+	}
+}
+
 @utility interactive-surface {
 	transition-property:
 		color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow,
@@ -251,7 +281,7 @@
 	transition-timing-function: var(--ease-out);
 	transition-duration: var(--duration-micro);
 	&:hover {
-		background-color: oklch(from var(--color-accent) l c h / 0.15);
+		background-color: oklch(from var(--color-accent) l c h / 0.05);
 	}
 }
 
@@ -262,7 +292,7 @@
 	transition-timing-function: var(--ease-out);
 	transition-duration: var(--duration-micro);
 	&:hover {
-		background-color: var(--color-accent);
+		background-color: oklch(from var(--color-accent) l c h / 0.08);
 	}
 }
 
