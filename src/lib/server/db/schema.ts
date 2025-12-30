@@ -71,8 +71,7 @@ export const contentIdea = pgTable('content_idea', {
 		.$type<UuidV7>(),
 	oneLiner: text().notNull(),
 	status: ideaStatusEnum().notNull(),
-	content: text().notNull(),
-	notes: text().notNull(),
+	content: text().notNull(), // Merged: previously separate 'notes' and 'content' fields
 	tags: text().array().notNull(),
 	...timestamps
 });
