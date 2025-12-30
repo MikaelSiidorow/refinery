@@ -121,17 +121,30 @@ Built on **OKLCH** color space for perceptual uniformity:
 
 #### Focus States
 
-- **3px teal ring** at 50% opacity
-- Applied via `focus-ring` utility class
-- Consistent across all interactive elements
-- No background color change on focus (ring only)
+- **3px teal ring** at 50% opacity using box-shadow approach
+- Applied via `focus-ring` or `focus-ring-input` utility classes
+- Consistent across all interactive elements (buttons, inputs, menus)
+- **Focus color (Teal)**: Primary brand color - professional, accessibility-first
+- Menu items get additional **2px left border** in teal for keyboard navigation clarity
+- Focus states are additive - can combine with hover states
 
 #### Hover States
 
-- **Amber overlay** at 15% opacity for surfaces/cards
-- **Full amber** for menu items (dropdowns, selects, command palette)
-- Applied via `interactive-surface` or `interactive-item` utilities
+- **Amber overlay** - warm, inviting exploratory feedback
+- **Hover color (Amber)**: Accent color - distinct from focus for clear state separation
+- Opacity levels by context:
+  - **5% opacity** for surfaces/cards (very subtle)
+  - **8% opacity** for menu items (subtle but visible)
+  - **15% opacity** for ghost buttons (more visible, no border context)
+- Applied via `hover-surface` or `hover-item` utilities
 - Text must remain readable (never dark text on dark background)
+
+#### Selected States (Command Palette)
+
+- **Primary (teal) background** at 10% opacity - distinct from hover
+- **2px left border** in primary color
+- **Medium font weight** for additional distinction
+- Visually distinct from both hover and focus states
 
 #### Transitions
 
@@ -143,28 +156,52 @@ Built on **OKLCH** color space for perceptual uniformity:
 ### Utility Classes
 
 ```css
-/* Focus ring - teal ring without background */
+/* Focus ring - teal ring using box-shadow (consistent across all elements) */
 .focus-ring {
 	outline: none;
 	&:focus-visible {
-		outline: 3px solid oklch(from var(--color-ring) l c h / 0.5);
-		outline-offset: 2px;
+		border-color: var(--color-ring);
+		box-shadow: 0 0 0 3px oklch(from var(--color-ring) l c h / 0.5);
 	}
 }
 
-/* Interactive surface - subtle amber hover for cards */
+/* Focus ring for inputs - same as focus-ring for consistency */
+.focus-ring-input {
+	outline: none;
+	&:focus-visible {
+		border-color: var(--color-ring);
+		box-shadow: 0 0 0 3px oklch(from var(--color-ring) l c h / 0.5);
+	}
+}
+
+/* Hover surface - very subtle amber hover for cards (5%) */
+.hover-surface {
+	transition: all var(--duration-micro) var(--ease-out);
+	&:hover {
+		background-color: oklch(from var(--color-accent) l c h / 0.05);
+	}
+}
+
+/* Hover item - subtle amber hover for menu items (8%) */
+.hover-item {
+	transition: all var(--duration-micro) var(--ease-out);
+	&:hover {
+		background-color: oklch(from var(--color-accent) l c h / 0.08);
+	}
+}
+
+/* Legacy aliases for backward compatibility */
 .interactive-surface {
 	transition: all var(--duration-micro) var(--ease-out);
 	&:hover {
-		background-color: oklch(from var(--color-accent) l c h / 0.15);
+		background-color: oklch(from var(--color-accent) l c h / 0.05);
 	}
 }
 
-/* Interactive item - full amber hover for menu items */
 .interactive-item {
 	transition: all var(--duration-micro) var(--ease-out);
 	&:hover {
-		background-color: var(--color-accent);
+		background-color: oklch(from var(--color-accent) l c h / 0.08);
 	}
 }
 
@@ -184,38 +221,53 @@ Built on **OKLCH** color space for perceptual uniformity:
 
 - **Primary**: Teal background, darkens 10% on hover
 - **Secondary**: Gray background, lightens 20% on hover
-- **Outline**: Subtle 15% amber on hover (not full color)
-- **Ghost**: 15% amber background on hover
-- **All variants**: Include focus ring, scale 98% on active
+- **Outline**: 15% amber on hover (subtle warmth)
+- **Ghost**: 15% amber background on hover (consistent with outline)
+- **All variants**: Include teal focus ring, scale 98% on active
+- Dark mode uses consistent /15 opacity for ghost variant
 
 #### Form Inputs
 
 - Consistent border and focus states across all inputs
+- **Focus**: Teal ring (3px box-shadow) + border color change
+- **Hover**: Very subtle amber (5%) on select triggers
 - No special overrides for title vs regular inputs
-- Focus ring + border color change on focus
 
 #### Cards & Surfaces
 
-- Use `interactive-surface` for clickable cards
-- 15% amber hover that keeps text readable
-- Focus ring on keyboard navigation
+- Use `hover-surface` for clickable cards
+- 5% amber hover - very subtle, keeps text fully readable
+- Teal focus ring on keyboard navigation
 
 #### Menus (Dropdown, Select, Command)
 
-- Data attribute states: `data-highlighted`, `aria-selected`
-- 15% amber background on highlighted/selected items
-- No text color change (stays readable)
+- **Hover/Highlighted**: 8% amber background - subtle exploratory feedback
+- **Focus (keyboard)**: Same as hover + 2px left teal border for clarity
+- **Selected (Command)**: 10% teal background + 2px left teal border + medium font weight
+- Data attribute states: `data-[highlighted]`, `aria-selected`
+- Hover and keyboard focus share same visual (acceptable for menus)
+- Selected state is visually distinct from hover/focus (prevents confusion)
 
 ### Design System Consistency
 
 **Key Rule**: Use utility classes and design tokens consistently. Never mix approaches:
 
-- ✅ `interactive-surface focus-ring`
-- ✅ `data-highlighted:bg-accent/15`
-- ❌ `hover:bg-accent` (too strong, inconsistent)
-- ❌ Direct inline opacity values (use tokens)
+- ✅ `hover-surface focus-ring` or `hover-item focus-ring`
+- ✅ `data-[highlighted]:bg-accent/8`
+- ✅ `aria-selected:bg-primary/10` (distinct from hover)
+- ❌ `hover:bg-accent` (too strong, use appropriate opacity)
+- ❌ `data-highlighted` without brackets (incorrect syntax)
+- ❌ Direct inline opacity values without semantic meaning
+
+**Color Separation Philosophy**:
+
+- **Teal (Primary)** = Focus, accessibility, "you are here" - serious and functional
+- **Amber (Accent)** = Hover, exploration, "come check this out" - warm and inviting
+- This separation ensures focus and hover states are visually distinct and serve different purposes
 
 **Readability Check**: If hover/focus makes text harder to read, the opacity is wrong. Text readability trumps visual effect every time.
+
+**Accessibility**: All focus indicators meet WCAG 2.2 Success Criterion 2.4.11 (Focus Appearance) with 3:1 contrast ratio.
 
 ### Implementation Notes
 
