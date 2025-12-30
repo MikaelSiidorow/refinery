@@ -74,9 +74,10 @@
 					</div>
 				</Collapsible.Trigger>
 				<Collapsible.Content>
-					<div class="border-t px-3 pb-3 pt-2">
+					<div class="border-t px-3 pt-2 pb-3">
 						<p class="text-xs text-muted-foreground italic">
-							[Future: Personalized follow-up questions and context-aware suggestions will appear here]
+							[Future: Personalized follow-up questions and context-aware suggestions will appear
+							here]
 						</p>
 					</div>
 				</Collapsible.Content>
@@ -85,9 +86,7 @@
 
 		<!-- Placeholder for future features -->
 		<div class="rounded-lg border border-dashed p-3 text-center">
-			<p class="text-xs text-muted-foreground">
-				More coaching questions will appear as you write
-			</p>
+			<p class="text-xs text-muted-foreground">More coaching questions will appear as you write</p>
 		</div>
 	</div>
 </div>

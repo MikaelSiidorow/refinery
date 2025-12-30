@@ -351,10 +351,11 @@
 					id="content"
 					bind:value={form.values.content}
 					placeholder="## Notes&#10;&#10;Add your initial thoughts, research, links...&#10;&#10;## Content Draft&#10;&#10;Develop your thinking and write authentically..."
-					class="min-h-[calc(100vh-20rem)] resize-y text-sm font-mono"
+					class="min-h-[calc(100vh-20rem)] resize-y font-mono text-sm"
 				/>
 				<p class="text-xs text-muted-foreground">
-					Tip: Use the template above or delete it and write freely. Your authentic voice matters most.
+					Tip: Use the template above or delete it and write freely. Your authentic voice matters
+					most.
 				</p>
 			</div>
 

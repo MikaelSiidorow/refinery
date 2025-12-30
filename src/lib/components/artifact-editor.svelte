@@ -187,51 +187,51 @@
 		<Resizable.PaneGroup direction="horizontal" class="flex-1">
 			<Resizable.Pane defaultSize={65} minSize={40}>
 				<div class="h-full space-y-6 overflow-y-auto p-6">
-			<div class="space-y-2">
-				<label for="artifact-title" class="text-sm font-medium">
-					Title <span class="text-muted-foreground">(optional)</span>
-				</label>
-				<Input
-					id="artifact-title"
-					bind:value={form.values.title}
-					placeholder="e.g., Twitter Thread about Zero Sync"
-				/>
-			</div>
+					<div class="space-y-2">
+						<label for="artifact-title" class="text-sm font-medium">
+							Title <span class="text-muted-foreground">(optional)</span>
+						</label>
+						<Input
+							id="artifact-title"
+							bind:value={form.values.title}
+							placeholder="e.g., Twitter Thread about Zero Sync"
+						/>
+					</div>
 
-			<div class="grid grid-cols-2 gap-4">
-				<div class="space-y-2">
-					<label for="artifact-type" class="text-sm font-medium">Type</label>
-					<Select.Root type="single" bind:value={form.values.artifactType}>
-						<Select.Trigger id="artifact-type">
-							{artifactTypeOptions.find((o) => o.value === form.values.artifactType)?.label ||
-								'Select type'}
-						</Select.Trigger>
-						<Select.Content>
-							{#each artifactTypeOptions as option (option.value)}
-								<Select.Item value={option.value} label={option.label}>
-									{option.label}
-								</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-				</div>
+					<div class="grid grid-cols-2 gap-4">
+						<div class="space-y-2">
+							<label for="artifact-type" class="text-sm font-medium">Type</label>
+							<Select.Root type="single" bind:value={form.values.artifactType}>
+								<Select.Trigger id="artifact-type">
+									{artifactTypeOptions.find((o) => o.value === form.values.artifactType)?.label ||
+										'Select type'}
+								</Select.Trigger>
+								<Select.Content>
+									{#each artifactTypeOptions as option (option.value)}
+										<Select.Item value={option.value} label={option.label}>
+											{option.label}
+										</Select.Item>
+									{/each}
+								</Select.Content>
+							</Select.Root>
+						</div>
 
-				<div class="space-y-2">
-					<label for="artifact-platform" class="text-sm font-medium">
-						Platform <span class="text-muted-foreground">(optional)</span>
-					</label>
-					<Input
-						id="artifact-platform"
-						bind:value={form.values.platform}
-						placeholder="e.g., Twitter, LinkedIn"
-					/>
-				</div>
-			</div>
+						<div class="space-y-2">
+							<label for="artifact-platform" class="text-sm font-medium">
+								Platform <span class="text-muted-foreground">(optional)</span>
+							</label>
+							<Input
+								id="artifact-platform"
+								bind:value={form.values.platform}
+								placeholder="e.g., Twitter, LinkedIn"
+							/>
+						</div>
+					</div>
 
-			<div class="space-y-2">
-				<div class="flex items-center justify-between">
-					<label for="artifact-content" class="text-sm font-medium">Content</label>
-					<!--
+					<div class="space-y-2">
+						<div class="flex items-center justify-between">
+							<label for="artifact-content" class="text-sm font-medium">Content</label>
+							<!--
 					TODO: Polish & Refine moved to AI coach panel
 					<Button
 						variant="outline"
@@ -243,109 +243,115 @@
 						Polish & Refine
 					</Button>
 					-->
-				</div>
-				<Textarea
-					id="artifact-content"
-					bind:value={form.values.content}
-					placeholder="Write your content here..."
-					class="min-h-100 text-sm"
-				/>
-			</div>
-
-			<div class="space-y-2">
-				<label for="artifact-status" class="text-sm font-medium">Status</label>
-				<Select.Root type="single" bind:value={form.values.status}>
-					<Select.Trigger id="artifact-status">
-						{statusOptions.find((o) => o.value === form.values.status)?.label || 'Select status'}
-					</Select.Trigger>
-					<Select.Content>
-						{#each statusOptions as option (option.value)}
-							<Select.Item value={option.value} label={option.label}>
-								{option.label}
-							</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</div>
-
-			{#if form.values.status !== 'published'}
-				<div class="space-y-2">
-					<label for="planned-date" class="text-sm font-medium">
-						Planned Publish Date <span class="text-muted-foreground">(optional)</span>
-					</label>
-					<Input id="planned-date" type="date" bind:value={form.values.plannedPublishDate} />
-					<p class="text-xs text-muted-foreground">
-						Set a target date to help plan your content calendar
-					</p>
-				</div>
-			{/if}
-
-			{#if form.values.status === 'published'}
-				<div class="space-y-4 rounded-lg border bg-muted/50 p-4">
-					<h2 class="text-sm font-semibold">Publishing Information</h2>
-
-					<div class="space-y-2">
-						<label for="published-url" class="text-sm font-medium">Published URL</label>
-						<Input
-							id="published-url"
-							bind:value={form.values.publishedUrl}
-							type="url"
-							placeholder="https://..."
+						</div>
+						<Textarea
+							id="artifact-content"
+							bind:value={form.values.content}
+							placeholder="Write your content here..."
+							class="min-h-100 text-sm"
 						/>
 					</div>
 
 					<div class="space-y-2">
-						<label for="published-date" class="text-sm font-medium">Published Date</label>
-						<Input id="published-date" bind:value={form.values.publishedAt} type="date" />
+						<label for="artifact-status" class="text-sm font-medium">Status</label>
+						<Select.Root type="single" bind:value={form.values.status}>
+							<Select.Trigger id="artifact-status">
+								{statusOptions.find((o) => o.value === form.values.status)?.label ||
+									'Select status'}
+							</Select.Trigger>
+							<Select.Content>
+								{#each statusOptions as option (option.value)}
+									<Select.Item value={option.value} label={option.label}>
+										{option.label}
+									</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
 					</div>
 
-					<div class="grid grid-cols-2 gap-4">
+					{#if form.values.status !== 'published'}
 						<div class="space-y-2">
-							<label for="impressions" class="text-sm font-medium">Impressions</label>
-							<Input
-								id="impressions"
-								bind:value={form.values.impressions}
-								type="number"
-								placeholder="0"
-							/>
+							<label for="planned-date" class="text-sm font-medium">
+								Planned Publish Date <span class="text-muted-foreground">(optional)</span>
+							</label>
+							<Input id="planned-date" type="date" bind:value={form.values.plannedPublishDate} />
+							<p class="text-xs text-muted-foreground">
+								Set a target date to help plan your content calendar
+							</p>
 						</div>
+					{/if}
 
-						<div class="space-y-2">
-							<label for="likes" class="text-sm font-medium">Likes</label>
-							<Input id="likes" bind:value={form.values.likes} type="number" placeholder="0" />
+					{#if form.values.status === 'published'}
+						<div class="space-y-4 rounded-lg border bg-muted/50 p-4">
+							<h2 class="text-sm font-semibold">Publishing Information</h2>
+
+							<div class="space-y-2">
+								<label for="published-url" class="text-sm font-medium">Published URL</label>
+								<Input
+									id="published-url"
+									bind:value={form.values.publishedUrl}
+									type="url"
+									placeholder="https://..."
+								/>
+							</div>
+
+							<div class="space-y-2">
+								<label for="published-date" class="text-sm font-medium">Published Date</label>
+								<Input id="published-date" bind:value={form.values.publishedAt} type="date" />
+							</div>
+
+							<div class="grid grid-cols-2 gap-4">
+								<div class="space-y-2">
+									<label for="impressions" class="text-sm font-medium">Impressions</label>
+									<Input
+										id="impressions"
+										bind:value={form.values.impressions}
+										type="number"
+										placeholder="0"
+									/>
+								</div>
+
+								<div class="space-y-2">
+									<label for="likes" class="text-sm font-medium">Likes</label>
+									<Input id="likes" bind:value={form.values.likes} type="number" placeholder="0" />
+								</div>
+							</div>
+
+							<div class="grid grid-cols-2 gap-4">
+								<div class="space-y-2">
+									<label for="comments-count" class="text-sm font-medium">Comments</label>
+									<Input
+										id="comments-count"
+										bind:value={form.values.comments}
+										type="number"
+										placeholder="0"
+									/>
+								</div>
+
+								<div class="space-y-2">
+									<label for="shares" class="text-sm font-medium">Shares</label>
+									<Input
+										id="shares"
+										bind:value={form.values.shares}
+										type="number"
+										placeholder="0"
+									/>
+								</div>
+							</div>
 						</div>
+					{/if}
+
+					<div class="space-y-2">
+						<label for="artifact-notes" class="text-sm font-medium">
+							Notes <span class="text-muted-foreground">(optional)</span>
+						</label>
+						<Textarea
+							id="artifact-notes"
+							bind:value={form.values.notes}
+							placeholder="Any additional notes about this artifact..."
+							class="min-h-25"
+						/>
 					</div>
-
-					<div class="grid grid-cols-2 gap-4">
-						<div class="space-y-2">
-							<label for="comments-count" class="text-sm font-medium">Comments</label>
-							<Input
-								id="comments-count"
-								bind:value={form.values.comments}
-								type="number"
-								placeholder="0"
-							/>
-						</div>
-
-						<div class="space-y-2">
-							<label for="shares" class="text-sm font-medium">Shares</label>
-							<Input id="shares" bind:value={form.values.shares} type="number" placeholder="0" />
-						</div>
-					</div>
-				</div>
-			{/if}
-
-			<div class="space-y-2">
-				<label for="artifact-notes" class="text-sm font-medium">
-					Notes <span class="text-muted-foreground">(optional)</span>
-				</label>
-				<Textarea
-					id="artifact-notes"
-					bind:value={form.values.notes}
-					placeholder="Any additional notes about this artifact..."
-					class="min-h-25"
-				/>
-			</div>
 				</div>
 			</Resizable.Pane>
 

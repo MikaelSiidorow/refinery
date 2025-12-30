@@ -23,14 +23,14 @@
 		<div class="flex-1 space-y-4 overflow-y-auto px-4 py-4">
 			<!-- One-liner -->
 			<div class="space-y-2">
-				<h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Title</h3>
+				<h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Title</h3>
 				<p class="text-sm">{idea.oneLiner || 'Untitled'}</p>
 			</div>
 
 			<!-- Tags -->
 			{#if idea.tags && idea.tags.length > 0}
 				<div class="space-y-2">
-					<h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tags</h3>
+					<h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Tags</h3>
 					<div class="flex flex-wrap gap-1.5">
 						{#each idea.tags as tag}
 							<span class="rounded-md bg-muted px-2 py-0.5 text-xs">{tag}</span>
@@ -41,7 +41,7 @@
 
 			<!-- Status -->
 			<div class="space-y-2">
-				<h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</h3>
+				<h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Status</h3>
 				<p class="text-sm capitalize">{idea.status}</p>
 			</div>
 
@@ -50,14 +50,14 @@
 				<Collapsible.Root open={true}>
 					<div class="space-y-2">
 						<Collapsible.Trigger class="flex w-full items-center justify-between">
-							<h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+							<h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
 								Content
 							</h3>
 							<span class="text-xs text-muted-foreground">(click to collapse)</span>
 						</Collapsible.Trigger>
 						<Collapsible.Content>
 							<div
-								class="max-h-96 overflow-y-auto rounded-md bg-muted/30 p-3 text-xs font-mono leading-relaxed"
+								class="max-h-96 overflow-y-auto rounded-md bg-muted/30 p-3 font-mono text-xs leading-relaxed"
 							>
 								{idea.content}
 							</div>
