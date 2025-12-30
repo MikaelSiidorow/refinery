@@ -13,7 +13,7 @@
 	 */
 
 	const {
-		value = 0 // 0-100, currently static placeholder
+		value: _value = 0 // 0-100, currently static placeholder (unused until implementation)
 	}: {
 		value?: number;
 	} = $props();

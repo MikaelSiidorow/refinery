@@ -32,7 +32,7 @@
 				<div class="space-y-2">
 					<h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Tags</h3>
 					<div class="flex flex-wrap gap-1.5">
-						{#each idea.tags as tag}
+						{#each idea.tags as tag (tag)}
 							<span class="rounded-md bg-muted px-2 py-0.5 text-xs">{tag}</span>
 						{/each}
 					</div>

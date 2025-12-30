@@ -57,7 +57,7 @@
 			</p>
 		</div>
 
-		{#each questions as item, i}
+		{#each questions as item, i (item.question)}
 			<Collapsible.Root
 				bind:open={item.expanded}
 				class="rounded-lg border bg-card text-card-foreground"

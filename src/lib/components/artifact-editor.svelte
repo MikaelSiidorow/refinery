@@ -5,7 +5,7 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
 	import * as Resizable from '$lib/components/ui/resizable';
-	import { CircleCheck, Sparkles } from '@lucide/svelte';
+	import { CircleCheck } from '@lucide/svelte';
 	import { queries } from '$lib/zero/queries';
 	import { mutators } from '$lib/zero/mutators';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
@@ -14,7 +14,6 @@
 	import AiCoachPanel from '$lib/components/ai-coach-panel.svelte';
 	import { createAutosaveForm } from '$lib/autosave-form.svelte';
 	import type { UuidV7 } from '$lib/utils';
-	import type { ContentArtifact } from '$lib/server/db/schema';
 
 	const {
 		artifactId,

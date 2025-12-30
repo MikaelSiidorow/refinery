@@ -102,9 +102,10 @@
 		}
 	});
 
-	function openPromptSelector() {
-		promptSelectorOpen = true;
-	}
+	// TODO: Restore when prompts are re-integrated with AI coach panel
+	// function openPromptSelector() {
+	// 	promptSelectorOpen = true;
+	// }
 
 	async function handleKeydown(event: KeyboardEvent) {
 		const isInputFocused = ['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement)?.tagName);
