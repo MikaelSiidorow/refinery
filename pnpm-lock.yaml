@@ -109,6 +109,9 @@ importers:
       mode-watcher:
         specifier: ^1.1.0
         version: 1.1.0(svelte@5.46.1)
+      paneforge:
+        specifier: ^1.0.2
+        version: 1.0.2(svelte@5.46.1)
       playwright:
         specifier: ^1.57.0
         version: 1.57.0
@@ -3103,6 +3106,11 @@ packages:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
 
+  paneforge@1.0.2:
+    resolution: {integrity: sha512-KzmIXQH1wCfwZ4RsMohD/IUtEjVhteR+c+ulb/CHYJHX8SuDXoJmChtsc/Xs5Wl8NHS4L5Q7cxL8MG40gSU1bA==}
+    peerDependencies:
+      svelte: ^5.29.0
+
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
     engines: {node: '>=6'}
@@ -3435,6 +3443,11 @@ packages:
     peerDependencies:
       svelte: ^5.7.0
 
+  runed@0.29.2:
+    resolution: {integrity: sha512-0cq6cA6sYGZwl/FvVqjx9YN+1xEBu9sDDyuWdDW1yWX7JF2wmvmVKfH+hVCZs+csW+P3ARH92MjI3H9QTagOQA==}
+    peerDependencies:
+      svelte: ^5.7.0
+
   runed@0.35.1:
     resolution: {integrity: sha512-2F4Q/FZzbeJTFdIS/PuOoPRSm92sA2LhzTnv6FXhCoENb3huf5+fDuNOg1LNvGOouy3u/225qxmuJvcV3IZK5Q==}
     peerDependencies:
@@ -3608,6 +3621,12 @@ packages:
     engines: {node: '>=18', pnpm: '>=8.7.0'}
     peerDependencies:
       svelte: ^5.0.0
+
+  svelte-toolbelt@0.9.3:
+    resolution: {integrity: sha512-HCSWxCtVmv+c6g1ACb8LTwHVbDqLKJvHpo6J8TaqwUme2hj9ATJCpjCPNISR1OCq2Q4U1KT41if9ON0isINQZw==}
+    engines: {node: '>=18', pnpm: '>=8.7.0'}
+    peerDependencies:
+      svelte: ^5.30.2
 
   svelte@5.46.1:
     resolution: {integrity: sha512-ynjfCHD3nP2el70kN5Pmg37sSi0EjOm9FgHYQdC4giWG/hzO3AatzXXJJgP305uIhGQxSufJLuYWtkY8uK/8RA==}
@@ -6880,6 +6899,12 @@ snapshots:
     dependencies:
       p-limit: 3.1.0
 
+  paneforge@1.0.2(svelte@5.46.1):
+    dependencies:
+      runed: 0.23.4(svelte@5.46.1)
+      svelte: 5.46.1
+      svelte-toolbelt: 0.9.3(svelte@5.46.1)
+
   parent-module@1.0.1:
     dependencies:
       callsites: 3.1.0
@@ -7195,6 +7220,11 @@ snapshots:
       esm-env: 1.2.2
       svelte: 5.46.1
 
+  runed@0.29.2(svelte@5.46.1):
+    dependencies:
+      esm-env: 1.2.2
+      svelte: 5.46.1
+
   runed@0.35.1(@sveltejs/kit@2.49.2(@opentelemetry/api@1.9.0)(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.46.1)(vite@7.3.0(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.1)))(svelte@5.46.1)(vite@7.3.0(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.1)))(svelte@5.46.1):
     dependencies:
       dequal: 2.0.3
@@ -7367,6 +7397,13 @@ snapshots:
       clsx: 2.1.1
       runed: 0.23.4(svelte@5.46.1)
       style-to-object: 1.0.11
+      svelte: 5.46.1
+
+  svelte-toolbelt@0.9.3(svelte@5.46.1):
+    dependencies:
+      clsx: 2.1.1
+      runed: 0.29.2(svelte@5.46.1)
+      style-to-object: 1.0.12
       svelte: 5.46.1
 
   svelte@5.46.1:
