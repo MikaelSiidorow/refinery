@@ -260,6 +260,7 @@ Built on **OKLCH** color space for perceptual uniformity:
 - ❌ Direct inline opacity values without semantic meaning
 
 **Color Separation Philosophy**:
+
 - **Teal (Primary)** = Focus, accessibility, "you are here" - serious and functional
 - **Amber (Accent)** = Hover, exploration, "come check this out" - warm and inviting
 - This separation ensures focus and hover states are visually distinct and serve different purposes
