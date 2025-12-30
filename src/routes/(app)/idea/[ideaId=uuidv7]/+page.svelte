@@ -15,6 +15,7 @@
 	import PromptSelector from '$lib/components/prompt-selector.svelte';
 	import ArtifactCard from '$lib/components/artifact-card.svelte';
 	import ArtifactEditor from '$lib/components/artifact-editor.svelte';
+	import ConfidenceIndicator from '$lib/components/confidence-indicator.svelte';
 	import { TagsInput } from '$lib/components/ui/tags-input';
 	import { queries } from '$lib/zero/queries';
 	import { mutators } from '$lib/zero/mutators';
@@ -66,15 +67,13 @@
 
 		defaultValues: {
 			oneLiner: '',
-			notes: '',
-			content: '',
+			content: '', // Unified content field (previously notes + content)
 			tags: [],
 			status: 'inbox' as const
 		},
 
 		initialize: (idea) => ({
 			oneLiner: idea.oneLiner || '',
-			notes: idea.notes || '',
 			content: idea.content || '',
 			tags: idea.tags || [],
 			status: idea.status || 'inbox'
@@ -82,7 +81,6 @@
 
 		normalize: (idea) => ({
 			oneLiner: idea.oneLiner || '',
-			notes: idea.notes || '',
 			content: idea.content || '',
 			tags: (idea.tags || []).slice().sort(),
 			status: idea.status || 'inbox'
@@ -91,15 +89,13 @@
 		onSave: async (values) => {
 			if (!idea) return;
 
-			const snapshot = $state.snapshot(values);
 			const write = z.mutate(
 				mutators.contentIdea.update({
 					id: idea.id,
-					oneLiner: snapshot.oneLiner,
-					status: snapshot.status,
-					notes: snapshot.notes,
-					content: snapshot.content,
-					tags: snapshot.tags
+					oneLiner: values.oneLiner,
+					status: values.status,
+					content: values.content,
+					tags: values.tags
 				})
 			);
 			await write.client;
@@ -309,11 +305,15 @@
 							>Updated {formatRelativeTime(idea.updatedAt)}</span
 						>
 					</div>
-					<div class="flex min-w-15 shrink-0 items-center gap-1">
-						{#if form.status === 'saved'}
-							<CircleCheck class="h-3.5 w-3.5 text-green-600" />
-							<span class="text-xs text-green-600">Saved</span>
-						{/if}
+					<div class="flex shrink-0 items-center gap-4">
+						<!-- Confidence Indicator - Placeholder for future AI-powered readiness metric -->
+						<ConfidenceIndicator />
+						<div class="flex min-w-15 items-center gap-1">
+							{#if form.status === 'saved'}
+								<CircleCheck class="h-3.5 w-3.5 text-green-600" />
+								<span class="text-xs text-green-600">Saved</span>
+							{/if}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -330,40 +330,32 @@
 				/>
 			</div>
 
-			<div class="grid max-w-306 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,600px)_minmax(0,600px)]">
-				<div class="min-w-0 space-y-2">
-					<label for="notes" class="text-sm font-semibold">Notes</label>
-					<p class="text-xs text-muted-foreground">
-						Brainstorm, research, outline - anything to help you write
-					</p>
-					<Textarea
-						id="notes"
-						bind:value={form.values.notes}
-						placeholder="Add your notes here..."
-						class="min-h-[calc(100vh-24rem)] resize-y"
-					/>
-				</div>
-
-				<div class="min-w-0 space-y-2">
-					<div class="flex items-center justify-between gap-3">
-						<div class="min-w-0 flex-1">
-							<label for="content" class="text-sm font-semibold">Content Draft</label>
-							<p class="text-xs text-muted-foreground">
-								Your full content draft - develop your thinking and write authentically
-							</p>
-						</div>
-						<Button onclick={openPromptSelector} variant="outline" size="sm" class="gap-2">
-							<Copy class="h-4 w-4" />
-							<span class="sr-only sm:not-sr-only">Frameworks</span>
-						</Button>
+			<!-- Single unified content editor -->
+			<div class="max-w-306 space-y-2">
+				<div class="flex items-center justify-between gap-3">
+					<div class="min-w-0 flex-1">
+						<label for="content" class="text-sm font-semibold">Content</label>
+						<p class="text-xs text-muted-foreground">
+							Brainstorm, outline, draft - use optional template below or write freely
+						</p>
 					</div>
-					<Textarea
-						id="content"
-						bind:value={form.values.content}
-						placeholder="Write or paste your content here..."
-						class="min-h-[calc(100vh-24rem)] resize-y text-sm"
-					/>
+					<!--
+					TODO: Prompts system temporarily hidden - will integrate with AI coach panel
+					<Button onclick={openPromptSelector} variant="outline" size="sm" class="gap-2">
+						<Copy class="h-4 w-4" />
+						<span class="sr-only sm:not-sr-only">Frameworks</span>
+					</Button>
+					-->
 				</div>
+				<Textarea
+					id="content"
+					bind:value={form.values.content}
+					placeholder="## Notes&#10;&#10;Add your initial thoughts, research, links...&#10;&#10;## Content Draft&#10;&#10;Develop your thinking and write authentically..."
+					class="min-h-[calc(100vh-20rem)] resize-y text-sm font-mono"
+				/>
+				<p class="text-xs text-muted-foreground">
+					Tip: Use the template above or delete it and write freely. Your authentic voice matters most.
+				</p>
 			</div>
 
 			<div class="mt-12 max-w-306 border-t pt-8">
