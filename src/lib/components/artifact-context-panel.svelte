@@ -14,13 +14,13 @@
 </script>
 
 {#if idea}
-	<div class="flex h-full flex-col overflow-hidden">
+	<div>
 		<div class="border-b px-4 py-3">
 			<h2 class="text-sm font-semibold">Idea Context</h2>
 			<p class="text-xs text-muted-foreground">Original thinking and notes</p>
 		</div>
 
-		<div class="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+		<div class="space-y-4 px-4 py-4">
 			<!-- One-liner -->
 			<div class="space-y-2">
 				<h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Title</h3>

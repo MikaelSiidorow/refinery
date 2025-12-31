@@ -38,7 +38,7 @@
 	let questions = $state(mockQuestions);
 </script>
 
-<div class="flex h-full flex-col overflow-hidden border-t">
+<div class="border-b">
 	<div class="border-b px-4 py-3">
 		<div class="flex items-center gap-2">
 			<Sparkles class="h-4 w-4 text-teal-600" />
@@ -47,7 +47,7 @@
 		<p class="text-xs text-muted-foreground">Questions to guide your development</p>
 	</div>
 
-	<div class="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+	<div class="space-y-3 px-4 py-4">
 		<div class="rounded-lg bg-amber-50 p-3 text-xs dark:bg-amber-950/20">
 			<p class="font-medium text-amber-900 dark:text-amber-100">
 				💡 AI Coach helps you think, not writes for you
