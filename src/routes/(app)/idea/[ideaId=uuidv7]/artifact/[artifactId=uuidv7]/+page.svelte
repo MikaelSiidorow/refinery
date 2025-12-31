@@ -25,8 +25,8 @@
 	const isLoading = $derived(isQueryLoading(artifactQuery));
 	const showNotFound = $derived(shouldShow404(artifact, artifactQuery));
 
-	const ideaQuery = $derived(z.q(queries.ideaById(params.ideaId as UuidV7)));
-	const idea = $derived(ideaQuery.data[0]);
+	const ideaQuery = $derived(artifact && z.q(queries.ideaById(artifact.ideaId)));
+	const idea = $derived(ideaQuery?.data[0]);
 
 	const settingsQuery = z.q(queries.userSettings());
 	const settings = $derived(settingsQuery.data[0]);
