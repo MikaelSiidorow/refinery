@@ -421,29 +421,32 @@
 									</Button>
 								</div>
 							{:else}
-								<button
-									onclick={() => startEditing(idea.id, idea.oneLiner)}
-									class="group/item w-full text-left"
-									type="button"
-								>
-									<div class="flex items-start justify-between gap-2">
-										<div class="min-w-0 flex-1">
-											<p
-												class="text-sm leading-relaxed transition-colors group-hover/item:text-primary"
-											>
-												{idea.oneLiner}
-											</p>
-											<p class="mt-2 text-xs text-muted-foreground">
-												{formatRelativeTime(idea.createdAt)}
-											</p>
-										</div>
-										<div
-											class="shrink-0 pt-0.5 transition-opacity sm:opacity-0 sm:group-hover/item:opacity-100"
+								<div class="flex items-start gap-2">
+									<a
+										href={resolve(`/idea/${idea.id}`)}
+										class="group/item block min-w-0 flex-1 rounded focus-ring"
+									>
+										<p
+											class="text-sm leading-relaxed transition-colors group-hover/item:text-primary"
 										>
-											<Pencil class="h-3.5 w-3.5 text-muted-foreground" />
-										</div>
-									</div>
-								</button>
+											{idea.oneLiner}
+										</p>
+										<p class="mt-2 text-xs text-muted-foreground">
+											{formatRelativeTime(idea.createdAt)}
+										</p>
+									</a>
+									<button
+										onclick={(e) => {
+											e.stopPropagation();
+											startEditing(idea.id, idea.oneLiner);
+										}}
+										class="shrink-0 focus-ring pt-0.5 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+										type="button"
+										title="Edit inline"
+									>
+										<Pencil class="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+									</button>
+								</div>
 
 								{#if saveStatus[idea.id] === 'saved'}
 									<div
