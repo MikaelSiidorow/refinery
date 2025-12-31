@@ -422,10 +422,9 @@
 								</div>
 							{:else}
 								<div class="flex items-start gap-2">
-									<button
-										onclick={() => goto(resolve(`/idea/${idea.id}`))}
-										class="group/item min-w-0 flex-1 text-left"
-										type="button"
+									<a
+										href={resolve(`/idea/${idea.id}`)}
+										class="group/item block min-w-0 flex-1 rounded focus-ring"
 									>
 										<p
 											class="text-sm leading-relaxed transition-colors group-hover/item:text-primary"
@@ -435,13 +434,13 @@
 										<p class="mt-2 text-xs text-muted-foreground">
 											{formatRelativeTime(idea.createdAt)}
 										</p>
-									</button>
+									</a>
 									<button
 										onclick={(e) => {
 											e.stopPropagation();
 											startEditing(idea.id, idea.oneLiner);
 										}}
-										class="shrink-0 pt-0.5 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+										class="shrink-0 focus-ring pt-0.5 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
 										type="button"
 										title="Edit inline"
 									>
