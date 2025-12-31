@@ -81,14 +81,15 @@
 		onSave: async (values) => {
 			if (!idea) return;
 
+			const snapshot = $state.snapshot(values);
 			const write = z.mutate(
 				mutators.contentIdea.update({
 					id: idea.id,
-					oneLiner: values.oneLiner,
-					status: values.status,
-					notes: values.notes,
-					content: values.content,
-					tags: [...values.tags]
+					oneLiner: snapshot.oneLiner,
+					status: snapshot.status,
+					notes: snapshot.notes,
+					content: snapshot.content,
+					tags: snapshot.tags
 				})
 			);
 			await write.client;

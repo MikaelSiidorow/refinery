@@ -113,24 +113,25 @@
 		onSave: async (values) => {
 			if (!artifact) return;
 
+			const snapshot = $state.snapshot(values);
 			const write = z.mutate(
 				mutators.contentArtifact.update({
 					id: artifact.id,
-					title: values.title || undefined,
-					content: values.content.trim() || '',
-					artifactType: values.artifactType,
-					platform: values.platform || undefined,
-					status: values.status,
-					plannedPublishDate: values.plannedPublishDate
-						? new Date(values.plannedPublishDate).getTime()
+					title: snapshot.title || undefined,
+					content: snapshot.content.trim() || '',
+					artifactType: snapshot.artifactType,
+					platform: snapshot.platform || undefined,
+					status: snapshot.status,
+					plannedPublishDate: snapshot.plannedPublishDate
+						? new Date(snapshot.plannedPublishDate).getTime()
 						: undefined,
-					publishedUrl: values.publishedUrl || undefined,
-					publishedAt: values.publishedAt ? new Date(values.publishedAt).getTime() : undefined,
-					impressions: values.impressions ? parseInt(values.impressions) : undefined,
-					likes: values.likes ? parseInt(values.likes) : undefined,
-					comments: values.comments ? parseInt(values.comments) : undefined,
-					shares: values.shares ? parseInt(values.shares) : undefined,
-					notes: values.notes || undefined
+					publishedUrl: snapshot.publishedUrl || undefined,
+					publishedAt: snapshot.publishedAt ? new Date(snapshot.publishedAt).getTime() : undefined,
+					impressions: snapshot.impressions ? parseInt(snapshot.impressions) : undefined,
+					likes: snapshot.likes ? parseInt(snapshot.likes) : undefined,
+					comments: snapshot.comments ? parseInt(snapshot.comments) : undefined,
+					shares: snapshot.shares ? parseInt(snapshot.shares) : undefined,
+					notes: snapshot.notes || undefined
 				})
 			);
 			await write.client;
