@@ -64,12 +64,10 @@
 		<Button href="/" variant="outline">Back to Dashboard</Button>
 	</div>
 {:else if artifact && idea}
-	<div class="mx-auto max-w-4xl px-4 py-4 sm:p-8">
-		<ArtifactEditor
-			bind:this={editorRef}
-			artifactId={params.artifactId as UuidV7}
-			ideaId={params.ideaId as UuidV7}
-			onDelete={handleDelete}
-		/>
-	</div>
+	<ArtifactEditor
+		bind:this={editorRef}
+		artifactId={params.artifactId as UuidV7}
+		ideaId={params.ideaId as UuidV7}
+		onDelete={handleDelete}
+	/>
 {/if}

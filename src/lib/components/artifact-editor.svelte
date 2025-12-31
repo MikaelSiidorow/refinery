@@ -165,8 +165,8 @@
 </script>
 
 {#if artifact}
-	<div class="flex h-full flex-col">
-		<div class="space-y-4 border-b p-6 pb-6">
+	<div class="flex h-screen flex-col">
+		<div class="border-b px-8 py-4">
 			<div class="flex items-center justify-between">
 				<h1 class="typography-h1">Edit Artifact</h1>
 				<div class="flex items-center gap-4">
@@ -184,8 +184,8 @@
 		</div>
 
 		<Resizable.PaneGroup direction="horizontal" class="flex-1">
-			<Resizable.Pane defaultSize={65} minSize={40}>
-				<div class="h-full space-y-6 overflow-y-auto p-6">
+			<Resizable.Pane defaultSize={60} minSize={45}>
+				<div class="h-full space-y-6 overflow-y-auto px-8 py-6">
 					<div class="space-y-2">
 						<label for="artifact-title" class="text-sm font-medium">
 							Title <span class="text-muted-foreground">(optional)</span>
@@ -356,7 +356,7 @@
 
 			<Resizable.Handle withHandle />
 
-			<Resizable.Pane defaultSize={35} minSize={25} maxSize={50}>
+			<Resizable.Pane defaultSize={40} minSize={30} maxSize={55}>
 				<div class="flex h-full flex-col overflow-hidden border-l">
 					<ArtifactContextPanel {ideaId} />
 					<AiCoachPanel />
