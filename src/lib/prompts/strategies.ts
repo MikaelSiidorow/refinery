@@ -47,6 +47,7 @@ export const promptStrategies: PromptStrategy[] = [
 		},
 		producesArtifact: true,
 		artifactType: 'thread',
+		targetPlatform: 'twitter',
 		generate: (ideaOrArtifact, settings, examples) => {
 			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
 			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
@@ -303,6 +304,7 @@ Target: 400-600 words for LinkedIn. Make it personal but professional.`;
 		},
 		producesArtifact: true,
 		artifactType: 'carousel',
+		targetPlatform: 'linkedin',
 		generate: (ideaOrArtifact, settings) => {
 			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
 			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
@@ -362,6 +364,7 @@ SLIDE 2:
 		},
 		producesArtifact: true,
 		artifactType: 'short-post',
+		targetPlatform: 'linkedin',
 		generate: (ideaOrArtifact, settings, examples) => {
 			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
 			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
@@ -489,6 +492,7 @@ Include plain text version suggestion (simplified formatting for text-only email
 		},
 		producesArtifact: true,
 		artifactType: 'thread',
+		targetPlatform: 'bluesky',
 		generate: (ideaOrArtifact, settings) => {
 			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
 			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';

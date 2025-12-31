@@ -107,14 +107,15 @@
 	const examples = $derived<ExampleContent>({
 		// For idea context, find relevant past ideas based on topic/tags
 		pastIdeas: idea ? findRelevantIdeas(idea, pastIdeas, 2) : [],
-		// For artifact context, find relevant past artifacts of the same type
+		// For artifact context, find relevant past artifacts of the same type and platform
 		pastArtifacts:
 			selectedStrategy?.artifactType && contentSource
 				? findRelevantArtifacts(
 						selectedStrategy.artifactType,
 						contentSource.content || '',
 						allArtifacts,
-						2
+						2,
+						selectedStrategy.targetPlatform
 					)
 				: []
 	});
