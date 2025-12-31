@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { WithChildren } from 'bits-ui';
 	import { Z } from 'zero-svelte';
+	import { dropAllDatabases } from '@rocicorp/zero';
+	import { trace, SpanStatusCode, type Span } from '@opentelemetry/api';
 	import { env } from '$env/dynamic/public';
 	import { mutators } from '$lib/zero/mutators';
 	import { schema, type Schema } from '$lib/zero/schema';
@@ -16,7 +18,43 @@
 	import { set_z, get_z } from '$lib/z.svelte';
 	import { queries } from '$lib/zero/queries';
 
+	const tracer = trace.getTracer('refinery-zero-client');
+
 	let { data, children }: WithChildren<{ data: LayoutData }> = $props();
+
+	let isResettingSync = $state(false);
+
+	async function handleSyncError(errorType: string, reason?: string) {
+		if (isResettingSync) return;
+		isResettingSync = true;
+
+		tracer.startActiveSpan('zero.sync_error', async (span: Span) => {
+			span.setAttribute('zero.error_type', errorType);
+			span.setAttribute('user.id', data.user.id);
+			if (reason) {
+				span.setAttribute('zero.error_reason', reason);
+			}
+
+			span.recordException(new Error(`Zero sync error: ${errorType}${reason ? ` - ${reason}` : ''}`));
+			span.setStatus({ code: SpanStatusCode.ERROR, message: errorType });
+
+			console.warn('[Zero] Sync error detected, clearing databases and reloading...');
+			try {
+				const result = await dropAllDatabases();
+				span.setAttribute('zero.databases_dropped', result.dropped.length);
+				if (result.errors.length > 0) {
+					span.setAttribute('zero.drop_errors', result.errors.length);
+					console.error('[Zero] Failed to drop some databases:', result.errors);
+				}
+			} catch (error) {
+				span.recordException(error instanceof Error ? error : new Error(String(error)));
+				console.error('[Zero] Error clearing databases:', error);
+			}
+
+			span.end();
+			location.reload();
+		});
+	}
 
 	set_z(
 		new Z<Schema>({
@@ -27,6 +65,10 @@
 			mutators,
 			context: {
 				userID: data.user.id
+			},
+			onUpdateNeeded: (reason) => {
+				console.warn('[Zero] Update needed:', reason.type);
+				void handleSyncError('update_needed', reason.type);
 			}
 		})
 	);
@@ -38,6 +80,18 @@
 		z.preload(queries.userSettings()),
 		z.preload(queries.allArtifacts())
 	];
+
+	// Monitor Zero connection state for sync errors
+	$effect(() => {
+		const state = z.connectionState;
+		if (state.name === 'error') {
+			console.error('[Zero] Connection error:', state.reason);
+			void handleSyncError('connection_error', state.reason);
+		} else if (state.name === 'disconnected' && state.reason?.includes('unexpected base cookie')) {
+			console.error('[Zero] Base cookie sync error:', state.reason);
+			void handleSyncError('unexpected_base_cookie', state.reason);
+		}
+	});
 
 	let commandPaletteOpen = $state(false);
 	const shortcuts = setupAppShortcuts();
