@@ -88,7 +88,7 @@
 					status: values.status,
 					notes: values.notes,
 					content: values.content,
-					tags: values.tags
+					tags: [...values.tags]
 				})
 			);
 			await write.client;
