@@ -2,16 +2,20 @@
 	import { get_z } from '$lib/z.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/stores';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Select from '$lib/components/ui/select';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import { Copy, CircleCheck, Plus } from '@lucide/svelte';
 	import { formatRelativeTime } from '$lib/utils/date';
 	import type { UuidV7 } from '$lib/utils';
 	import { generateId } from '$lib/utils';
 	import PromptSelector from '$lib/components/prompt-selector.svelte';
 	import ArtifactCard from '$lib/components/artifact-card.svelte';
+	import ArtifactEditor from '$lib/components/artifact-editor.svelte';
+	import ConfidenceIndicator from '$lib/components/confidence-indicator.svelte';
 	import { TagsInput } from '$lib/components/ui/tags-input';
 	import { queries } from '$lib/zero/queries';
 	import { mutators } from '$lib/zero/mutators';
@@ -24,6 +28,13 @@
 	const z = get_z();
 
 	const { params } = $props();
+
+	// Detect if we're showing an artifact in a sheet
+	const artifactIdFromUrl = $derived.by(() => {
+		const match = $page.url.pathname.match(/\/artifact\/([a-z0-9-]+)$/);
+		return match?.[1] as UuidV7 | undefined;
+	});
+	const showArtifactSheet = $derived(artifactIdFromUrl && $page.state.modal === true);
 
 	// Parameterized queries with reactive args using $derived
 	const ideasQuery = $derived(z.q(queries.ideaById(params.ideaId as UuidV7)));
@@ -56,15 +67,13 @@
 
 		defaultValues: {
 			oneLiner: '',
-			notes: '',
-			content: '',
+			content: '', // Unified content field (previously notes + content)
 			tags: [],
 			status: 'inbox' as const
 		},
 
 		initialize: (idea) => ({
 			oneLiner: idea.oneLiner || '',
-			notes: idea.notes || '',
 			content: idea.content || '',
 			tags: idea.tags || [],
 			status: idea.status || 'inbox'
@@ -72,7 +81,6 @@
 
 		normalize: (idea) => ({
 			oneLiner: idea.oneLiner || '',
-			notes: idea.notes || '',
 			content: idea.content || '',
 			tags: (idea.tags || []).slice().sort(),
 			status: idea.status || 'inbox'
@@ -81,24 +89,23 @@
 		onSave: async (values) => {
 			if (!idea) return;
 
-			const snapshot = $state.snapshot(values);
 			const write = z.mutate(
 				mutators.contentIdea.update({
 					id: idea.id,
-					oneLiner: snapshot.oneLiner,
-					status: snapshot.status,
-					notes: snapshot.notes,
-					content: snapshot.content,
-					tags: snapshot.tags
+					oneLiner: values.oneLiner,
+					status: values.status,
+					content: values.content,
+					tags: values.tags
 				})
 			);
 			await write.client;
 		}
 	});
 
-	function openPromptSelector() {
-		promptSelectorOpen = true;
-	}
+	// TODO: Restore when prompts are re-integrated with AI coach panel
+	// function openPromptSelector() {
+	// 	promptSelectorOpen = true;
+	// }
 
 	async function handleKeydown(event: KeyboardEvent) {
 		const isInputFocused = ['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement)?.tagName);
@@ -110,6 +117,12 @@
 		}
 
 		if (event.key === 'Escape' && !isInputFocused) {
+			if (showArtifactSheet) {
+				event.preventDefault();
+				await closeArtifactSheet();
+				return;
+			}
+
 			const hasOpenDialog = document.querySelector('[role="dialog"]');
 			if (!hasOpenDialog && !promptSelectorOpen) {
 				event.preventDefault();
@@ -124,7 +137,20 @@
 
 	function handleEditArtifact(id: string) {
 		if (!idea) return;
-		void goto(resolve(`/idea/${idea.id}/artifact/${id}`));
+		void goto(resolve(`/idea/${idea.id}/artifact/${id}`), {
+			state: { modal: true }
+		});
+	}
+
+	async function closeArtifactSheet() {
+		if (!idea) return;
+		await goto(resolve(`/idea/${idea.id}`), {
+			state: {}
+		});
+	}
+
+	async function handleArtifactDelete() {
+		await closeArtifactSheet();
 	}
 
 	async function handleCreateArtifact() {
@@ -280,11 +306,15 @@
 							>Updated {formatRelativeTime(idea.updatedAt)}</span
 						>
 					</div>
-					<div class="flex min-w-15 shrink-0 items-center gap-1">
-						{#if form.status === 'saved'}
-							<CircleCheck class="h-3.5 w-3.5 text-green-600" />
-							<span class="text-xs text-green-600">Saved</span>
-						{/if}
+					<div class="flex shrink-0 items-center gap-4">
+						<!-- Confidence Indicator - Placeholder for future AI-powered readiness metric -->
+						<ConfidenceIndicator />
+						<div class="flex min-w-15 items-center gap-1">
+							{#if form.status === 'saved'}
+								<CircleCheck class="h-3.5 w-3.5 text-green-600" />
+								<span class="text-xs text-green-600">Saved</span>
+							{/if}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -301,40 +331,33 @@
 				/>
 			</div>
 
-			<div class="grid max-w-306 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,600px)_minmax(0,600px)]">
-				<div class="min-w-0 space-y-2">
-					<label for="notes" class="text-sm font-semibold">Notes</label>
-					<p class="text-xs text-muted-foreground">
-						Brainstorm, research, outline - anything to help you write
-					</p>
-					<Textarea
-						id="notes"
-						bind:value={form.values.notes}
-						placeholder="Add your notes here..."
-						class="min-h-[calc(100vh-24rem)] resize-y"
-					/>
-				</div>
-
-				<div class="min-w-0 space-y-2">
-					<div class="flex items-center justify-between gap-3">
-						<div class="min-w-0 flex-1">
-							<label for="content" class="text-sm font-semibold">Content Draft</label>
-							<p class="text-xs text-muted-foreground">
-								Your full content draft - develop your thinking and write authentically
-							</p>
-						</div>
-						<Button onclick={openPromptSelector} variant="outline" size="sm" class="gap-2">
-							<Copy class="h-4 w-4" />
-							<span class="sr-only sm:not-sr-only">Frameworks</span>
-						</Button>
+			<!-- Single unified content editor -->
+			<div class="max-w-306 space-y-2">
+				<div class="flex items-center justify-between gap-3">
+					<div class="min-w-0 flex-1">
+						<label for="content" class="text-sm font-semibold">Content</label>
+						<p class="text-xs text-muted-foreground">
+							Brainstorm, outline, draft - use optional template below or write freely
+						</p>
 					</div>
-					<Textarea
-						id="content"
-						bind:value={form.values.content}
-						placeholder="Write or paste your content here..."
-						class="min-h-[calc(100vh-24rem)] resize-y text-sm"
-					/>
+					<!--
+					TODO: Prompts system temporarily hidden - will integrate with AI coach panel
+					<Button onclick={openPromptSelector} variant="outline" size="sm" class="gap-2">
+						<Copy class="h-4 w-4" />
+						<span class="sr-only sm:not-sr-only">Frameworks</span>
+					</Button>
+					-->
 				</div>
+				<Textarea
+					id="content"
+					bind:value={form.values.content}
+					placeholder="## Notes&#10;&#10;Add your initial thoughts, research, links...&#10;&#10;## Content Draft&#10;&#10;Develop your thinking and write authentically..."
+					class="min-h-[calc(100vh-20rem)] resize-y font-mono text-sm"
+				/>
+				<p class="text-xs text-muted-foreground">
+					Tip: Use the template above or delete it and write freely. Your authentic voice matters
+					most.
+				</p>
 			</div>
 
 			<div class="mt-12 max-w-306 border-t pt-8">
@@ -418,3 +441,22 @@
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>
+
+<Sheet.Root
+	open={showArtifactSheet}
+	onOpenChange={(open) => {
+		if (!open) {
+			void closeArtifactSheet();
+		}
+	}}
+>
+	<Sheet.Content side="right" class="w-full p-0 sm:max-w-2xl">
+		{#if artifactIdFromUrl && idea}
+			<ArtifactEditor
+				artifactId={artifactIdFromUrl}
+				ideaId={idea.id}
+				onDelete={handleArtifactDelete}
+			/>
+		{/if}
+	</Sheet.Content>
+</Sheet.Root>
