@@ -52,12 +52,14 @@ export function findRelevantIdeas(
 
 /**
  * Find the most relevant past artifacts of a specific type
+ * Prioritizes: 1) artifact type, 2) platform match, 3) content similarity, 4) recency
  */
 export function findRelevantArtifacts(
 	artifactType: ArtifactType,
 	currentContent: string,
 	allArtifacts: Row['contentArtifact'][],
-	limit = 2
+	limit = 2,
+	targetPlatform?: string
 ): Row['contentArtifact'][] {
 	// Filter to artifacts of the same type with substantial content
 	const relevantArtifacts = allArtifacts.filter(
@@ -69,13 +71,52 @@ export function findRelevantArtifacts(
 
 	if (relevantArtifacts.length === 0) return [];
 
-	// If we have few artifacts of this type, just return them all (up to limit)
-	if (relevantArtifacts.length <= limit) {
-		return relevantArtifacts;
+	// Sort by recency first (most recent first) as a baseline
+	const sortedByRecency = [...relevantArtifacts].sort((a, b) => {
+		const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+		const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+		return dateB - dateA;
+	});
+
+	// If we have a target platform, prioritize platform matches
+	if (targetPlatform) {
+		const platformMatches = sortedByRecency.filter(
+			(artifact) =>
+				artifact.platform === targetPlatform || artifact.importedFrom === targetPlatform
+		);
+		const nonPlatformMatches = sortedByRecency.filter(
+			(artifact) =>
+				artifact.platform !== targetPlatform && artifact.importedFrom !== targetPlatform
+		);
+
+		// If we have enough platform matches, use content similarity within them
+		if (platformMatches.length >= limit) {
+			return findBestContentMatches(platformMatches, currentContent, limit);
+		}
+
+		// Otherwise, take all platform matches and fill remaining slots from other artifacts
+		const remaining = limit - platformMatches.length;
+		const additionalMatches = findBestContentMatches(nonPlatformMatches, currentContent, remaining);
+		return [...platformMatches, ...additionalMatches];
 	}
 
+	// No platform specified, use content similarity on all artifacts
+	return findBestContentMatches(sortedByRecency, currentContent, limit);
+}
+
+/**
+ * Find best content matches using Fuse.js fuzzy search
+ */
+function findBestContentMatches(
+	artifacts: Row['contentArtifact'][],
+	currentContent: string,
+	limit: number
+): Row['contentArtifact'][] {
+	if (artifacts.length === 0) return [];
+	if (artifacts.length <= limit) return artifacts;
+
 	// Use Fuse to find similar content
-	const fuse = new Fuse(relevantArtifacts, {
+	const fuse = new Fuse(artifacts, {
 		keys: [
 			{ name: 'content', weight: 0.5 },
 			{ name: 'title', weight: 0.3 },
@@ -88,8 +129,8 @@ export function findRelevantArtifacts(
 	const results = fuse.search(currentContent.substring(0, 500)); // Use first 500 chars for matching
 
 	if (results.length === 0) {
-		// No good matches, return most recent
-		return relevantArtifacts.slice(0, limit);
+		// No good matches, return most recent (already sorted)
+		return artifacts.slice(0, limit);
 	}
 
 	return results.slice(0, limit).map((result) => result.item);

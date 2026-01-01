@@ -25,6 +25,7 @@ export interface PromptStrategy {
 	requirements: StrategyRequirements;
 	producesArtifact: boolean; // If true, this creates an artifact
 	artifactType?: ArtifactType; // What type of artifact it creates
+	targetPlatform?: string; // Target platform for matching examples (e.g., 'linkedin', 'bluesky', 'twitter')
 	targetArtifactTypes?: ArtifactType[]; // Which artifact types this strategy applies to (for refine category)
 	generate: (
 		ideaOrArtifact: Row['contentIdea'] | Row['contentArtifact'],
