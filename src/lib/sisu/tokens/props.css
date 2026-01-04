@@ -1,0 +1,49 @@
+/* @sisu/tokens/props.css - Design tokens layer */
+/* Imports Open Props and defines semantic aliases matching Refinery's design system */
+
+/* Import Open Props base (minimal subset - we mostly use existing Refinery tokens) */
+@import 'open-props/style' layer(open-props);
+@import 'open-props/normalize' layer(normalize);
+
+/* Semantic Design Tokens - Mapping to existing Refinery system */
+:root {
+	/* Typography - already defined in app.css, referencing for completeness */
+	--sisu-font-display: var(--font-display);
+	--sisu-font-sans: var(--font-sans);
+	--sisu-font-mono: var(--font-mono);
+
+	/* Spacing & Layout */
+	--sisu-radius: var(--radius);
+	--sisu-radius-sm: var(--radius-sm);
+	--sisu-radius-md: var(--radius-md);
+	--sisu-radius-lg: var(--radius-lg);
+	--sisu-radius-xl: var(--radius-xl);
+
+	/* Animation - calm flow timing */
+	--sisu-duration-micro: var(--duration-micro);
+	--sisu-duration-fast: var(--duration-fast);
+	--sisu-duration-normal: var(--duration-normal);
+	--sisu-ease-out: var(--ease-out);
+	--sisu-ease-spring: var(--ease-spring);
+
+	/* Shadows - layered depth */
+	--sisu-shadow-sm: var(--shadow-sm);
+	--sisu-shadow-md: var(--shadow-md);
+	--sisu-shadow-lg: var(--shadow-lg);
+
+	/* Semantic Color Tokens */
+	--sisu-color-background: var(--color-background);
+	--sisu-color-foreground: var(--color-foreground);
+	--sisu-color-primary: var(--color-primary);
+	--sisu-color-primary-foreground: var(--color-primary-foreground);
+	--sisu-color-secondary: var(--color-secondary);
+	--sisu-color-secondary-foreground: var(--color-secondary-foreground);
+	--sisu-color-accent: var(--color-accent);
+	--sisu-color-accent-foreground: var(--color-accent-foreground);
+	--sisu-color-muted: var(--color-muted);
+	--sisu-color-muted-foreground: var(--color-muted-foreground);
+	--sisu-color-destructive: var(--color-destructive);
+	--sisu-color-border: var(--color-border);
+	--sisu-color-input: var(--color-input);
+	--sisu-color-ring: var(--color-ring);
+}

@@ -7,6 +7,9 @@
 @import '@fontsource-variable/inter';
 @import '@fontsource/geist-mono';
 
+/* sisu - CSS-first component tokens */
+@import '$lib/sisu/tokens/props.css';
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

@@ -28,6 +28,7 @@
 		"@lucide/svelte": "^0.562.0",
 		"@node-rs/argon2": "^2.0.2",
 		"@oslojs/crypto": "^1.0.1",
+		"open-props": "^1.7.17",
 		"@oslojs/encoding": "^1.1.0",
 		"@rocicorp/zero": "^0.25.5",
 		"@sveltejs/adapter-node": "^5.4.0",

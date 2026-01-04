@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import Button from '$lib/sisu/components/button.svelte';
 	import { GithubIcon } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import { dev } from '$app/environment';
@@ -13,20 +13,16 @@
 		</div>
 
 		<div class="mt-8 space-y-4">
-			<a href={resolve('/sign-in/github')}>
-				<Button class="w-full" size="lg">
-					<GithubIcon class="mr-2 h-5 w-5" />
-					Sign in with GitHub
-				</Button>
-			</a>
+			<Button href={resolve('/sign-in/github')} class="w-full" size="lg">
+				<GithubIcon class="mr-2 h-5 w-5" />
+				Sign in with GitHub
+			</Button>
 
 			{#if dev}
-				<a href={resolve('/sign-in/demo')}>
-					<Button class="w-full" size="lg" variant="outline">
-						<span class="mr-2">🦦</span>
-						Sign in as Demo
-					</Button>
-				</a>
+				<Button href={resolve('/sign-in/demo')} class="w-full" size="lg" variant="outline">
+					<span class="mr-2">🦦</span>
+					Sign in as Demo
+				</Button>
 			{/if}
 		</div>
 
