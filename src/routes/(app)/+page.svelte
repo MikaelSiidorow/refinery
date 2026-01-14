@@ -21,21 +21,18 @@
 
 	let selectedTags = $state<string[]>([]);
 
-	type SectionState = Record<string, boolean>;
+	// Individual persisted state for each section to avoid infinite loops with bind:open
+	const inboxOpen = new PersistedState('dashboard-inbox-open', true);
+	const developingOpen = new PersistedState('dashboard-developing-open', true);
+	const readyOpen = new PersistedState('dashboard-ready-open', true);
+	const publishedOpen = new PersistedState('dashboard-published-open', true);
 
-	const sectionState = new PersistedState<SectionState>('dashboard-sections-state', {
-		inbox: true,
-		developing: true,
-		ready: true,
-		published: true
-	});
-
-	function toggleSection(section: string) {
-		sectionState.current = {
-			...sectionState.current,
-			[section]: !sectionState.current[section]
-		};
-	}
+	const sectionOpenState = {
+		inbox: inboxOpen,
+		developing: developingOpen,
+		ready: readyOpen,
+		published: publishedOpen
+	} as const;
 
 	const allUniqueTags = $derived.by(() => {
 		const tagSet = new SvelteSet<string>();
@@ -140,8 +137,7 @@
 			{#each Object.entries(statusConfig) as [status, config] (status)}
 				<details
 					class="group/section rounded-lg border bg-card"
-					open={sectionState.current[status]}
-					ontoggle={() => toggleSection(status)}
+					bind:open={sectionOpenState[status as keyof typeof sectionOpenState].current}
 				>
 					<summary
 						class="flex cursor-pointer items-center justify-between p-4 focus-ring transition-calm hover:bg-accent/50"
