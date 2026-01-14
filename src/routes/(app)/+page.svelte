@@ -12,6 +12,7 @@
 	import { queries } from '$lib/zero/queries';
 	import { isQueryLoading } from '$lib/zero/query-helpers';
 	import { DashboardSkeleton } from '$lib/components/skeletons';
+	import { browser } from '$app/environment';
 
 	const z = get_z();
 
@@ -19,6 +20,36 @@
 	const isLoading = $derived(isQueryLoading(allIdeasQuery));
 
 	let selectedTags = $state<string[]>([]);
+
+	const STORAGE_KEY = 'dashboard-sections-state';
+
+	type SectionState = Record<string, boolean>;
+
+	function loadSectionState(): SectionState {
+		if (!browser) return { inbox: true, developing: true, ready: true, published: true };
+		try {
+			const stored = localStorage.getItem(STORAGE_KEY);
+			return stored
+				? JSON.parse(stored)
+				: { inbox: true, developing: true, ready: true, published: true };
+		} catch {
+			return { inbox: true, developing: true, ready: true, published: true };
+		}
+	}
+
+	function saveSectionState(state: SectionState) {
+		if (!browser) return;
+		try {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+		} catch {}
+	}
+
+	let sectionState = $state<SectionState>(loadSectionState());
+
+	function toggleSection(section: string) {
+		sectionState[section] = !sectionState[section];
+		saveSectionState(sectionState);
+	}
 
 	const allUniqueTags = $derived.by(() => {
 		const tagSet = new SvelteSet<string>();
@@ -118,19 +149,32 @@
 			</div>
 		{/if}
 
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+		<div class="space-y-4">
 			{#each Object.entries(statusConfig) as [status, config] (status)}
-				<div class="flex min-h-100 flex-col">
-					<div class="mb-3 flex items-center justify-between">
-						<h2 class="text-sm font-semibold text-muted-foreground">
-							{config.label}
-						</h2>
-						<Badge class="{config.badgeClass} ml-2">
-							{groupedIdeas[status as keyof typeof groupedIdeas].length}
-						</Badge>
-					</div>
+				<details
+					class="group/section rounded-lg border bg-card"
+					open={sectionState[status]}
+					ontoggle={() => toggleSection(status)}
+				>
+					<summary
+						class="flex cursor-pointer items-center justify-between p-4 focus-ring transition-calm hover:bg-accent/50"
+					>
+						<div class="flex items-center gap-3">
+							<span
+								class="inline-flex size-5 items-center justify-center transition-transform group-open/section:rotate-90"
+							>
+								▸
+							</span>
+							<h2 class="text-sm font-semibold">
+								{config.label}
+							</h2>
+							<Badge class="{config.badgeClass}">
+								{groupedIdeas[status as keyof typeof groupedIdeas].length}
+							</Badge>
+						</div>
+					</summary>
 
-					<div class="space-y-2">
+					<div class="space-y-2 p-4 pt-0">
 						{#each groupedIdeas[status as keyof typeof groupedIdeas] as idea (idea.id)}
 							{@const urls = extractUrls(idea.oneLiner)}
 							{@const cleanText = urls.length > 0 ? removeUrls(idea.oneLiner) : idea.oneLiner}
@@ -189,7 +233,7 @@
 							</div>
 						{/each}
 					</div>
-				</div>
+				</details>
 			{/each}
 		</div>
 	</div>

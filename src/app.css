@@ -367,3 +367,12 @@
 	font-family: var(--font-mono);
 	font-size: 0.875em;
 }
+
+/* Collapsible sections - hide default marker */
+details > summary {
+	list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+	display: none;
+}
