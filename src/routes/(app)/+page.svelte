@@ -12,7 +12,7 @@
 	import { queries } from '$lib/zero/queries';
 	import { isQueryLoading } from '$lib/zero/query-helpers';
 	import { DashboardSkeleton } from '$lib/components/skeletons';
-	import { browser } from '$app/environment';
+	import { PersistedState } from 'runed';
 
 	const z = get_z();
 
@@ -21,34 +21,20 @@
 
 	let selectedTags = $state<string[]>([]);
 
-	const STORAGE_KEY = 'dashboard-sections-state';
-
 	type SectionState = Record<string, boolean>;
 
-	function loadSectionState(): SectionState {
-		if (!browser) return { inbox: true, developing: true, ready: true, published: true };
-		try {
-			const stored = localStorage.getItem(STORAGE_KEY);
-			return stored
-				? JSON.parse(stored)
-				: { inbox: true, developing: true, ready: true, published: true };
-		} catch {
-			return { inbox: true, developing: true, ready: true, published: true };
-		}
-	}
-
-	function saveSectionState(state: SectionState) {
-		if (!browser) return;
-		try {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-		} catch {}
-	}
-
-	let sectionState = $state<SectionState>(loadSectionState());
+	const sectionState = new PersistedState<SectionState>('dashboard-sections-state', {
+		inbox: true,
+		developing: true,
+		ready: true,
+		published: true
+	});
 
 	function toggleSection(section: string) {
-		sectionState[section] = !sectionState[section];
-		saveSectionState(sectionState);
+		sectionState.current = {
+			...sectionState.current,
+			[section]: !sectionState.current[section]
+		};
 	}
 
 	const allUniqueTags = $derived.by(() => {
@@ -153,7 +139,7 @@
 			{#each Object.entries(statusConfig) as [status, config] (status)}
 				<details
 					class="group/section rounded-lg border bg-card"
-					open={sectionState[status]}
+					open={sectionState.current[status]}
 					ontoggle={() => toggleSection(status)}
 				>
 					<summary
