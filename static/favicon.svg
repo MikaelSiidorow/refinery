@@ -2,15 +2,17 @@
   <!-- Teal background -->
   <rect width="100" height="100" fill="#67a5a5"/>
 
-  <!-- White letter R in Fraunces style -->
-  <text
-    x="50"
-    y="50"
-    font-family="'Fraunces', serif"
-    font-size="70"
-    font-weight="600"
-    fill="#ffffff"
-    text-anchor="middle"
-    dominant-baseline="central"
-    style="font-variation-settings: 'wght' 600;">R</text>
+  <!-- Stylized letter R as path (matches PWA icon style) -->
+  <path fill="#ffffff" d="
+    M22 82 L22 78 C24 78 26 77 27 76 C28 75 28.5 73 28.5 70 L28.5 30
+    C28.5 27 28 25 27 24 C26 23 24 22 22 22 L22 18 L50 18
+    C57 18 62.5 19.5 66.5 22.5 C70.5 25.5 72.5 30 72.5 36
+    C72.5 40.5 71.5 44 69.5 47 C67.5 50 64.5 52.5 60.5 54
+    L75 74 C76.5 76 78 77.5 79.5 78.5 C81 79.5 82.5 80 84 80
+    L84 82 L62 82 L62 80 C64 80 65 79.5 65 78.5 C65 77.5 64.5 76 63 74
+    L50 56 L42 56 L42 70 C42 73 42.5 75 43.5 76 C44.5 77 46.5 78 49 78
+    L49 82 L22 82 Z
+    M42 52 L49 52 C54 52 57.5 51 60 48.5 C62.5 46 63.5 42 63.5 37
+    C63.5 32 62.5 28.5 60 26 C57.5 23.5 54 22 49 22 L42 22 L42 52 Z
+  "/>
 </svg>
