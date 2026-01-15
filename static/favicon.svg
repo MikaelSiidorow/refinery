@@ -1,16 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Teal background -->
+  <style>
+    @font-face {
+      font-family: 'Fraunces';
+      src: url('data:font/woff2;base64,d09GMgABAAAAAATkABIAAAAACUwAAAR+AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGyAcKj9IVkFSRAZgP1NUQVSCAicmADQvJBEICoFwgWYwggABNgIkAwgLBgAEIAWGBgcgGwMIERWkJRJ8cWCD29Su0QpN6kLbYpVTMrv1vzZyHfQQnvTzNqlykJUeQH6A3UO9imnJ9tYE6wqlwqv//V1ktz9A4P8AuFhbFbEIDZouJqGSiPkS0Ei2N0M1bWKREGk0KkRL3plLiIWmUr/9nG5qU49HCaUTEZEyeuy5Nj8CPNKSHlWtXrcpYVwACwDw6ZGdnJj24vftNLQ/Kd1/BRAASYHyu39IiAFSAxkROs/50PxCCGL/wGBw3aPOZAIQSOruB5ZyB5jTFDaVUfbiAJpVaQrnaUzj0OaYIYhkNZ0AATiXAyOBjDgIESYAJCUClMUMGDhktIB/NF+lDBrRo+dQCdOiQf06cnB6De3UVylwSUx2SlOfzgxnJms5iEEYJQEAIBVgMCCXrkBX4LpgUHnXJGqPLIzCmg+PfvOTnmkJj5kpZFxzGh4nIzC+MxlOmJhMx5Mc9QI+GFyMUgL4wARrLQJAhM5znvvcvvOcFyu/4ovuP/FrDqAiFQEM4ABJcRCQFJeMgIuLgMbWUqPdl24uEkld4fdEutKSsAi6upW1JACgBOACBmgMdAd2UwAwZZOP8R8/bnp5TvFmPn1ausWOG0/izHqm6Gpznhf2d2TLtmUHvhd/5llF65TYtkuh6M7sxW8qei5Oglkfngzt0mrHjqeMPeLTXtyZb74qRYptq1K3XzSnbbPl63oOSFKrWfLmiUqW75GwcYasjNm4vFrcfMMnTZrTr8H2WR1b5ciQKl+rO28bpK7cNF+eSemLZem3Yk6qy6nmLu+XpViGiXkq/dk02Pd6H+cKvR2f7m7vMR1Tp5+U55eGjYTXv76ertYNABAgAFJjeBaAIb7weOlzHhrFfLPHyWbZ5RlKVpl5/Rz7KfavxU4XO9A9aK19NrLjbfFOD8YlPSGpJArWTfJtJLuSJCxfpqy4TPmE2eeJfNvAZun7NvG/RN7YFFOtc9z1riHpY9b7l5j29VdJ0qRNRcWYv0yp4oeGMH7GApoFC5f4+P75Q2n8XMXrND+76LTZS5ZvOX1nUoLP72xbvmTutOiEUYP79GxVJM2kOCZuvK9WrF6xZtPpO59PCt25cnT3jrUbN04CAYJaCfom7pCg7O9hOnQf4NXpQ+WYak+7XvLI7lBXIIgBQPCVHQ9dgl+ugxC6GecrugZH0xIBhsUEuU3Qz3AoAMlkcJAbAdbCCkRC1oIhPnvBoSinwSUjP0GAwkqoDJJRlY0EKdUZRFyNBkNCTQUHT0vBJaz1EMTTdk+YLm55GdyDEJewLkJ8PN1kJuE+huQk1FtnCnB/mC8lniT/EE2sejrPcibKpq0PrTZMmK+j3y3lCQaa6ViAZ9RXtzjCYd0XCbO8DLYeySeWU1nMF531590A01MhVVY7MmdZAGtJdz2TTJvOa+vmqiY1EtHqPlsIN3BIax4rqCrz+CgVqX/pez5zLs6cqiZ/trWElrwf2MLb5y4xYypJaGxboOhdoplXRpHfQeYbWHoxUZv5FJdcA1QneWWp2DfbEK1ov8DyXaEJospjIkukAAAAAA==') format('woff2');
+      font-weight: 600;
+    }
+  </style>
   <rect width="100" height="100" fill="#67a5a5"/>
-
-  <!-- White letter R in Fraunces style -->
-  <text
-    x="50"
-    y="50"
-    font-family="'Fraunces', serif"
-    font-size="70"
-    font-weight="600"
-    fill="#ffffff"
-    text-anchor="middle"
-    dominant-baseline="central"
-    style="font-variation-settings: 'wght' 600;">R</text>
+  <text x="50" y="50" font-family="Fraunces" font-size="70" font-weight="600"
+        fill="#ffffff" text-anchor="middle" dominant-baseline="central">R</text>
 </svg>
