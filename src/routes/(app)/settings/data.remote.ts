@@ -321,12 +321,12 @@ async function importLinkedInPosts(userId: UuidV7) {
 
 	if (!response.ok) {
 		const errorText = await response.text();
-		console.error('LinkedIn API error:', {
-			status: response.status,
-			statusText: response.statusText,
-			body: errorText,
-			url: response.url
-		});
+
+		// Add error context for wide event logging
+		const { locals } = getRequestEvent();
+		locals.ctx.linkedin_api_status = response.status;
+		locals.ctx.linkedin_api_error = errorText;
+		locals.ctx.error = `LinkedIn API error: ${response.status} ${response.statusText}`;
 
 		if (response.status === 403 || response.status === 401 || response.status === 400) {
 			error(

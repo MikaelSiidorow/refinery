@@ -4,9 +4,14 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import PwaUpdateNotifier from '$lib/components/pwa-update-notifier.svelte';
+	import { initClientTracing } from '$lib/instrumentation.client';
 	import type { Snippet } from 'svelte';
 
 	let { children }: { children: Snippet } = $props();
+
+	$effect(() => {
+		initClientTracing();
+	});
 </script>
 
 <svelte:head>

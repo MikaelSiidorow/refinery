@@ -6,6 +6,8 @@ declare global {
 		interface Locals {
 			user: import('$lib/server/auth').SessionValidationResult['user'];
 			session: import('$lib/server/auth').SessionValidationResult['session'];
+			/** Accumulate context for wide event logging - emitted at request completion */
+			ctx: import('$lib/server/logger').WideEvent;
 		}
 		// interface PageData {}
 		// interface PageState {}

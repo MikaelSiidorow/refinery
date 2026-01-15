@@ -81,12 +81,10 @@ export function findRelevantArtifacts(
 	// If we have a target platform, prioritize platform matches
 	if (targetPlatform) {
 		const platformMatches = sortedByRecency.filter(
-			(artifact) =>
-				artifact.platform === targetPlatform || artifact.importedFrom === targetPlatform
+			(artifact) => artifact.platform === targetPlatform || artifact.importedFrom === targetPlatform
 		);
 		const nonPlatformMatches = sortedByRecency.filter(
-			(artifact) =>
-				artifact.platform !== targetPlatform && artifact.importedFrom !== targetPlatform
+			(artifact) => artifact.platform !== targetPlatform && artifact.importedFrom !== targetPlatform
 		);
 
 		// If we have enough platform matches, use content similarity within them

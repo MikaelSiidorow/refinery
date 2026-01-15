@@ -96,7 +96,7 @@ export async function fetchBlueskyPosts(
 
 		return posts;
 	} catch (error) {
-		console.error('Error fetching Bluesky posts:', error);
+		// Let error bubble up - will be caught by wide event handler
 		throw error;
 	}
 }

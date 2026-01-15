@@ -28,6 +28,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 			.where(eq(table.user.githubId, githubUser.id));
 
 		let userId: UuidV7;
+		let isNewUser = false;
 
 		if (existingUser) {
 			userId = existingUser.id;
@@ -45,6 +46,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		} else {
 			// Create new user
 			userId = generateId();
+			isNewUser = true;
 			await db.insert(table.user).values({
 				id: userId,
 				githubId: githubUser.id,
@@ -55,14 +57,20 @@ export async function GET(event: RequestEvent): Promise<Response> {
 				updatedAt: new Date()
 			});
 
-			// Load example data for new users
+			// Load example data for new users (non-critical)
 			try {
 				await seedUserData(db, userId);
 			} catch (seedError) {
-				console.error('Failed to seed example data for new user:', seedError);
-				// Don't fail signup if seed data fails
+				// Add warning to wide event context (non-fatal)
+				event.locals.ctx.seed_error =
+					seedError instanceof Error ? seedError.message : String(seedError);
 			}
 		}
+
+		// Add context for wide event
+		event.locals.ctx.oauth_provider = 'github';
+		event.locals.ctx.is_new_user = isNewUser;
+		event.locals.ctx.github_user_id = githubUser.id;
 
 		// Create session
 		const sessionToken = generateSessionToken();
@@ -76,7 +84,10 @@ export async function GET(event: RequestEvent): Promise<Response> {
 			}
 		});
 	} catch (e) {
-		console.error(e);
+		// Add error context for wide event logging
+		event.locals.ctx.error = e instanceof Error ? e.message : String(e);
+		event.locals.ctx.error_type = e instanceof Error ? e.constructor.name : typeof e;
+		event.locals.ctx.oauth_provider = 'github';
 		return new Response(null, { status: 500 });
 	}
 }

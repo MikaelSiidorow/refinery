@@ -13,6 +13,8 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 		return redirect(302, '/sign-in');
 	}
 
+	locals.ctx.oauth_provider = 'linkedin';
+
 	const code = url.searchParams.get('code');
 	const state = url.searchParams.get('state');
 	const storedState = cookies.get('linkedin_oauth_state');
@@ -69,6 +71,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 				.update(connectedAccount)
 				.set(accountData)
 				.where(eq(connectedAccount.id, existing[0]!.id));
+			locals.ctx.linkedin_action = 'updated';
 		} else {
 			await db.insert(connectedAccount).values({
 				id: generateId(),
@@ -76,6 +79,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 				createdAt: new Date(),
 				updatedAt: new Date()
 			});
+			locals.ctx.linkedin_action = 'created';
 		}
 
 		cookies.delete('linkedin_oauth_state', { path: '/' });
@@ -85,7 +89,9 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 			throw error;
 		}
 
-		console.error('LinkedIn OAuth error:', error);
+		// Add error context for wide event logging
+		locals.ctx.error = error instanceof Error ? error.message : String(error);
+		locals.ctx.error_type = error instanceof Error ? error.constructor.name : typeof error;
 
 		if (error instanceof OAuth2RequestError) {
 			return new Response('Invalid authorization code', { status: 400 });

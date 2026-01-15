@@ -23,7 +23,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		return Response.json(response);
 	} catch (error) {
-		console.error('Get queries error:', error);
+		// Add error context for wide event logging
+		locals.ctx.error = error instanceof Error ? error.message : String(error);
+		locals.ctx.error_type = error instanceof Error ? error.constructor.name : typeof error;
 		return Response.json({ error: 'Internal server error' }, { status: 500 });
 	}
 };

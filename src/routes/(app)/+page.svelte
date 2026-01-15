@@ -140,7 +140,7 @@
 					bind:open={sectionOpenState[status as keyof typeof sectionOpenState].current}
 				>
 					<summary
-						class="flex cursor-pointer items-center justify-between p-4 focus-ring transition-calm hover:bg-accent/50"
+						class="flex cursor-pointer items-center justify-between focus-ring p-4 transition-calm hover:bg-accent/50"
 					>
 						<div class="flex items-center gap-3">
 							<span
@@ -151,7 +151,7 @@
 							<h2 class="text-sm font-semibold">
 								{config.label}
 							</h2>
-							<Badge class="{config.badgeClass}">
+							<Badge class={config.badgeClass}>
 								{groupedIdeas[status as keyof typeof groupedIdeas].length}
 							</Badge>
 						</div>

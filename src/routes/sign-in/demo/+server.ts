@@ -15,6 +15,8 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		error(404, 'Not found');
 	}
 
+	event.locals.ctx.demo_signin = true;
+
 	try {
 		// Create or update demo user with seed data
 		await seedDemoUser(db);
@@ -24,7 +26,9 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		const session = await createSession(sessionToken, DEMO_USER_ID);
 		setSessionTokenCookie(event, sessionToken, session.expiresAt);
 	} catch (e) {
-		console.error('Demo sign-in failed:', e);
+		// Add error context for wide event (error() throws, will be caught by handleWideEvent)
+		event.locals.ctx.error = e instanceof Error ? e.message : String(e);
+		event.locals.ctx.error_type = e instanceof Error ? e.constructor.name : typeof e;
 		error(500, 'Failed to sign in as demo user');
 	}
 

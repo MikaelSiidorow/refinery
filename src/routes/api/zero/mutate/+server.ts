@@ -40,7 +40,8 @@ export const POST: RequestHandler = async ({ request, locals, tracing }) => {
 								);
 								mutatorSpan.setStatus({
 									code: SpanStatusCode.ERROR,
-									message: mutatorError instanceof Error ? mutatorError.message : String(mutatorError)
+									message:
+										mutatorError instanceof Error ? mutatorError.message : String(mutatorError)
 								});
 								throw mutatorError;
 							} finally {
@@ -56,7 +57,10 @@ export const POST: RequestHandler = async ({ request, locals, tracing }) => {
 			span.end();
 			return Response.json(result);
 		} catch (error) {
-			console.error('Push processing error:', error);
+			// Add error context for wide event logging
+			locals.ctx.error = error instanceof Error ? error.message : String(error);
+			locals.ctx.error_type = error instanceof Error ? error.constructor.name : typeof error;
+
 			span.recordException(error instanceof Error ? error : new Error(String(error)));
 			span.setStatus({
 				code: SpanStatusCode.ERROR,
