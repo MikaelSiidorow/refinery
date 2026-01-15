@@ -9,18 +9,19 @@ import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic
 
 let initialized = false;
 
-export function initClientTracing(config: { endpoint: string; serviceName?: string }) {
+export function initClientTracing(config?: { serviceName?: string }) {
 	if (initialized || typeof window === 'undefined') {
 		return;
 	}
 
 	const resource = resourceFromAttributes({
-		[ATTR_SERVICE_NAME]: config.serviceName ?? 'refinery-client',
+		[ATTR_SERVICE_NAME]: config?.serviceName ?? 'refinery-client',
 		[ATTR_SERVICE_VERSION]: '0.0.1'
 	});
 
+	// Use same-origin proxy endpoint to avoid CORS and keep collector private
 	const exporter = new OTLPTraceExporter({
-		url: config.endpoint
+		url: '/api/telemetry/traces'
 	});
 
 	const provider = new WebTracerProvider({
@@ -36,7 +37,9 @@ export function initClientTracing(config: { endpoint: string; serviceName?: stri
 		instrumentations: [
 			new FetchInstrumentation({
 				propagateTraceHeaderCorsUrls: [/.*/],
-				clearTimingResources: true
+				clearTimingResources: true,
+				// Don't trace telemetry requests to avoid infinite loops
+				ignoreUrls: [/\/api\/telemetry\//]
 			}),
 			new DocumentLoadInstrumentation()
 		]
@@ -45,5 +48,4 @@ export function initClientTracing(config: { endpoint: string; serviceName?: stri
 	initialized = true;
 
 	console.log('[OpenTelemetry] Client tracing initialized');
-	console.log(`[OpenTelemetry] Exporting client traces to: ${config.endpoint}`);
 }

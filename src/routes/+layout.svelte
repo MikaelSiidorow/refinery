@@ -4,16 +4,13 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import PwaUpdateNotifier from '$lib/components/pwa-update-notifier.svelte';
-	import { env } from '$env/dynamic/public';
 	import { initClientTracing } from '$lib/instrumentation.client';
 	import type { Snippet } from 'svelte';
 
 	let { children }: { children: Snippet } = $props();
 
 	$effect(() => {
-		if (env.PUBLIC_OTEL_ENDPOINT) {
-			initClientTracing({ endpoint: env.PUBLIC_OTEL_ENDPOINT });
-		}
+		initClientTracing();
 	});
 </script>
 
