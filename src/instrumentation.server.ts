@@ -5,6 +5,7 @@ import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-proto';
 import { SimpleLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { createAddHookMessageChannel } from 'import-in-the-middle';
 import { register } from 'node:module';
 
@@ -27,6 +28,8 @@ const sdk = new NodeSDK({
 	traceExporter: new OTLPTraceExporter({
 		url: `${otlpEndpoint}/v1/traces`
 	}),
+	// Explicitly configure W3C Trace Context propagator for distributed tracing
+	textMapPropagator: new W3CTraceContextPropagator(),
 	logRecordProcessors: [new SimpleLogRecordProcessor(logExporter)],
 	instrumentations: [
 		getNodeAutoInstrumentations({
@@ -34,6 +37,9 @@ const sdk = new NodeSDK({
 				enabled: false
 			},
 			'@opentelemetry/instrumentation-pino': {
+				enabled: true
+			},
+			'@opentelemetry/instrumentation-http': {
 				enabled: true
 			}
 		})
