@@ -7,6 +7,7 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 	if (!sessionToken) {
 		event.locals.user = null;
 		event.locals.session = null;
+		event.tracing?.root.setAttribute('auth.status', 'unauthenticated');
 		return resolve(event);
 	}
 
@@ -20,6 +21,16 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 
 	event.locals.user = user;
 	event.locals.session = session;
+
+	if (user && session) {
+		event.tracing?.root.setAttribute('auth.status', 'authenticated');
+		event.tracing?.root.setAttribute('user.id', user.id);
+		event.tracing?.root.setAttribute('user.username', user.username);
+		event.tracing?.root.setAttribute('session.id', session.id);
+	} else {
+		event.tracing?.root.setAttribute('auth.status', 'invalid_session');
+	}
+
 	return resolve(event);
 };
 

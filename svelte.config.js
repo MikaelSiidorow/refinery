@@ -17,7 +17,13 @@ const config = {
 			envPrefix: ''
 		}),
 		experimental: {
-			remoteFunctions: true
+			remoteFunctions: true,
+			tracing: {
+				server: true
+			},
+			instrumentation: {
+				server: true
+			}
 		}
 	},
 
