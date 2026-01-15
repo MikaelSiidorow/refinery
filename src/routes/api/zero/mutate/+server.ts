@@ -4,7 +4,6 @@ import { mustGetMutator } from '@rocicorp/zero';
 import { dbProvider } from '$lib/zero/db-provider.server';
 import { mutators } from '$lib/zero/mutators';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
-import { logger } from '$lib/server/logger';
 
 const tracer = trace.getTracer('refinery-zero');
 
@@ -58,7 +57,10 @@ export const POST: RequestHandler = async ({ request, locals, tracing }) => {
 			span.end();
 			return Response.json(result);
 		} catch (error) {
-			logger.error({ err: error, userId: user.id }, 'Push processing error');
+			// Add error context for wide event logging
+			locals.ctx.error = error instanceof Error ? error.message : String(error);
+			locals.ctx.error_type = error instanceof Error ? error.constructor.name : typeof error;
+
 			span.recordException(error instanceof Error ? error : new Error(String(error)));
 			span.setStatus({
 				code: SpanStatusCode.ERROR,

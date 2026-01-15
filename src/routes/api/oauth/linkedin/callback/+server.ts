@@ -7,12 +7,13 @@ import { generateId } from '$lib/utils';
 import { eq, and } from 'drizzle-orm';
 import { OAuth2RequestError } from 'arctic';
 import { encrypt } from '$lib/server/crypto';
-import { logger } from '$lib/server/logger';
 
 export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 	if (!locals.user) {
 		return redirect(302, '/sign-in');
 	}
+
+	locals.ctx.oauth_provider = 'linkedin';
 
 	const code = url.searchParams.get('code');
 	const state = url.searchParams.get('state');
@@ -70,6 +71,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 				.update(connectedAccount)
 				.set(accountData)
 				.where(eq(connectedAccount.id, existing[0]!.id));
+			locals.ctx.linkedin_action = 'updated';
 		} else {
 			await db.insert(connectedAccount).values({
 				id: generateId(),
@@ -77,6 +79,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 				createdAt: new Date(),
 				updatedAt: new Date()
 			});
+			locals.ctx.linkedin_action = 'created';
 		}
 
 		cookies.delete('linkedin_oauth_state', { path: '/' });
@@ -86,7 +89,9 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 			throw error;
 		}
 
-		logger.error({ err: error, userId: locals.user.id }, 'LinkedIn OAuth error');
+		// Add error context for wide event logging
+		locals.ctx.error = error instanceof Error ? error.message : String(error);
+		locals.ctx.error_type = error instanceof Error ? error.constructor.name : typeof error;
 
 		if (error instanceof OAuth2RequestError) {
 			return new Response('Invalid authorization code', { status: 400 });

@@ -7,7 +7,6 @@ import type { RequestEvent } from '@sveltejs/kit';
 import type { OAuth2Tokens } from 'arctic';
 import { generateId, type UuidV7 } from '$lib/utils';
 import { seedUserData } from '$lib/server/seed-data';
-import { logger } from '$lib/server/logger';
 
 export async function GET(event: RequestEvent): Promise<Response> {
 	const code = event.url.searchParams.get('code');
@@ -29,6 +28,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 			.where(eq(table.user.githubId, githubUser.id));
 
 		let userId: UuidV7;
+		let isNewUser = false;
 
 		if (existingUser) {
 			userId = existingUser.id;
@@ -46,6 +46,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		} else {
 			// Create new user
 			userId = generateId();
+			isNewUser = true;
 			await db.insert(table.user).values({
 				id: userId,
 				githubId: githubUser.id,
@@ -56,13 +57,20 @@ export async function GET(event: RequestEvent): Promise<Response> {
 				updatedAt: new Date()
 			});
 
-			// Load example data for new users
+			// Load example data for new users (non-critical)
 			try {
 				await seedUserData(db, userId);
 			} catch (seedError) {
-				logger.error({ err: seedError, userId }, 'Failed to seed example data for new user');
+				// Add warning to wide event context (non-fatal)
+				event.locals.ctx.seed_error =
+					seedError instanceof Error ? seedError.message : String(seedError);
 			}
 		}
+
+		// Add context for wide event
+		event.locals.ctx.oauth_provider = 'github';
+		event.locals.ctx.is_new_user = isNewUser;
+		event.locals.ctx.github_user_id = githubUser.id;
 
 		// Create session
 		const sessionToken = generateSessionToken();
@@ -76,7 +84,10 @@ export async function GET(event: RequestEvent): Promise<Response> {
 			}
 		});
 	} catch (e) {
-		logger.error({ err: e }, 'GitHub OAuth callback failed');
+		// Add error context for wide event logging
+		event.locals.ctx.error = e instanceof Error ? e.message : String(e);
+		event.locals.ctx.error_type = e instanceof Error ? e.constructor.name : typeof e;
+		event.locals.ctx.oauth_provider = 'github';
 		return new Response(null, { status: 500 });
 	}
 }
