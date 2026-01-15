@@ -96,6 +96,7 @@
 		"@opentelemetry/api-logs": "^0.210.0",
 		"@opentelemetry/auto-instrumentations-node": "^0.67.3",
 		"@opentelemetry/context-zone": "^2.4.0",
+		"@opentelemetry/core": "^2.4.0",
 		"@opentelemetry/exporter-logs-otlp-proto": "^0.210.0",
 		"@opentelemetry/exporter-trace-otlp-http": "^0.210.0",
 		"@opentelemetry/exporter-trace-otlp-proto": "^0.210.0",
