@@ -7,6 +7,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import type { OAuth2Tokens } from 'arctic';
 import { generateId, type UuidV7 } from '$lib/utils';
 import { seedUserData } from '$lib/server/seed-data';
+import { logger } from '$lib/server/logger';
 
 export async function GET(event: RequestEvent): Promise<Response> {
 	const code = event.url.searchParams.get('code');
@@ -59,8 +60,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 			try {
 				await seedUserData(db, userId);
 			} catch (seedError) {
-				console.error('Failed to seed example data for new user:', seedError);
-				// Don't fail signup if seed data fails
+				logger.error({ err: seedError, userId }, 'Failed to seed example data for new user');
 			}
 		}
 
@@ -76,7 +76,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 			}
 		});
 	} catch (e) {
-		console.error(e);
+		logger.error({ err: e }, 'GitHub OAuth callback failed');
 		return new Response(null, { status: 500 });
 	}
 }

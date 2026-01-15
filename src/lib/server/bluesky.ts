@@ -1,4 +1,5 @@
 import { AtpAgent } from '@atproto/api';
+import { logger } from './logger';
 
 export async function createBlueskyAgent(identifier: string, password: string) {
 	const agent = new AtpAgent({ service: 'https://bsky.social' });
@@ -96,7 +97,7 @@ export async function fetchBlueskyPosts(
 
 		return posts;
 	} catch (error) {
-		console.error('Error fetching Bluesky posts:', error);
+		logger.error({ err: error, actor }, 'Error fetching Bluesky posts');
 		throw error;
 	}
 }

@@ -13,6 +13,7 @@ import {
 } from '$lib/server/bluesky';
 import { generateId, type UuidV7 } from '$lib/utils';
 import { encrypt, decrypt } from '$lib/server/crypto';
+import { logger } from '$lib/server/logger';
 
 export const getConnectedAccounts = query(async () => {
 	const { locals } = getRequestEvent();
@@ -321,12 +322,15 @@ async function importLinkedInPosts(userId: UuidV7) {
 
 	if (!response.ok) {
 		const errorText = await response.text();
-		console.error('LinkedIn API error:', {
-			status: response.status,
-			statusText: response.statusText,
-			body: errorText,
-			url: response.url
-		});
+		logger.error(
+			{
+				status: response.status,
+				statusText: response.statusText,
+				body: errorText,
+				url: response.url
+			},
+			'LinkedIn API error'
+		);
 
 		if (response.status === 403 || response.status === 401 || response.status === 400) {
 			error(

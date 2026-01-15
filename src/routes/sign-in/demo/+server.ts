@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { seedDemoUser, DEMO_USER_ID } from '$lib/server/seed-data';
 import type { RequestEvent } from '@sveltejs/kit';
 import { error, redirect } from '@sveltejs/kit';
+import { logger } from '$lib/server/logger';
 
 /**
  * Demo sign-in endpoint - DEVELOPMENT ONLY
@@ -24,7 +25,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		const session = await createSession(sessionToken, DEMO_USER_ID);
 		setSessionTokenCookie(event, sessionToken, session.expiresAt);
 	} catch (e) {
-		console.error('Demo sign-in failed:', e);
+		logger.error({ err: e }, 'Demo sign-in failed');
 		error(500, 'Failed to sign in as demo user');
 	}
 

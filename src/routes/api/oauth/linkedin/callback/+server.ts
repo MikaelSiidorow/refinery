@@ -7,6 +7,7 @@ import { generateId } from '$lib/utils';
 import { eq, and } from 'drizzle-orm';
 import { OAuth2RequestError } from 'arctic';
 import { encrypt } from '$lib/server/crypto';
+import { logger } from '$lib/server/logger';
 
 export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 	if (!locals.user) {
@@ -85,7 +86,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 			throw error;
 		}
 
-		console.error('LinkedIn OAuth error:', error);
+		logger.error({ err: error, userId: locals.user.id }, 'LinkedIn OAuth error');
 
 		if (error instanceof OAuth2RequestError) {
 			return new Response('Invalid authorization code', { status: 400 });
