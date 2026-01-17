@@ -1,9 +1,27 @@
 import pino from 'pino';
+import { trace } from '@opentelemetry/api';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+/**
+ * Mixin to inject OpenTelemetry trace context into every log record.
+ * This enables correlation between logs and traces in observability tools like SigNoz.
+ */
+function traceMixin() {
+	const span = trace.getActiveSpan();
+	if (!span) return {};
+
+	const spanContext = span.spanContext();
+	return {
+		trace_id: spanContext.traceId,
+		span_id: spanContext.spanId,
+		trace_flags: spanContext.traceFlags
+	};
+}
+
 export const logger = pino({
 	level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
+	mixin: traceMixin,
 	transport: isProduction
 		? undefined
 		: {
