@@ -55,50 +55,45 @@ export async function fetchBlueskyPosts(
 	const posts: BlueskyPost[] = [];
 	let cursor: string | undefined;
 
-	try {
-		// Fetch posts in batches
-		while (posts.length < limit) {
-			const response = await agent.getAuthorFeed({
-				actor,
-				limit: Math.min(50, limit - posts.length),
-				cursor
-			});
+	// Fetch posts in batches
+	while (posts.length < limit) {
+		const response = await agent.getAuthorFeed({
+			actor,
+			limit: Math.min(50, limit - posts.length),
+			cursor
+		});
 
-			if (!response.data.feed || response.data.feed.length === 0) {
-				break;
-			}
-
-			for (const item of response.data.feed) {
-				const post = item.post;
-				if (post.record && typeof post.record === 'object' && 'text' in post.record) {
-					const record = post.record as {
-						text: string;
-						createdAt: string;
-						reply?: { parent?: { uri: string }; root?: { uri: string } };
-					};
-					posts.push({
-						uri: post.uri,
-						cid: post.cid,
-						text: record.text,
-						createdAt: record.createdAt,
-						likeCount: post.likeCount,
-						replyCount: post.replyCount,
-						repostCount: post.repostCount,
-						replyParent: record.reply?.parent?.uri,
-						replyRoot: record.reply?.root?.uri
-					});
-				}
-			}
-
-			cursor = response.data.cursor;
-			if (!cursor) break;
+		if (!response.data.feed || response.data.feed.length === 0) {
+			break;
 		}
 
-		return posts;
-	} catch (error) {
-		// Let error bubble up - will be caught by wide event handler
-		throw error;
+		for (const item of response.data.feed) {
+			const post = item.post;
+			if (post.record && typeof post.record === 'object' && 'text' in post.record) {
+				const record = post.record as {
+					text: string;
+					createdAt: string;
+					reply?: { parent?: { uri: string }; root?: { uri: string } };
+				};
+				posts.push({
+					uri: post.uri,
+					cid: post.cid,
+					text: record.text,
+					createdAt: record.createdAt,
+					likeCount: post.likeCount,
+					replyCount: post.replyCount,
+					repostCount: post.repostCount,
+					replyParent: record.reply?.parent?.uri,
+					replyRoot: record.reply?.root?.uri
+				});
+			}
+		}
+
+		cursor = response.data.cursor;
+		if (!cursor) break;
 	}
+
+	return posts;
 }
 
 export function groupPostsIntoThreads(posts: BlueskyPost[]): {

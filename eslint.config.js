@@ -57,7 +57,30 @@ export default defineConfig(
 			'@typescript-eslint/no-unsafe-call': 'off',
 			'@typescript-eslint/no-unsafe-member-access': 'off',
 			'@typescript-eslint/no-unsafe-return': 'off',
-			'@typescript-eslint/no-unnecessary-type-assertion': 'off'
+			'@typescript-eslint/no-unnecessary-type-assertion': 'off',
+			// Disable for UI library components with complex type intersections
+			'@typescript-eslint/no-redundant-type-constituents': 'off'
+		}
+	},
+	{
+		files: [
+			'src/hooks.server.ts',
+			'src/lib/zero/**/*.ts',
+			'src/lib/server/**/*.ts',
+			'src/lib/prompts/**/*.ts',
+			'src/routes/**/*.server.ts',
+			'src/routes/**/+server.ts',
+			'src/routes/**/*.remote.ts',
+			'src/params/**/*.ts'
+		],
+		rules: {
+			// Disable unsafe type rules for server files with complex runtime type inference
+			// (OpenTelemetry tracing, Zero mutations, OAuth, Bluesky API, etc.)
+			'@typescript-eslint/no-unsafe-argument': 'off',
+			'@typescript-eslint/no-unsafe-assignment': 'off',
+			'@typescript-eslint/no-unsafe-call': 'off',
+			'@typescript-eslint/no-unsafe-member-access': 'off',
+			'@typescript-eslint/no-unsafe-return': 'off'
 		}
 	}
 );

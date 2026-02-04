@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion -- this depends on type-gen which might not be there in build */
 import { GitHub, LinkedIn } from 'arctic';
 import { env } from '$env/dynamic/private';
 
