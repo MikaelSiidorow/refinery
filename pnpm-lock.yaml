@@ -27,6 +27,9 @@ importers:
       '@fontsource/geist-mono':
         specifier: ^5.2.7
         version: 5.2.7
+      '@kubiks/otel-drizzle':
+        specifier: ^2.1.0
+        version: 2.1.0(@opentelemetry/api@1.9.0)(drizzle-orm@0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(pg@8.16.3)(postgres@3.4.7))
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
@@ -787,6 +790,13 @@ packages:
 
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
+
+  '@kubiks/otel-drizzle@2.1.0':
+    resolution: {integrity: sha512-9UHb0od3jwa6zTWMyEYPIZcUq5PDaziCmQLMLakSK2zeqy12SFZ3SAGWXJTgEr8valn/Wa+DKVs+Z3aqKQUpvg==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.9.0 <2.0.0'
+      drizzle-orm: '>=0.28.0'
 
   '@lucide/svelte@0.562.0':
     resolution: {integrity: sha512-wDMULwtTFN2Sc/TFBm6gfuVCNb4Y5P9LDrwxNnUbV52+IEU7NXZmvxwXoz+vrrpad6Xupq+Hw5eUlqIHEGhouw==}
@@ -5107,6 +5117,11 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@js-sdsl/ordered-map@4.4.2': {}
+
+  '@kubiks/otel-drizzle@2.1.0(@opentelemetry/api@1.9.0)(drizzle-orm@0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(pg@8.16.3)(postgres@3.4.7))':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      drizzle-orm: 0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(pg@8.16.3)(postgres@3.4.7)
 
   '@lucide/svelte@0.562.0(svelte@5.46.1)':
     dependencies:
