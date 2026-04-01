@@ -17,6 +17,7 @@
 	import { resolve } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import { cmdOrCtrl } from '$lib/hooks/is-mac.svelte';
 
 	const z = get_z();
 
@@ -36,9 +37,6 @@
 	let clearDialogOpen = $state(false);
 	let lastCreatedIdeaId = $state<UuidV7 | null>(null);
 	let lastCreatedIdeaTimeout: ReturnType<typeof setTimeout> | undefined;
-
-	const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-	const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Mac');
 
 	function handleGlobalKeydown(event: KeyboardEvent) {
 		if ((event.metaKey || event.ctrlKey) && event.key === 'o' && lastCreatedIdeaId) {
@@ -102,7 +100,7 @@
 
 			setLastCreatedIdea(id);
 
-			const shortcutHint = isMobile ? '' : ` (${isMac ? '⌘' : 'Ctrl+'}O)`;
+			const shortcutHint = ` (${cmdOrCtrl}O)`;
 
 			// Show success toast with optional link to view
 			if (isDuplicate) {
