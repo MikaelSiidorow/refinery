@@ -34,6 +34,29 @@
 	let saveStatus = $state<Record<string, 'saving' | 'saved'>>({});
 	let inputError = $state<string | null>(null);
 	let clearDialogOpen = $state(false);
+	let lastCreatedIdeaId = $state<UuidV7 | null>(null);
+	let lastCreatedIdeaTimeout: ReturnType<typeof setTimeout> | undefined;
+
+	const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+	const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Mac');
+
+	function handleGlobalKeydown(event: KeyboardEvent) {
+		if ((event.metaKey || event.ctrlKey) && event.key === 'o' && lastCreatedIdeaId) {
+			event.preventDefault();
+			const id = lastCreatedIdeaId;
+			lastCreatedIdeaId = null;
+			clearTimeout(lastCreatedIdeaTimeout);
+			goto(resolve(`/idea/${id}`));
+		}
+	}
+
+	function setLastCreatedIdea(id: UuidV7) {
+		lastCreatedIdeaId = id;
+		clearTimeout(lastCreatedIdeaTimeout);
+		lastCreatedIdeaTimeout = setTimeout(() => {
+			lastCreatedIdeaId = null;
+		}, 5000);
+	}
 
 	const fuseOptions = {
 		includeScore: true,
@@ -77,19 +100,23 @@
 			);
 			await write.client;
 
+			setLastCreatedIdea(id);
+
+			const shortcutHint = isMobile ? '' : ` (${isMac ? '⌘' : 'Ctrl+'}O)`;
+
 			// Show success toast with optional link to view
 			if (isDuplicate) {
 				toast.success('Idea added to inbox', {
 					description: 'Similar to an existing idea',
 					action: {
-						label: 'View',
+						label: `View${shortcutHint}`,
 						onClick: () => goto(resolve(`/idea/${id}`))
 					}
 				});
 			} else {
 				toast.success('Idea added to inbox', {
 					action: {
-						label: 'View',
+						label: `View${shortcutHint}`,
 						onClick: () => goto(resolve(`/idea/${id}`))
 					}
 				});
@@ -244,6 +271,8 @@
 		}
 	});
 </script>
+
+<svelte:window onkeydown={handleGlobalKeydown} />
 
 <svelte:head>
 	<title>Quick Capture - Refinery</title>
