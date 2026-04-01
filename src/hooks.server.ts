@@ -1,7 +1,7 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import * as auth from '$lib/server/auth';
-import { emitWideEvent } from '$lib/server/logger';
+import { logger, emitWideEvent } from '$lib/server/logger';
 
 /**
  * Wide event logging - emits one canonical log line per request at completion.
@@ -90,3 +90,26 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 
 // Wide event handler runs first (outermost) to capture full request lifecycle
 export const handle: Handle = sequence(handleWideEvent, handleAuth);
+
+/**
+ * Catch-all for unexpected server errors.
+ * Logs the full error so it reaches Loki → AlertManager → Telegram.
+ */
+export const handleError: HandleServerError = async ({ error, event, status, message }) => {
+	const errorObj = error instanceof Error ? error : new Error(String(error));
+
+	logger.error(
+		{
+			event: 'unhandled_error',
+			err: errorObj,
+			method: event.request.method,
+			path: event.url.pathname,
+			route: event.route.id,
+			status,
+			user_id: event.locals?.user?.id
+		},
+		`Unhandled server error: ${errorObj.message}`
+	);
+
+	return { message };
+};
