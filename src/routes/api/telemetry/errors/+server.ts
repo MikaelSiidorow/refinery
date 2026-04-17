@@ -3,7 +3,7 @@ import { logger } from '$lib/server/logger';
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
-		const body = await request.json();
+		const body: unknown = await request.json();
 
 		const { message, stack, source, lineno, colno, url, componentStack } = body as {
 			message?: string;

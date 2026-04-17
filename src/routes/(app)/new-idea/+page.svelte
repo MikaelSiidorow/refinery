@@ -44,7 +44,7 @@
 			const id = lastCreatedIdeaId;
 			lastCreatedIdeaId = null;
 			clearTimeout(lastCreatedIdeaTimeout);
-			goto(resolve(`/idea/${id}`));
+			void goto(resolve(`/idea/${id}`));
 		}
 	}
 

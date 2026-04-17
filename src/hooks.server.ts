@@ -95,7 +95,7 @@ export const handle: Handle = sequence(handleWideEvent, handleAuth);
  * Catch-all for unexpected server errors.
  * Logs the full error so it reaches Loki → AlertManager → Telegram.
  */
-export const handleError: HandleServerError = async ({ error, event, status, message }) => {
+export const handleError: HandleServerError = ({ error, event, status, message }) => {
 	const errorObj = error instanceof Error ? error : new Error(String(error));
 
 	logger.error(
