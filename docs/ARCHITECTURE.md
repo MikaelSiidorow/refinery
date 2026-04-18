@@ -205,6 +205,18 @@ git add src/lib/server/db/schema.ts src/lib/zero/zero-schema.gen.ts
 git commit -m "feat: add new field to content_idea"
 ```
 
+### Client Version Negotiation
+
+Refinery ships a compatibility policy alongside the app build:
+
+- `package.json` version is the human release version and is required to move forward in every PR
+- `src/lib/version-policy.ts` defines `minSupportedVersion`
+- the server exposes `/api/version` plus response headers for observability
+- the browser shows a soft refresh prompt for newer supported builds
+- the browser blocks interaction and requires a refresh when it falls below `minSupportedVersion`
+
+This keeps contract migrations explicit: expand first, ship code that no longer depends on the old schema, wait for clients to refresh, then raise `minSupportedVersion` before running the destructive migration.
+
 ### Zero Authorization Pattern
 
 Refinery enforces Zero access in app code rather than Zero permissions:

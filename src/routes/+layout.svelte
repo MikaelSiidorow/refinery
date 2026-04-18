@@ -3,7 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from '$lib/components/ui/sonner';
-	import PwaUpdateNotifier from '$lib/components/pwa-update-notifier.svelte';
+	import AppUpdateManager from '$lib/components/app-update-manager.svelte';
 	import { initClientTracing } from '$lib/instrumentation.client';
 	import type { Snippet } from 'svelte';
 
@@ -21,6 +21,6 @@
 
 <ModeWatcher />
 <Toaster position="top-center" />
-<PwaUpdateNotifier />
+<AppUpdateManager />
 
 {@render children()}

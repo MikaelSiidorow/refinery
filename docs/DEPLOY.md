@@ -54,7 +54,7 @@ The CI workflow (`.github/workflows/docker-build.yml`) builds the runtime images
 - `production` - The currently promoted production image
 - `latest` - Convenience alias for the latest build from `main`
 - `sha-<commit>` - Immutable commit tag for traceability
-- `v*` - Semantic version tags (e.g., `v1.0.0`)
+- `<package.json version>` - Release alias from the merged app version (for example `0.0.2`)
 
 **Recommended production setup**: point long-lived workloads at `:production` and let CI promote that tag after the build and deploy checks succeed.
 
@@ -317,20 +317,23 @@ Checking Zero Cache (admin)... ✓ OK (HTTP 200)
 When you modify the database schema:
 
 ```bash
-# 1. Update src/lib/server/db/schema.ts locally
-# 2. Generate migration
+# 1. Bump package.json version
+# 2. Update src/lib/server/db/schema.ts locally
+# 3. Generate migration
 pnpm db:generate
 
-# 3. Label the PR with exactly one of: schema:expand, schema:contract
+# 4. Label the PR with exactly one of: schema:expand, schema:contract
 
-# 4. Commit migration files
+# 5. Commit migration files
 git add drizzle
 git commit -m "feat: add new schema migration"
 
-# 5. Regenerate Zero schema
+# 6. Regenerate Zero schema
 pnpm zero:generate
 
-# 6. Commit and push
+# 7. If the PR is schema:contract, raise minSupportedVersion in src/lib/version-policy.ts
+
+# 8. Commit and push
 git add src/lib/zero/zero-schema.gen.ts
 git commit -m "chore: regenerate zero schema"
 git push
@@ -344,6 +347,8 @@ The deployment workflow:
 4. `schema:contract` rolls out app changes first and runs the migration job afterward
 5. zero-cache is restarted only when the zero runtime inputs changed
 6. zero-cache continues replicating schema changes directly from Postgres
+
+`schema:contract` PRs must also raise `minSupportedVersion` to the oldest app version that is still safe after the destructive change. That is not necessarily the version introduced by the contract PR itself.
 
 **Manual migration (if needed)**: run the `migrate:production` image as a one-shot job with the same `DATABASE_URL` secret the app uses.
 
@@ -363,6 +368,17 @@ The deployment workflow:
 3. Only the workloads whose runtime changed are restarted
 
 **Note**: Keep app and zero workloads pinned to `:production`, not `:latest`, so deploys are explicit promotions instead of every main-branch build.
+
+### Client Version Policy
+
+The app publishes version policy from `src/lib/version-policy.ts` through `/api/version` and response headers:
+
+- `appVersion` comes from `package.json`
+- `minSupportedVersion` is the oldest client allowed to continue running
+- browsers show a soft refresh prompt when a newer version exists but the client is still supported
+- browsers show a blocking refresh screen when the active client drops below `minSupportedVersion`
+
+This is the operational guardrail for delayed contract migrations: raise `minSupportedVersion`, let stale clients drain out, then run the destructive migration.
 
 ## Troubleshooting
 
@@ -398,12 +414,12 @@ The deployment workflow:
 
 **Symptoms:**
 
-- App container fails during startup before serving traffic
+- Migration job fails before the app rollout completes
 
 **Solution:**
 
 1. Check `DATABASE_URL` environment variable is set correctly
-2. Verify network access to PostgreSQL from the app container
+2. Verify network access to PostgreSQL from the migration job
 3. Review migration files in `drizzle/`
 4. Manually run: `pnpm exec drizzle-kit migrate` for detailed errors
 

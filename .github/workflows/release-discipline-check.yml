@@ -1,0 +1,155 @@
+name: Release Discipline Check
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+      - labeled
+      - unlabeled
+
+jobs:
+  release-discipline-check:
+    name: Enforce Version Policy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Validate package version and contract policy
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const labels = (pr.labels ?? []).map((label) => label.name);
+            const changedFiles = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                per_page: 100,
+              },
+              (response) => response.data.map((file) => file.filename)
+            );
+
+            const isContract = labels.includes('schema:contract');
+
+            function parseSemver(version) {
+              const match = /^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:[-+].*)?$/.exec(version);
+              if (!match) {
+                throw new Error(`Invalid semver version: ${version}`);
+              }
+
+              return [Number(match[1]), Number(match[2]), Number(match[3])];
+            }
+
+            function compareSemver(left, right) {
+              const leftParts = parseSemver(left);
+              const rightParts = parseSemver(right);
+
+              for (let index = 0; index < leftParts.length; index += 1) {
+                if (leftParts[index] > rightParts[index]) return 1;
+                if (leftParts[index] < rightParts[index]) return -1;
+              }
+
+              return 0;
+            }
+
+            function extractMinSupportedVersion(source) {
+              const match = source.match(/export const minSupportedVersion = ['"]([^'"]+)['"]/);
+
+              if (!match) {
+                throw new Error('Could not find minSupportedVersion in src/lib/version-policy.ts');
+              }
+
+              return match[1];
+            }
+
+            async function fetchText(repoInfo, path, ref) {
+              const response = await github.rest.repos.getContent({
+                owner: repoInfo.owner.login,
+                repo: repoInfo.name,
+                path,
+                ref,
+              });
+
+              if (Array.isArray(response.data) || response.data.type !== 'file') {
+                throw new Error(`Expected ${path} at ${ref} to be a file`);
+              }
+
+              return Buffer.from(response.data.content, response.data.encoding).toString('utf8');
+            }
+
+            const basePackageJson = JSON.parse(
+              await fetchText(pr.base.repo, 'package.json', pr.base.sha)
+            );
+            const headPackageJson = JSON.parse(
+              await fetchText(pr.head.repo, 'package.json', pr.head.sha)
+            );
+            const headVersionPolicy = await fetchText(
+              pr.head.repo,
+              'src/lib/version-policy.ts',
+              pr.head.sha
+            );
+
+            const failures = [];
+            const versionChanged = changedFiles.includes('package.json');
+            const baseVersion = basePackageJson.version;
+            const headVersion = headPackageJson.version;
+            const headMinimum = extractMinSupportedVersion(headVersionPolicy);
+
+            if (!versionChanged) {
+              failures.push('Every PR must update package.json and bump the app version.');
+            } else if (compareSemver(headVersion, baseVersion) <= 0) {
+              failures.push(
+                `package.json version must increase. Base is ${baseVersion}, PR is ${headVersion}.`
+              );
+            }
+
+            if (compareSemver(headMinimum, headVersion) > 0) {
+              failures.push(
+                `minSupportedVersion (${headMinimum}) cannot be greater than package.json version (${headVersion}).`
+              );
+            }
+
+            let baseMinimum = null;
+            if (isContract) {
+              const baseVersionPolicy = await fetchText(
+                pr.base.repo,
+                'src/lib/version-policy.ts',
+                pr.base.sha
+              );
+
+              baseMinimum = extractMinSupportedVersion(baseVersionPolicy);
+
+              if (!changedFiles.includes('src/lib/version-policy.ts')) {
+                failures.push(
+                  'schema:contract PRs must update src/lib/version-policy.ts and raise minSupportedVersion.'
+                );
+              } else if (compareSemver(headMinimum, baseMinimum) <= 0) {
+                failures.push(
+                  `schema:contract PRs must raise minSupportedVersion. Base is ${baseMinimum}, PR is ${headMinimum}.`
+                );
+              }
+            }
+
+            await core.summary
+              .addHeading('Release Discipline Check')
+              .addRaw(`Package version: ${baseVersion} -> ${headVersion}\n\n`)
+              .addRaw(`minSupportedVersion: ${baseMinimum ?? 'n/a'} -> ${headMinimum}\n\n`)
+              .addRaw(`schema:contract label: ${isContract ? 'present' : 'absent'}\n\n`)
+              .addRaw(
+                failures.length === 0
+                  ? 'All release-discipline checks passed.\n'
+                  : failures.map((failure) => `- ${failure}`).join('\n')
+              )
+              .write();
+
+            if (failures.length > 0) {
+              core.setFailed(failures.join('\n'));
+            }
