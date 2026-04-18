@@ -54,7 +54,7 @@ The CI workflow (`.github/workflows/docker-build.yml`) builds the runtime images
 - `production` - The currently promoted production image
 - `latest` - Convenience alias for the latest build from `main`
 - `sha-<commit>` - Immutable commit tag for traceability
-- `<package.json version>` - Release alias from the merged app version (for example `0.0.2`)
+- `<package.json version>` - Release alias from the merged app version (for example `1.0.0`)
 
 **Recommended production setup**: point long-lived workloads at `:production` and let CI promote that tag after the build and deploy checks succeed.
 

@@ -145,7 +145,6 @@ jobs:
             const zeroPatterns = [
               /^Dockerfile\.zero$/,
               /^scripts\/zero-entrypoint\.sh$/,
-              /^package\.json$/,
               /^pnpm-lock\.yaml$/,
               /^\.npmrc$/
             ];

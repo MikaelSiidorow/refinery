@@ -8,15 +8,17 @@ import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { createAddHookMessageChannel } from 'import-in-the-middle';
 import { register } from 'node:module';
+import { readFileSync } from 'node:fs';
 
 const { registerOptions } = createAddHookMessageChannel();
 register('import-in-the-middle/hook.mjs', import.meta.url, registerOptions);
 
 const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
+const appVersion = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string };
 
 const resource = resourceFromAttributes({
 	[ATTR_SERVICE_NAME]: 'refinery-server',
-	[ATTR_SERVICE_VERSION]: '0.0.1'
+	[ATTR_SERVICE_VERSION]: appVersion.version
 });
 
 const logExporter = new OTLPLogExporter({

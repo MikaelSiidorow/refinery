@@ -18,7 +18,7 @@ export function initClientTracing(config?: { serviceName?: string }) {
 
 	const resource = resourceFromAttributes({
 		[ATTR_SERVICE_NAME]: config?.serviceName ?? 'refinery-client',
-		[ATTR_SERVICE_VERSION]: '0.0.1'
+		[ATTR_SERVICE_VERSION]: __APP_VERSION__
 	});
 
 	// Use same-origin proxy endpoint to avoid CORS and keep collector private

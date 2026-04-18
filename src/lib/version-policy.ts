@@ -12,7 +12,7 @@ export const versionHeaderNames = {
  * Contract PRs must increase this when older clients would no longer be safe
  * after the destructive migration.
  */
-export const minSupportedVersion = '0.0.1';
+export const minSupportedVersion = '1.0.0';
 
 export const appVersion = __APP_VERSION__;
 export const buildSha = __COMMIT_SHA__;

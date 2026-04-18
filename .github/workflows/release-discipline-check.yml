@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: write
       pull-requests: read
     steps:
       - name: Validate package version and contract policy
@@ -25,19 +26,46 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
             const labels = (pr.labels ?? []).map((label) => label.name);
-            const changedFiles = await github.paginate(
+            const files = await github.paginate(
               github.rest.pulls.listFiles,
               {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
+                owner,
+                repo,
                 pull_number: pr.number,
                 per_page: 100,
               },
-              (response) => response.data.map((file) => file.filename)
+              (response) => response.data
             );
+            const changedFiles = files.map((file) => file.filename);
 
+            const commentMarker = '<!-- release-discipline-comment -->';
+            const migrationPattern = /^drizzle\/[^/]+\.sql$/;
+            const schemaLabels = ['schema:expand', 'schema:contract'];
+            const appPatterns = [
+              /^src\//,
+              /^drizzle\//,
+              /^drizzle\.config\.ts$/,
+              /^drizzle-zero\.config\.ts$/,
+              /^package\.json$/,
+              /^pnpm-lock\.yaml$/,
+              /^\.npmrc$/,
+              /^components\.json$/,
+              /^Dockerfile\.app$/,
+              /^scripts\/run-migrations\.js$/
+            ];
+            const zeroPatterns = [
+              /^Dockerfile\.zero$/,
+              /^scripts\/zero-entrypoint\.sh$/,
+              /^pnpm-lock\.yaml$/,
+              /^\.npmrc$/
+            ];
             const isContract = labels.includes('schema:contract');
+            const matchedLabels = labels.filter((label) => schemaLabels.includes(label));
+            const changedMigrationFiles = changedFiles.filter((filename) => migrationPattern.test(filename));
+            const needsMigration = changedMigrationFiles.length > 0;
 
             function parseSemver(version) {
               const match = /^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:[-+].*)?$/.exec(version);
@@ -60,6 +88,10 @@ jobs:
               return 0;
             }
 
+            function matchesAny(filename, patterns) {
+              return patterns.some((pattern) => pattern.test(filename));
+            }
+
             function extractMinSupportedVersion(source) {
               const match = source.match(/export const minSupportedVersion = ['"]([^'"]+)['"]/);
 
@@ -68,6 +100,61 @@ jobs:
               }
 
               return match[1];
+            }
+
+            function formatList(items) {
+              return items.length > 0 ? items.map((item) => `\`${item}\``).join(', ') : 'none';
+            }
+
+            function buildMermaidPlan({ promoteApp, promoteMigrate, promoteZero, appChanged, zeroChanged, migrationPhase }) {
+              const promotionTargets = [
+                promoteApp ? 'app' : null,
+                promoteMigrate ? 'migrate' : null,
+                promoteZero ? 'zero' : null,
+              ].filter(Boolean);
+
+              const lines = [
+                '```mermaid',
+                'flowchart LR',
+                '  build["Build merged images"]',
+                `  promote["Promote ${promotionTargets.length > 0 ? promotionTargets.join(', ') : 'no runtime'} to :production"]`,
+                '  build --> promote',
+              ];
+
+              let lastNode = 'promote';
+
+              if (migrationPhase === 'before') {
+                lines.push('  migrate_before["Run migrate job"]');
+                lines.push(`  ${lastNode} --> migrate_before`);
+                lastNode = 'migrate_before';
+              }
+
+              if (appChanged) {
+                lines.push('  app["Restart refinery-app"]');
+                lines.push(`  ${lastNode} --> app`);
+                lastNode = 'app';
+              }
+
+              if (zeroChanged) {
+                lines.push('  zero["Restart refinery-zero"]');
+                lines.push(`  ${lastNode} --> zero`);
+                lastNode = 'zero';
+              }
+
+              if (migrationPhase === 'after') {
+                lines.push('  migrate_after["Run migrate job"]');
+                lines.push(`  ${lastNode} --> migrate_after`);
+                lastNode = 'migrate_after';
+              }
+
+              if (!appChanged && !zeroChanged && migrationPhase === 'none') {
+                lines.push('  noop["No deployment restart"]');
+                lines.push(`  ${lastNode} --> noop`);
+              }
+
+              lines.push('```');
+
+              return lines.join('\n');
             }
 
             async function fetchText(repoInfo, path, ref) {
@@ -102,6 +189,21 @@ jobs:
             const baseVersion = basePackageJson.version;
             const headVersion = headPackageJson.version;
             const headMinimum = extractMinSupportedVersion(headVersionPolicy);
+            const appChanged = changedFiles.some((filename) => matchesAny(filename, appPatterns));
+            const zeroChanged = changedFiles.some((filename) => matchesAny(filename, zeroPatterns));
+            const deployments = [
+              appChanged ? 'refinery-app' : null,
+              zeroChanged ? 'refinery-zero' : null,
+            ].filter(Boolean);
+            const migrationPhase =
+              matchedLabels[0] === 'schema:contract'
+                ? 'after'
+                : needsMigration
+                  ? 'before'
+                  : 'none';
+            const promoteApp = appChanged;
+            const promoteMigrate = appChanged || needsMigration;
+            const promoteZero = zeroChanged;
 
             if (!versionChanged) {
               failures.push('Every PR must update package.json and bump the app version.');
@@ -138,11 +240,91 @@ jobs:
               }
             }
 
+            const labelStatus = needsMigration
+              ? matchedLabels.length === 1
+                ? matchedLabels[0]
+                : 'invalid'
+              : matchedLabels.length > 0
+                ? matchedLabels.join(', ')
+                : 'none';
+
+            const commentBody = [
+              commentMarker,
+              '## Release Discipline',
+              failures.length === 0
+                ? '✅ Version policy checks passed.'
+                : '❌ Action required before merge.',
+              '',
+              '**Versioning**',
+              `- Package version: \`${baseVersion} -> ${headVersion}\``,
+              `- minSupportedVersion: \`${baseMinimum ?? headMinimum} -> ${headMinimum}\``,
+              `- Release tag on main: \`${headVersion}\``,
+              '',
+              '**Schema**',
+              `- Migration files: ${formatList(changedMigrationFiles)}`,
+              `- Schema label: \`${labelStatus}\``,
+              `- Migration phase: \`${migrationPhase}\``,
+              '',
+              '**Deploy Plan**',
+              `- Promote tags: ${formatList([
+                promoteApp ? 'app' : null,
+                promoteMigrate ? 'migrate' : null,
+                promoteZero ? 'zero' : null,
+              ].filter(Boolean))}`,
+              `- Restart deployments: ${formatList(deployments)}`,
+              '',
+              buildMermaidPlan({
+                promoteApp,
+                promoteMigrate,
+                promoteZero,
+                appChanged,
+                zeroChanged,
+                migrationPhase,
+              }),
+              '',
+              '**Blocking issues**',
+              ...(failures.length > 0 ? failures.map((failure) => `- ${failure}`) : ['- none']),
+            ].join('\n');
+
+            const existingComments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner,
+                repo,
+                issue_number: pr.number,
+                per_page: 100,
+              },
+              (response) => response.data
+            );
+
+            const existingComment = existingComments.find(
+              (comment) => comment.body?.includes(commentMarker)
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingComment.id,
+                body: commentBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body: commentBody,
+              });
+            }
+
             await core.summary
               .addHeading('Release Discipline Check')
               .addRaw(`Package version: ${baseVersion} -> ${headVersion}\n\n`)
               .addRaw(`minSupportedVersion: ${baseMinimum ?? 'n/a'} -> ${headMinimum}\n\n`)
               .addRaw(`schema:contract label: ${isContract ? 'present' : 'absent'}\n\n`)
+              .addRaw(`Migration files: ${changedMigrationFiles.length > 0 ? changedMigrationFiles.join(', ') : 'none'}\n\n`)
+              .addRaw(`Deployments: ${deployments.length > 0 ? deployments.join(', ') : 'none'}\n\n`)
+              .addRaw(`Migration phase: ${migrationPhase}\n\n`)
               .addRaw(
                 failures.length === 0
                   ? 'All release-discipline checks passed.\n'
