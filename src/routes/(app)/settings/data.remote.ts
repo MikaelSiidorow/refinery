@@ -132,6 +132,11 @@ export const importPosts = command(
 	}
 );
 
+function appendImportedContext(content: string, context: string) {
+	if (!content.trim()) return context;
+	return `${content}\n\n---\n\n${context}`;
+}
+
 async function importBlueskyPosts(userId: UuidV7) {
 	const accounts = await db
 		.select()
@@ -195,9 +200,11 @@ async function importBlueskyPosts(userId: UuidV7) {
 			id: ideaId,
 			userId,
 			oneLiner,
-			content: thread.combinedText,
+			content: appendImportedContext(
+				thread.combinedText,
+				`Imported thread (${thread.posts.length} posts) from Bluesky on ${new Date().toISOString()}`
+			),
 			status: 'published',
-			notes: `Imported thread (${thread.posts.length} posts) from Bluesky on ${new Date().toISOString()}`,
 			tags: ['bluesky', 'imported', 'thread'],
 			createdAt: new Date(),
 			updatedAt: new Date()
@@ -252,9 +259,11 @@ async function importBlueskyPosts(userId: UuidV7) {
 			id: ideaId,
 			userId,
 			oneLiner,
-			content: post.text,
+			content: appendImportedContext(
+				post.text,
+				`Imported from Bluesky on ${new Date().toISOString()}`
+			),
 			status: 'published',
-			notes: `Imported from Bluesky on ${new Date().toISOString()}`,
 			tags: ['bluesky', 'imported'],
 			createdAt: new Date(),
 			updatedAt: new Date()
@@ -387,9 +396,11 @@ async function importLinkedInPosts(userId: UuidV7) {
 			id: ideaId,
 			userId,
 			oneLiner,
-			content: postText,
+			content: appendImportedContext(
+				postText,
+				`Imported from LinkedIn on ${new Date().toISOString()}`
+			),
 			status: 'published',
-			notes: `Imported from LinkedIn on ${new Date().toISOString()}`,
 			tags: ['linkedin', 'imported'],
 			createdAt: new Date(),
 			updatedAt: new Date()

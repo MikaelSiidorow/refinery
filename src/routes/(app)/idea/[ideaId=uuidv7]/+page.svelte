@@ -56,7 +56,6 @@
 
 		defaultValues: {
 			oneLiner: '',
-			notes: '',
 			content: '',
 			tags: [],
 			status: 'inbox' as const
@@ -64,7 +63,6 @@
 
 		initialize: (idea) => ({
 			oneLiner: idea.oneLiner || '',
-			notes: idea.notes || '',
 			content: idea.content || '',
 			tags: idea.tags || [],
 			status: idea.status || 'inbox'
@@ -72,7 +70,6 @@
 
 		normalize: (idea) => ({
 			oneLiner: idea.oneLiner || '',
-			notes: idea.notes || '',
 			content: idea.content || '',
 			tags: (idea.tags || []).slice().sort(),
 			status: idea.status || 'inbox'
@@ -87,7 +84,6 @@
 					id: idea.id,
 					oneLiner: snapshot.oneLiner,
 					status: snapshot.status,
-					notes: snapshot.notes,
 					content: snapshot.content,
 					tags: snapshot.tags
 				})
@@ -301,40 +297,25 @@
 				/>
 			</div>
 
-			<div class="grid max-w-306 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,600px)_minmax(0,600px)]">
-				<div class="min-w-0 space-y-2">
-					<label for="notes" class="text-sm font-semibold">Notes</label>
-					<p class="text-xs text-muted-foreground">
-						Brainstorm, research, outline - anything to help you write
-					</p>
-					<Textarea
-						id="notes"
-						bind:value={form.values.notes}
-						placeholder="Add your notes here..."
-						class="min-h-[calc(100vh-24rem)] resize-y"
-					/>
-				</div>
-
-				<div class="min-w-0 space-y-2">
-					<div class="flex items-center justify-between gap-3">
-						<div class="min-w-0 flex-1">
-							<label for="content" class="text-sm font-semibold">Content Draft</label>
-							<p class="text-xs text-muted-foreground">
-								Your full content draft - develop your thinking and write authentically
-							</p>
-						</div>
-						<Button onclick={openPromptSelector} variant="outline" size="sm" class="gap-2">
-							<Copy class="h-4 w-4" />
-							<span class="sr-only sm:not-sr-only">Frameworks</span>
-						</Button>
+			<div class="max-w-306 space-y-2">
+				<div class="flex items-center justify-between gap-3">
+					<div class="min-w-0 flex-1">
+						<label for="content" class="text-sm font-semibold">Content</label>
+						<p class="text-xs text-muted-foreground">
+							Capture notes, research, and draft copy in one place
+						</p>
 					</div>
-					<Textarea
-						id="content"
-						bind:value={form.values.content}
-						placeholder="Write or paste your content here..."
-						class="min-h-[calc(100vh-24rem)] resize-y text-sm"
-					/>
+					<Button onclick={openPromptSelector} variant="outline" size="sm" class="gap-2">
+						<Copy class="h-4 w-4" />
+						<span class="sr-only sm:not-sr-only">Frameworks</span>
+					</Button>
 				</div>
+				<Textarea
+					id="content"
+					bind:value={form.values.content}
+					placeholder="Add your notes, outline, or draft here..."
+					class="min-h-[calc(100vh-20rem)] resize-y text-sm"
+				/>
 			</div>
 
 			<div class="mt-12 max-w-306 border-t pt-8">

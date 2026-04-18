@@ -22,8 +22,7 @@ export function findRelevantIdeas(
 		keys: [
 			{ name: 'tags', weight: 0.4 }, // Tags are most important for topical relevance
 			{ name: 'oneLiner', weight: 0.3 }, // Topic/title similarity
-			{ name: 'content', weight: 0.2 }, // Content similarity
-			{ name: 'notes', weight: 0.1 } // Notes for context
+			{ name: 'content', weight: 0.3 } // Working notes and draft content
 		],
 		threshold: 0.6, // More lenient matching
 		includeScore: true,
@@ -34,7 +33,7 @@ export function findRelevantIdeas(
 	const searchTerms = [
 		currentIdea.oneLiner || '',
 		...(currentIdea.tags || []),
-		currentIdea.notes || ''
+		currentIdea.content.substring(0, 300)
 	]
 		.filter(Boolean)
 		.join(' ');

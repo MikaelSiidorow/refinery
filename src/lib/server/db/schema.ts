@@ -71,8 +71,7 @@ export const contentIdea = pgTable('content_idea', {
 		.$type<UuidV7>(),
 	oneLiner: text().notNull(),
 	status: ideaStatusEnum().notNull(),
-	content: text().notNull(),
-	notes: text().notNull(),
+	content: text().notNull(), // Unified working field for notes, research, and drafts
 	tags: text().array().notNull(),
 	...timestamps
 });
