@@ -40,14 +40,15 @@ FROM node:24-slim
 
 WORKDIR /app
 
-# Copy built app and production dependencies from builder
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-
 # Create non-root user
 RUN groupadd -r nodejs && useradd -r -g nodejs nodejs
-RUN chown -R nodejs:nodejs /app
+
+# Copy built app and production dependencies from builder
+COPY --from=builder --chown=nodejs:nodejs /app/build ./build
+COPY --from=builder --chown=nodejs:nodejs /app/drizzle ./drizzle
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nodejs:nodejs /app/scripts/start-with-migrations.js ./scripts/start-with-migrations.js
 USER nodejs
 
 # Expose port
@@ -60,5 +61,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Set environment
 ENV NODE_ENV=production
 
-# Start server
-CMD ["node", "build"]
+# Run migrations before starting the app server
+CMD ["node", "scripts/start-with-migrations.js"]

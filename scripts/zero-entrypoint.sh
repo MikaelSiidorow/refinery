@@ -1,6 +1,6 @@
 #!/bin/bash
 # Zero Cache entrypoint script
-# Runs database migrations and deploys permissions before starting zero-cache
+# Validates required runtime configuration before starting zero-cache
 
 set -e
 
@@ -22,50 +22,40 @@ if [ "$NODE_ENV" = "production" ] && [ -z "$ZERO_ADMIN_PASSWORD" ]; then
     exit 1
 fi
 
-# Ensure /data directory is writable
-echo "Checking /data directory permissions..."
-if [ ! -w /data ]; then
-    echo "✗ /data directory is not writable"
-    echo "Current permissions: $(ls -ld /data)"
-    exit 1
-fi
-echo "✓ /data directory is writable"
+REPLICA_DIR="$(dirname "$ZERO_REPLICA_FILE")"
 
-echo "Running database migrations..."
-export DATABASE_URL="$ZERO_UPSTREAM_DB"
-pnpm exec drizzle-kit migrate
-
-if [ $? -eq 0 ]; then
-    echo "✓ Migrations completed successfully"
-else
-    echo "✗ Migration failed"
+echo "Checking replica directory permissions..."
+if [ ! -d "$REPLICA_DIR" ]; then
+    echo "✗ Replica directory does not exist: $REPLICA_DIR"
     exit 1
 fi
 
-echo "Deploying Zero permissions..."
-pnpm exec zero-deploy-permissions \
-    --upstream-db "$ZERO_UPSTREAM_DB" \
-    --app-id "${ZERO_APP_ID:-refinery}" \
-    --log-level info
-
-if [ $? -eq 0 ]; then
-    echo "✓ Permissions deployed successfully"
-else
-    echo "✗ Permission deployment failed"
+if [ ! -w "$REPLICA_DIR" ]; then
+    echo "✗ Replica directory is not writable: $REPLICA_DIR"
+    echo "Current permissions: $(ls -ld "$REPLICA_DIR")"
     exit 1
 fi
+echo "✓ Replica directory is writable"
 
 echo "Starting Zero Cache server..."
 echo "Environment check:"
 echo "  ZERO_UPSTREAM_DB: ${ZERO_UPSTREAM_DB:0:20}..."
-echo "  ZERO_CVR_DB: ${ZERO_CVR_DB:0:20:-[using ZERO_UPSTREAM_DB]}..."
-echo "  ZERO_CHANGE_DB: ${ZERO_CHANGE_DB:0:20:-[using ZERO_UPSTREAM_DB]}..."
 echo "  ZERO_REPLICA_FILE: $ZERO_REPLICA_FILE"
 echo "  ZERO_APP_ID: ${ZERO_APP_ID:-refinery}"
 echo "  ZERO_PORT: ${ZERO_PORT:-4848}"
 echo "  ZERO_LOG_LEVEL: ${ZERO_LOG_LEVEL:-info}"
 echo "  ZERO_ADMIN_PASSWORD: ${ZERO_ADMIN_PASSWORD:+[set]}"
 
-# Start zero-cache with environment variables
-# CVR_DB and CHANGE_DB default to ZERO_UPSTREAM_DB if not set
+if [ -n "$ZERO_CVR_DB" ]; then
+    echo "  ZERO_CVR_DB: ${ZERO_CVR_DB:0:20}..."
+else
+    echo "  ZERO_CVR_DB: [using ZERO_UPSTREAM_DB]"
+fi
+
+if [ -n "$ZERO_CHANGE_DB" ]; then
+    echo "  ZERO_CHANGE_DB: ${ZERO_CHANGE_DB:0:20}..."
+else
+    echo "  ZERO_CHANGE_DB: [using ZERO_UPSTREAM_DB]"
+fi
+
 exec pnpm exec zero-cache

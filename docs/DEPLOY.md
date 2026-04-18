@@ -166,11 +166,10 @@ ZERO_LOG_LEVEL=info  # Options: debug, info, warn, error
 **Important**: On first startup, the Zero Cache container will:
 
 1. Validate required environment variables
-2. Run Drizzle migrations to create/update database tables
-3. Deploy Zero permissions to PostgreSQL
-4. Start the zero-cache server
+2. Validate that the replica directory is writable
+3. Start the zero-cache server
 
-Check the container logs to confirm migrations and permissions deployed successfully before proceeding.
+Check the container logs to confirm zero-cache starts cleanly before proceeding.
 
 #### Zero Configuration Details
 
@@ -190,11 +189,11 @@ For small to medium deployments, using a single database (ZERO_UPSTREAM_DB) is s
 **Custom Image vs Official Image**:
 Our deployment uses a custom Docker image that:
 
-- Automatically runs Drizzle migrations on startup
-- Deploys Zero permissions before starting zero-cache
-- Simplifies deployment (no external migration orchestration needed)
+- Validates runtime configuration before startup
+- Keeps the zero-cache image decoupled from application code
+- Uses the repo's pinned Zero version without baking in app schema files
 
-This differs from Rocicorp's official `rocicorp/zero` image, which requires separate migration and permission deployment steps.
+This differs from Rocicorp's official `rocicorp/zero` image mainly in packaging and startup validation. Database migrations now happen in the app container instead of the zero-cache container.
 
 ### 3. Deploy SvelteKit App
 
@@ -246,6 +245,8 @@ Update your GitHub OAuth app settings with this callback URL.
 
 - Endpoint: `/`
 - Expected: HTTP 200
+
+**Important**: On startup, the SvelteKit app container runs Drizzle migrations before it starts serving traffic. Keep `DATABASE_URL` pointed at the authoritative Postgres database.
 
 ### 5. Deploy Drizzle Studio (Optional)
 
@@ -318,14 +319,16 @@ When you modify the database schema:
 # 2. Generate migration
 pnpm db:generate
 
-# 3. Commit migration files
-git add src/lib/server/db/migrations
+# 3. Label the PR with exactly one of: schema:expand, schema:contract
+
+# 4. Commit migration files
+git add drizzle
 git commit -m "feat: add new schema migration"
 
-# 4. Regenerate Zero schema
+# 5. Regenerate Zero schema
 pnpm zero:generate
 
-# 5. Commit and push
+# 6. Commit and push
 git add src/lib/zero/zero-schema.gen.ts
 git commit -m "chore: regenerate zero schema"
 git push
@@ -334,11 +337,12 @@ git push
 The deployment workflow:
 
 1. GitHub Actions builds new Docker images with the migrations included
-2. Coolify pulls and restarts the Zero Cache service
-3. Zero Cache automatically runs migrations and deploys permissions on startup
-4. SvelteKit app is redeployed with the updated Zero schema
+2. The deploy job inspects the merged PR label to choose rollout order
+3. `schema:expand` rolls out `refinery-app` first so app startup applies the expand migration before zero-cache restarts
+4. `schema:contract` rolls out `refinery-zero` first so app startup runs the contract migration last
+5. zero-cache continues replicating schema changes directly from Postgres
 
-**Manual migration (if needed)**: Use `scripts/deploy-permissions.sh` for manual schema deployment without restarting services.
+**Manual migration (if needed)**: Run `pnpm db:migrate` against production with the same image and environment variables the app uses.
 
 ### Application Updates
 
@@ -391,13 +395,13 @@ The deployment workflow:
 
 **Symptoms:**
 
-- `deploy-permissions.sh` script fails during migration step
+- App container fails during startup before serving traffic
 
 **Solution:**
 
 1. Check `DATABASE_URL` environment variable is set correctly
-2. Verify network access to PostgreSQL from your local machine
-3. Review migration files in `src/lib/server/db/migrations`
+2. Verify network access to PostgreSQL from the app container
+3. Review migration files in `drizzle/`
 4. Manually run: `pnpm exec drizzle-kit migrate` for detailed errors
 
 ### Issue: GitHub OAuth fails in production
@@ -426,18 +430,19 @@ The deployment workflow:
 2. Ensure `/data` volume has sufficient space (10GB+ recommended)
 3. Monitor disk usage in Coolify
 
-### Issue: Permission deployment fails
+### Issue: Zero Cache fails after a schema change
 
 **Symptoms:**
 
-- `zero-deploy-permissions` command fails
+- zero-cache does not catch up after an expand migration
+- Clients remain stuck in update-needed / reload loops
 
 **Solution:**
 
-1. Verify `ZERO_UPSTREAM_DB` is accessible
-2. Check that Drizzle migrations ran successfully first
-3. Ensure `src/lib/zero/schema.ts` has valid permission definitions
-4. Run with `--log-level debug` for detailed output
+1. Confirm the expand migration completed successfully in the app logs
+2. Check zero-cache logs for replication lag or publication errors
+3. If you use custom publications, make sure the new tables or columns were added correctly
+4. Wait for replication to catch up before validating the new client behavior
 
 ## Security Considerations
 

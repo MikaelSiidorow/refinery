@@ -6,9 +6,17 @@
 
 	let registration: ServiceWorkerRegistration | null = $state(null);
 	let updateAvailable = $state(false);
+	let reloadRequested = $state(false);
 
 	function reloadApp() {
-		postToServiceWorker(registration?.waiting, { type: 'SKIP_WAITING' });
+		if (reloadRequested) return;
+		reloadRequested = true;
+
+		if (registration?.waiting) {
+			postToServiceWorker(registration.waiting, { type: 'SKIP_WAITING' });
+			return;
+		}
+
 		window.location.reload();
 	}
 
@@ -54,7 +62,7 @@
 		// Handle controller change (when skipWaiting is called)
 		navigator.serviceWorker.addEventListener('controllerchange', () => {
 			// Only reload if we triggered it
-			if (updateAvailable) {
+			if (reloadRequested) {
 				window.location.reload();
 			}
 		});

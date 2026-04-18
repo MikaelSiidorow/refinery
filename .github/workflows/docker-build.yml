@@ -78,13 +78,112 @@ jobs:
       - name: Image digest
         run: echo "Image pushed with tags:${{ steps.meta.outputs.tags }}"
 
+  resolve-deploy-order:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      deployments: ${{ steps.resolve.outputs.deployments }}
+      schema_label: ${{ steps.resolve.outputs.schema_label }}
+      pull_number: ${{ steps.resolve.outputs.pull_number }}
+    steps:
+      - name: Resolve rollout order from merged PR label
+        id: resolve
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const defaultDeployments = 'refinery-app,refinery-zero';
+            const contractDeployments = 'refinery-zero,refinery-app';
+            const migrationPattern = /^drizzle\/[^/]+\.sql$/;
+            const schemaLabels = ['schema:expand', 'schema:contract'];
+
+            const prs = await github.paginate(
+              github.rest.repos.listPullRequestsAssociatedWithCommit,
+              {
+                owner,
+                repo,
+                commit_sha: context.sha,
+                per_page: 100,
+              },
+              (response) => response.data
+            );
+
+            const pr =
+              prs.find((candidate) => candidate.base?.ref === 'main' && candidate.merged_at) ??
+              prs.find((candidate) => candidate.base?.ref === 'main') ??
+              null;
+
+            let deployments = defaultDeployments;
+            let matchedLabels = [];
+            let changedMigrationFiles = [];
+
+            if (pr) {
+              const labels = (pr.labels ?? [])
+                .map((label) => (typeof label === 'string' ? label : label.name))
+                .filter(Boolean);
+              matchedLabels = labels.filter((label) => schemaLabels.includes(label));
+
+              const files = await github.paginate(
+                github.rest.pulls.listFiles,
+                {
+                  owner,
+                  repo,
+                  pull_number: pr.number,
+                  per_page: 100,
+                },
+                (response) => response.data
+              );
+
+              changedMigrationFiles = files
+                .map((file) => file.filename)
+                .filter((filename) => migrationPattern.test(filename));
+
+              if (changedMigrationFiles.length > 0 && matchedLabels.length !== 1) {
+                core.setFailed(
+                  `Pull request #${pr.number} changed migration files (${changedMigrationFiles.join(', ')}) ` +
+                    `but does not have exactly one schema label. Expected one of: ${schemaLabels.join(', ')}.`
+                );
+                return;
+              }
+
+              if (matchedLabels[0] === 'schema:contract') {
+                deployments = contractDeployments;
+              }
+            }
+
+            await core.summary
+              .addHeading('Resolved Rollout Order')
+              .addRaw(`Commit: ${context.sha}\n\n`)
+              .addRaw(`Pull request: ${pr ? `#${pr.number}` : 'none'}\n\n`)
+              .addRaw(
+                `Migration files: ${
+                  changedMigrationFiles.length > 0 ? changedMigrationFiles.join(', ') : 'none'
+                }\n\n`
+              )
+              .addRaw(
+                `Schema label: ${matchedLabels.length > 0 ? matchedLabels[0] : 'none'}\n\n`
+              )
+              .addRaw(`Deployments: ${deployments}\n`)
+              .write();
+
+            core.setOutput('deployments', deployments);
+            core.setOutput('schema_label', matchedLabels[0] ?? 'none');
+            core.setOutput('pull_number', pr ? String(pr.number) : '');
+
   deploy:
-    needs: build
+    needs:
+      - build
+      - resolve-deploy-order
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: MikaelSiidorow/infra/.github/workflows/k8s-rollout.yml@main
     with:
       namespace: refinery
-      deployments: refinery-app,refinery-zero
+      deployments: ${{ needs.resolve-deploy-order.outputs.deployments }}
     secrets:
-      HEADSCALE_AUTH_KEY: ${{ secrets.HEADSCALE_AUTH_KEY }}
+      HEADSCALE_PREAUTH_KEY: ${{ secrets.HEADSCALE_AUTH_KEY }}
       K8S_DEPLOY_KUBECONFIG: ${{ secrets.K8S_DEPLOY_KUBECONFIG }}

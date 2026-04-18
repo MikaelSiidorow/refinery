@@ -183,8 +183,8 @@ Refinery uses both Drizzle ORM (server) and Zero (client) for local-first sync:
 
 1. **Drizzle Schema** (`src/lib/server/db/schema.ts`) - Source of truth
 2. **Zero Schema** (`src/lib/zero/zero-schema.gen.ts`) - Auto-generated via `pnpm zero:generate`
-3. **Zero Permissions** (`src/lib/zero/schema.ts`) - Row-level security
-4. **Zero Mutators** (`src/lib/zero/mutators.ts`) - Server-side mutations with auth
+3. **Zero Query/Mutation Endpoints** (`src/routes/api/zero/*`) - Session auth and request handling
+4. **Zero Mutators** (`src/lib/zero/mutators.ts`) - Server-side mutations with ownership checks
 
 ### Schema Modification Workflow
 
@@ -205,31 +205,15 @@ git add src/lib/server/db/schema.ts src/lib/zero/zero-schema.gen.ts
 git commit -m "feat: add new field to content_idea"
 ```
 
-### Zero Permissions Pattern
+### Zero Authorization Pattern
 
-All user data is protected with row-level permissions:
+Refinery enforces Zero access in app code rather than Zero permissions:
 
-```typescript
-const allowIfOwner = (authData: AuthData, { cmp }: ExpressionBuilder) =>
-	cmp('userId', authData.sub);
+- `src/routes/api/zero/get-queries/+server.ts` rejects unauthenticated requests and injects `ctx.userID`
+- `src/routes/api/zero/mutate/+server.ts` does the same for mutation requests
+- `src/lib/zero/context.ts` and `assertIsOwner` protect row ownership inside mutators before writes happen
 
-return {
-	contentIdea: {
-		row: {
-			select: [allowIfOwner],
-			insert: [allowIfOwner],
-			update: {
-				preMutation: [allowIfOwner],
-				postMutation: [allowIfOwner]
-			},
-			delete: [allowIfOwner]
-		}
-	}
-	// ... similar for contentSettings, contentArtifact
-};
-```
-
-**Key Pattern**: `authData.sub` contains the user's UUID from their session. Zero compares this against the `userId` column in each table.
+**Key Pattern**: the authenticated session user ID becomes `ctx.userID`, and queries/mutators must scope data access through that context.
 
 ### Cookie-Based Authentication
 
@@ -246,8 +230,8 @@ ZERO_MUTATE_FORWARD_COOKIES=true
 1. User authenticates via GitHub OAuth
 2. SvelteKit sets session cookie
 3. Zero automatically forwards cookies to push endpoint
-4. Server validates session and injects `authData`
-5. Permissions check against `authData.sub`
+4. Server validates session and injects `ctx.userID`
+5. Queries and mutators scope all access using that user ID
 
 ### Synced Queries Pattern
 
@@ -469,21 +453,18 @@ vim src/lib/server/db/schema.ts
 pnpm db:generate
 
 # 3. Review migration SQL
-cat src/lib/server/db/migrations/*.sql
+cat drizzle/*.sql
 
-# 4. Apply migration (production: done in Docker startup)
+# 4. Apply migration (production: app startup runs this before serving)
 pnpm db:migrate
 
 # 5. Regenerate Zero schema
 pnpm zero:generate
 
-# 6. Update permissions if needed
-vim src/lib/zero/schema.ts
-
-# 7. Test locally before deploying
+# 6. Test locally before deploying
 ```
 
-**Production Note**: The Zero Cache Docker container automatically runs migrations and deploys permissions on startup. See `docs/DEPLOY.md` for details.
+**Production Note**: The SvelteKit app container runs Drizzle migrations on startup before it serves traffic. zero-cache stays decoupled from app code and continues replicating schema changes directly from Postgres. See `docs/DEPLOY.md` for rollout details.
 
 ## Troubleshooting
 
