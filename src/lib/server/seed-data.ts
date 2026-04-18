@@ -6,6 +6,13 @@ import { eq } from 'drizzle-orm';
 // Demo user ID - fixed for development
 export const DEMO_USER_ID = '01936f42-0000-7000-8000-000000000000' as UuidV7;
 
+function mergeIdeaContent(...sections: string[]) {
+	return sections
+		.map((section) => section.trim())
+		.filter(Boolean)
+		.join('\n\n---\n\n');
+}
+
 /**
  * Create or update demo user for development
  * Only call in development environment
@@ -87,7 +94,8 @@ export async function seedUserData(db: DrizzleDB, userId: UuidV7) {
 		userId,
 		oneLiner: 'I found Refinery and it completely changed my content workflow',
 		status: 'developing',
-		content: `**Before Refinery:**
+		content: mergeIdeaContent(
+			`**Before Refinery:**
 My content ideas were scattered everywhere - Apple Notes, random Google Docs, Twitter drafts, bookmarks I'd never revisit. Every time I wanted to create something, I'd spend 20 minutes just finding my notes.
 
 **What Changed:**
@@ -104,7 +112,7 @@ I can capture an idea in 5 seconds on my phone, then develop it when I have time
 - Inbox has 15+ quick captures
 - Developing 3 pieces for next week
 - Ready to publish: thread about local-first tools`,
-		notes: `Possible angles:
+			`Possible angles:
 - Full walkthrough tutorial
 - Before/after workflow comparison
 - Specific feature highlights (offline, share sheet, prompts)
@@ -113,7 +121,8 @@ I can capture an idea in 5 seconds on my phone, then develop it when I have time
 Could expand into:
 - Twitter thread about finding the tool
 - LinkedIn post about productivity improvement
-- Blog post: "How I organize 50+ content ideas"`,
+- Blog post: "How I organize 50+ content ideas"`
+		),
 		tags: ['refinery', 'productivity', 'workflow', 'tools'],
 		createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000), // 2 days ago
 		updatedAt: new Date(now - 1 * 24 * 60 * 60 * 1000) // 1 day ago
@@ -234,7 +243,8 @@ Not affiliated - just genuinely impressed with how well it works.`,
 		userId,
 		oneLiner: 'How I went from 5 scattered ideas to 20+ organized posts with Refinery',
 		status: 'ready',
-		content: `**Week 1 with Refinery:**
+		content: mergeIdeaContent(
+			`**Week 1 with Refinery:**
 
 Started with 5 random ideas in my Notes app. Now I have 20+ organized across different stages.
 
@@ -274,7 +284,7 @@ Started with 5 random ideas in my Notes app. Now I have 20+ organized across dif
 - Zero lost ideas
 
 This system actually works for me.`,
-		notes: `Could add:
+			`Could add:
 - Screenshots of my dashboard
 - Before/after comparison
 - Specific examples of adapted content
@@ -283,7 +293,8 @@ This system actually works for me.`,
 Possible formats:
 - Twitter thread (workflow steps)
 - Blog post (detailed tutorial)
-- YouTube walkthrough`,
+- YouTube walkthrough`
+		),
 		tags: ['refinery', 'workflow', 'productivity', 'content-creation'],
 		createdAt: new Date(now - 5 * 60 * 60 * 1000), // 5 hours ago
 		updatedAt: new Date(now - 1 * 60 * 60 * 1000) // 1 hour ago
@@ -387,8 +398,7 @@ Not affiliated, just sharing what works 🚀`,
 		userId,
 		oneLiner: 'First week with Refinery: 3 things I learned about my content habits',
 		status: 'inbox',
-		content: '',
-		notes: `Quick thoughts to explore:
+		content: mergeIdeaContent(`Quick thoughts to explore:
 
 1. I capture way more ideas than I thought
    - Had 20+ ideas in first 3 days
@@ -410,7 +420,7 @@ Could expand on:
 - Mobile vs desktop workflow differences
 - What types of ideas I'm capturing most
 
-Maybe become: reflective blog post or lessons learned thread?`,
+Maybe become: reflective blog post or lessons learned thread?`),
 		tags: ['productivity', 'content-creation', 'lessons-learned'],
 		createdAt: new Date(now - 30 * 60 * 1000), // 30 minutes ago
 		updatedAt: new Date(now - 30 * 60 * 1000)
@@ -424,8 +434,7 @@ Maybe become: reflective blog post or lessons learned thread?`,
 		oneLiner:
 			'Interesting article about Zero https://zero.rocicorp.dev - local-first architecture deep dive',
 		status: 'inbox',
-		content: '',
-		notes: `Key takeaways:
+		content: mergeIdeaContent(`Key takeaways:
 - Zero handles offline-first sync automatically
 - Works with existing PostgreSQL databases
 - Real-time multi-user collaboration
@@ -435,7 +444,7 @@ Possible angles:
 - Technical breakdown of how Zero works
 - Comparison with other sync solutions
 - Real-world use case (Refinery!)
-- Performance considerations`,
+- Performance considerations`),
 		tags: ['technical', 'zero', 'local-first'],
 		createdAt: new Date(now - 10 * 60 * 1000), // 10 minutes ago
 		updatedAt: new Date(now - 10 * 60 * 1000)

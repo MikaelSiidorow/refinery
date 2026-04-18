@@ -35,6 +35,20 @@ function formatIdeaExamples(ideas: Row['contentIdea'][], limit = 2): string {
 	return `\n\n## YOUR AUTHENTIC VOICE - Past Work\n\nHere are examples of how you typically develop ideas. Use these to match your authentic voice and thinking style:\n\n${examples.join('\n\n')}\n\n---\n\n`;
 }
 
+function getPromptContext(ideaOrArtifact: Row['contentIdea'] | Row['contentArtifact']) {
+	const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
+	const supplementalNotes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes || '' : '';
+	const workingContent =
+		'oneLiner' in ideaOrArtifact ? ideaOrArtifact.content || '' : supplementalNotes;
+	const contentSource = ideaOrArtifact.content || supplementalNotes || oneLiner;
+
+	return {
+		oneLiner,
+		workingContent,
+		contentSource
+	};
+}
+
 export const promptStrategies: PromptStrategy[] = [
 	{
 		id: 'convert-thread',
@@ -49,9 +63,7 @@ export const promptStrategies: PromptStrategy[] = [
 		artifactType: 'thread',
 		targetPlatform: 'twitter',
 		generate: (ideaOrArtifact, settings, examples) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
-			const contentSource = ideaOrArtifact.content || notes || oneLiner;
+			const { contentSource } = getPromptContext(ideaOrArtifact);
 
 			const pastThreadExamples = formatArtifactExamples(
 				examples?.pastArtifacts?.filter((a) => a.artifactType === 'thread') || [],
@@ -89,13 +101,12 @@ Keep tweets under 280 characters. Make it easy to read on mobile.`;
 		},
 		producesArtifact: false, // Utility prompt, not part of content pipeline
 		generate: (ideaOrArtifact, settings) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
+			const { oneLiner, workingContent } = getPromptContext(ideaOrArtifact);
 			return `Help me write an authentic, valuable comment for someone's post.
 
 ${settings?.uniquePerspective ? `My Unique Perspective: ${settings.uniquePerspective}\n\n` : ''}${settings?.contentPillars ? `My Content Focus Areas: ${settings.contentPillars}\n\n` : ''}Their post topic: ${oneLiner}
 
-${notes ? `Additional context:\n${notes}\n\n` : ''}
+${workingContent ? `Working content:\n${workingContent}\n\n` : ''}
 
 Generate 3 different comment options:
 
@@ -133,12 +144,11 @@ Each comment should be:
 		},
 		producesArtifact: false,
 		generate: (ideaOrArtifact, settings) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
+			const { oneLiner, workingContent } = getPromptContext(ideaOrArtifact);
 			return `Create an outline for a technical deep-dive post.
 
 Topic: ${oneLiner}
-${settings?.targetAudience ? `Target Audience: ${settings.targetAudience}\n` : ''}${notes ? `Additional Context:\n${notes}\n\n` : ''}
+${settings?.targetAudience ? `Target Audience: ${settings.targetAudience}\n` : ''}${workingContent ? `Working Content:\n${workingContent}\n\n` : ''}
 
 Structure the outline with these sections:
 
@@ -188,8 +198,7 @@ Target: 800-1200 word blog post or LinkedIn article.`;
 		},
 		producesArtifact: false,
 		generate: (ideaOrArtifact, settings, examples) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
+			const { oneLiner, workingContent } = getPromptContext(ideaOrArtifact);
 
 			const pastIdeaExamples = formatIdeaExamples(examples?.pastIdeas || [], 2);
 
@@ -197,7 +206,7 @@ Target: 800-1200 word blog post or LinkedIn article.`;
 
 Topic: ${oneLiner}
 
-${notes ? `My Notes:\n${notes}\n\n` : ''}${settings?.targetAudience ? `Target Audience: ${settings.targetAudience}\n` : ''}${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}${pastIdeaExamples}Create an outline that helps me develop my thinking:
+${workingContent ? `Working Content:\n${workingContent}\n\n` : ''}${settings?.targetAudience ? `Target Audience: ${settings.targetAudience}\n` : ''}${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}${pastIdeaExamples}Create an outline that helps me develop my thinking:
 
 **1. Core Message**
    - What's the ONE key insight I want readers to take away?
@@ -248,8 +257,7 @@ Focus on YOUR voice and authentic perspective. This is a thinking tool, not a te
 		},
 		producesArtifact: false,
 		generate: (ideaOrArtifact, settings, examples) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
+			const { oneLiner, workingContent } = getPromptContext(ideaOrArtifact);
 
 			const pastIdeaExamples = formatIdeaExamples(examples?.pastIdeas || [], 2);
 
@@ -257,7 +265,7 @@ Focus on YOUR voice and authentic perspective. This is a thinking tool, not a te
 
 Experience/Lesson: ${oneLiner}
 
-${notes ? `Context:\n${notes}\n\n` : ''}${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}${pastIdeaExamples}Use this proven framework:
+${workingContent ? `Context:\n${workingContent}\n\n` : ''}${settings?.brandVoice ? `Brand Voice: ${settings.brandVoice}\n\n` : ''}${pastIdeaExamples}Use this proven framework:
 
 1. **The Situation** (Set the Scene)
    - Where were you when this happened?
@@ -306,9 +314,7 @@ Target: 400-600 words for LinkedIn. Make it personal but professional.`;
 		artifactType: 'carousel',
 		targetPlatform: 'linkedin',
 		generate: (ideaOrArtifact, settings) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
-			const contentSource = ideaOrArtifact.content || notes || oneLiner;
+			const { contentSource } = getPromptContext(ideaOrArtifact);
 
 			return `Convert this content into a LinkedIn carousel (5-8 slides).
 
@@ -366,9 +372,7 @@ SLIDE 2:
 		artifactType: 'short-post',
 		targetPlatform: 'linkedin',
 		generate: (ideaOrArtifact, settings, examples) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
-			const contentSource = ideaOrArtifact.content || notes || oneLiner;
+			const { contentSource } = getPromptContext(ideaOrArtifact);
 
 			const pastPostExamples = formatArtifactExamples(
 				examples?.pastArtifacts?.filter((a) => a.artifactType === 'short-post') || [],
@@ -421,9 +425,7 @@ Aim for: 800-1200 characters for optimal engagement`;
 		producesArtifact: true,
 		artifactType: 'newsletter',
 		generate: (ideaOrArtifact, settings) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
-			const contentSource = ideaOrArtifact.content || notes || oneLiner;
+			const { contentSource } = getPromptContext(ideaOrArtifact);
 
 			return `Convert this content into an email newsletter section.
 
@@ -494,9 +496,7 @@ Include plain text version suggestion (simplified formatting for text-only email
 		artifactType: 'thread',
 		targetPlatform: 'bluesky',
 		generate: (ideaOrArtifact, settings) => {
-			const oneLiner = 'oneLiner' in ideaOrArtifact ? ideaOrArtifact.oneLiner : '';
-			const notes = 'notes' in ideaOrArtifact ? ideaOrArtifact.notes : '';
-			const contentSource = ideaOrArtifact.content || notes || oneLiner;
+			const { contentSource } = getPromptContext(ideaOrArtifact);
 
 			return `Convert this content into a Bluesky thread (6-10 posts).
 

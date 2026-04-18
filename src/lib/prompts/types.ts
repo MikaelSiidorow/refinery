@@ -7,7 +7,6 @@ export type { ArtifactType };
 
 export interface StrategyRequirements {
 	needsMasterContent?: boolean; // Requires idea.content to be filled
-	needsNotes?: boolean; // Requires idea.notes to be filled
 	needsOneLiner?: boolean; // Requires idea.oneLiner to be filled
 }
 

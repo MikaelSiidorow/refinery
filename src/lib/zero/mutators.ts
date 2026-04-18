@@ -18,7 +18,6 @@ const updateContentIdeaSchema = v.object({
 	oneLiner: v.optional(vShortString()),
 	status: v.optional(v.picklist(IDEA_STATUSES)),
 	content: v.optional(v.string()),
-	notes: v.optional(v.string()),
 	tags: v.optional(v.array(v.string()))
 });
 
@@ -66,7 +65,6 @@ export const mutators = defineMutators({
 				userId,
 				status: 'inbox',
 				content: '',
-				notes: '',
 				tags: [],
 				createdAt: Date.now(),
 				updatedAt: Date.now()
@@ -74,7 +72,7 @@ export const mutators = defineMutators({
 		}),
 		update: defineMutator(
 			updateContentIdeaSchema,
-			async ({ tx, ctx, args: { id, oneLiner, status, content, notes, tags } }) => {
+			async ({ tx, ctx, args: { id, oneLiner, status, content, tags } }) => {
 				const entity = await tx.run(zql.contentIdea.where('id', id).one());
 				assertIsOwner(ctx, entity, id);
 
@@ -83,7 +81,6 @@ export const mutators = defineMutators({
 					oneLiner?: string;
 					status?: 'inbox' | 'developing' | 'ready' | 'published' | 'archived' | 'cancelled';
 					content?: string;
-					notes?: string;
 					tags?: string[];
 					updatedAt: number;
 				} = {
@@ -94,7 +91,6 @@ export const mutators = defineMutators({
 				if (oneLiner !== undefined) updateData.oneLiner = oneLiner;
 				if (status !== undefined) updateData.status = status;
 				if (content !== undefined) updateData.content = content;
-				if (notes !== undefined) updateData.notes = notes;
 				if (tags !== undefined) updateData.tags = tags;
 
 				await tx.mutate.contentIdea.update(updateData);

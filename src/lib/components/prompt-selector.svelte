@@ -42,7 +42,6 @@
 		!!(idea?.content && idea.content.trim().length > 0) ||
 			!!(artifact?.content && artifact.content.trim().length > 0)
 	);
-	const hasNotes = $derived(!!(idea?.notes && idea.notes.trim().length > 0));
 	const hasOneLiner = $derived(!!(idea?.oneLiner && idea.oneLiner.trim().length > 0));
 
 	const relevantStrategies = $derived(
@@ -82,7 +81,6 @@
 			) {
 				return false;
 			}
-			if (strategy.requirements.needsNotes && !hasNotes) return false;
 			if (strategy.requirements.needsOneLiner && !hasOneLiner) return false;
 			return true;
 		})
