@@ -44,17 +44,19 @@ Refinery consists of four services:
 
 Docker images are automatically built and published to GitHub Container Registry (GHCR) on every push to `main`:
 
-- **SvelteKit App**: `ghcr.io/[owner]/refinery/app:latest`
-- **Zero Cache**: `ghcr.io/[owner]/refinery/zero:latest`
+- **SvelteKit App**: `ghcr.io/[owner]/refinery/app:production`
+- **Migration Job**: `ghcr.io/[owner]/refinery/migrate:production`
+- **Zero Cache**: `ghcr.io/[owner]/refinery/zero:production`
 - **Drizzle Studio**: `ghcr.io/[owner]/refinery/drizzle:latest`
 
-The CI workflow (`.github/workflows/docker-build.yml`) builds all three images in parallel and tags them with:
+The CI workflow (`.github/workflows/docker-build.yml`) builds the runtime images in parallel and tags them with:
 
-- `latest` - Latest build from main branch
-- `main-<sha>` - Commit SHA for traceability
+- `production` - The currently promoted production image
+- `latest` - Convenience alias for the latest build from `main`
+- `sha-<commit>` - Immutable commit tag for traceability
 - `v*` - Semantic version tags (e.g., `v1.0.0`)
 
-**To use a specific version**, replace `latest` with the desired tag in Coolify.
+**Recommended production setup**: point long-lived workloads at `:production` and let CI promote that tag after the build and deploy checks succeed.
 
 ### Making Images Accessible
 
@@ -123,7 +125,7 @@ In Coolify, create a new service from Docker image:
 
 **Image Configuration:**
 
-- **Image**: `ghcr.io/[owner]/refinery/zero:latest`
+- **Image**: `ghcr.io/[owner]/refinery/zero:production`
 - **Port**: 4848
 - **Domain**: `zero.yourdomain.com`
 
@@ -193,7 +195,7 @@ Our deployment uses a custom Docker image that:
 - Keeps the zero-cache image decoupled from application code
 - Uses the repo's pinned Zero version without baking in app schema files
 
-This differs from Rocicorp's official `rocicorp/zero` image mainly in packaging and startup validation. Database migrations now happen in the app container instead of the zero-cache container.
+This differs from Rocicorp's official `rocicorp/zero` image mainly in packaging and startup validation. Database migrations now happen in a separate one-shot migration job instead of either long-lived app or zero-cache containers.
 
 ### 3. Deploy SvelteKit App
 
@@ -201,7 +203,7 @@ In Coolify, create a new service from Docker image:
 
 **Image Configuration:**
 
-- **Image**: `ghcr.io/[owner]/refinery/app:latest`
+- **Image**: `ghcr.io/[owner]/refinery/app:production`
 - **Port**: 3000
 - **Domain**: `app.yourdomain.com`
 
@@ -246,7 +248,7 @@ Update your GitHub OAuth app settings with this callback URL.
 - Endpoint: `/`
 - Expected: HTTP 200
 
-**Important**: On startup, the SvelteKit app container runs Drizzle migrations before it starts serving traffic. Keep `DATABASE_URL` pointed at the authoritative Postgres database.
+**Important**: The SvelteKit app container now starts the server only. Schema changes are applied by the dedicated `ghcr.io/[owner]/refinery/migrate:production` job, which should use the same `DATABASE_URL` as the app.
 
 ### 5. Deploy Drizzle Studio (Optional)
 
@@ -337,12 +339,13 @@ git push
 The deployment workflow:
 
 1. GitHub Actions builds new Docker images with the migrations included
-2. The deploy job inspects the merged PR label to choose rollout order
-3. `schema:expand` rolls out `refinery-app` first so app startup applies the expand migration before zero-cache restarts
-4. `schema:contract` rolls out `refinery-zero` first so app startup runs the contract migration last
-5. zero-cache continues replicating schema changes directly from Postgres
+2. The deploy job promotes `app`, `migrate`, and `zero` images to the `production` tag only when those runtimes changed
+3. `schema:expand` runs the migration job before any app rollout
+4. `schema:contract` rolls out app changes first and runs the migration job afterward
+5. zero-cache is restarted only when the zero runtime inputs changed
+6. zero-cache continues replicating schema changes directly from Postgres
 
-**Manual migration (if needed)**: Run `pnpm db:migrate` against production with the same image and environment variables the app uses.
+**Manual migration (if needed)**: run the `migrate:production` image as a one-shot job with the same `DATABASE_URL` secret the app uses.
 
 ### Application Updates
 
@@ -356,10 +359,10 @@ git push
 The deployment workflow:
 
 1. GitHub Actions automatically builds new Docker images
-2. Images are pushed to GHCR with `latest` tag
-3. Coolify pulls the new image and redeploys services with zero-downtime rolling updates
+2. The pipeline promotes the changed runtime images to the `production` tag
+3. Only the workloads whose runtime changed are restarted
 
-**Note**: Configure Coolify to watch for new images on GHCR, or manually trigger a redeploy after CI completes.
+**Note**: Keep app and zero workloads pinned to `:production`, not `:latest`, so deploys are explicit promotions instead of every main-branch build.
 
 ## Troubleshooting
 

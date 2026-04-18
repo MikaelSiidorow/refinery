@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,10 +40,7 @@ if (!databaseUrl) {
 
 try {
 	await runMigrations(databaseUrl);
-
-	const serverEntry = path.join(__dirname, '..', 'build', 'index.js');
-	await import(pathToFileURL(serverEntry).href);
 } catch (error) {
-	console.error('Failed to start application:', error);
+	console.error('Failed to run migrations:', error);
 	process.exit(1);
 }
