@@ -1,7 +1,7 @@
 name: Release Discipline Check
 
 on:
-  pull_request_target:
+  pull_request:
     branches:
       - main
     types:
@@ -66,6 +66,7 @@ jobs:
             const matchedLabels = labels.filter((label) => schemaLabels.includes(label));
             const changedMigrationFiles = changedFiles.filter((filename) => migrationPattern.test(filename));
             const needsMigration = changedMigrationFiles.length > 0;
+            const canWriteComment = pr.head.repo.full_name === pr.base.repo.full_name;
 
             function parseSemver(version) {
               const match = /^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:[-+].*)?$/.exec(version);
@@ -286,35 +287,46 @@ jobs:
               ...(failures.length > 0 ? failures.map((failure) => `- ${failure}`) : ['- none']),
             ].join('\n');
 
-            const existingComments = await github.paginate(
-              github.rest.issues.listComments,
-              {
-                owner,
-                repo,
-                issue_number: pr.number,
-                per_page: 100,
-              },
-              (response) => response.data
-            );
+            let commentStatus = 'skipped on fork PR';
 
-            const existingComment = existingComments.find(
-              (comment) => comment.body?.includes(commentMarker)
-            );
+            if (canWriteComment) {
+              try {
+                const existingComments = await github.paginate(
+                  github.rest.issues.listComments,
+                  {
+                    owner,
+                    repo,
+                    issue_number: pr.number,
+                    per_page: 100,
+                  },
+                  (response) => response.data
+                );
 
-            if (existingComment) {
-              await github.rest.issues.updateComment({
-                owner,
-                repo,
-                comment_id: existingComment.id,
-                body: commentBody,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner,
-                repo,
-                issue_number: pr.number,
-                body: commentBody,
-              });
+                const existingComment = existingComments.find(
+                  (comment) => comment.body?.includes(commentMarker)
+                );
+
+                if (existingComment) {
+                  await github.rest.issues.updateComment({
+                    owner,
+                    repo,
+                    comment_id: existingComment.id,
+                    body: commentBody,
+                  });
+                  commentStatus = 'updated sticky PR comment';
+                } else {
+                  await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: pr.number,
+                    body: commentBody,
+                  });
+                  commentStatus = 'created sticky PR comment';
+                }
+              } catch (error) {
+                commentStatus = 'comment unavailable; using job summary only';
+                core.warning(`Could not write PR comment: ${error.message}`);
+              }
             }
 
             await core.summary
@@ -325,6 +337,7 @@ jobs:
               .addRaw(`Migration files: ${changedMigrationFiles.length > 0 ? changedMigrationFiles.join(', ') : 'none'}\n\n`)
               .addRaw(`Deployments: ${deployments.length > 0 ? deployments.join(', ') : 'none'}\n\n`)
               .addRaw(`Migration phase: ${migrationPhase}\n\n`)
+              .addRaw(`PR comment: ${commentStatus}\n\n`)
               .addRaw(
                 failures.length === 0
                   ? 'All release-discipline checks passed.\n'
