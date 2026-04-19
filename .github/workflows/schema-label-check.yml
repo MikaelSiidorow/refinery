@@ -1,0 +1,75 @@
+name: Schema Label Check
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+      - unlabeled
+
+jobs:
+  schema-label-check:
+    name: Require Schema Change Label
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Validate schema change labels
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = context.payload.pull_request.number;
+
+            const migrationPattern = /^drizzle\/[^/]+\.sql$/;
+            const requiredLabels = ['schema:expand', 'schema:contract'];
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner,
+                repo,
+                pull_number,
+                per_page: 100,
+              },
+              (response) => response.data
+            );
+
+            const changedMigrationFiles = files
+              .map((file) => file.filename)
+              .filter((filename) => migrationPattern.test(filename));
+
+            const labels = (context.payload.pull_request.labels ?? []).map((label) => label.name);
+            const matchedLabels = labels.filter((label) => requiredLabels.includes(label));
+
+            await core.summary
+              .addHeading('Schema Label Check')
+              .addRaw(`Migration files detected: ${changedMigrationFiles.length}\n\n`)
+              .addRaw(
+                changedMigrationFiles.length > 0
+                  ? changedMigrationFiles.map((filename) => `- ${filename}`).join('\n') + '\n\n'
+                  : 'No migration SQL files changed.\n\n'
+              )
+              .addRaw(`Schema labels on PR: ${matchedLabels.length > 0 ? matchedLabels.join(', ') : 'none'}\n`)
+              .write();
+
+            if (changedMigrationFiles.length === 0) {
+              core.info('No migration SQL files changed. No schema label required.');
+              return;
+            }
+
+            if (matchedLabels.length !== 1) {
+              core.setFailed(
+                `This PR changes drizzle migration SQL files (${changedMigrationFiles.join(', ')}). ` +
+                `Add exactly one label: schema:expand or schema:contract.`
+              );
+              return;
+            }
+
+            core.info(`Schema label check passed with label: ${matchedLabels[0]}`);

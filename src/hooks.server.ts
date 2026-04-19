@@ -2,6 +2,7 @@ import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import * as auth from '$lib/server/auth';
 import { logger, emitWideEvent } from '$lib/server/logger';
+import { getVersionHeaders } from '$lib/version-policy';
 
 /**
  * Wide event logging - emits one canonical log line per request at completion.
@@ -19,6 +20,11 @@ const handleWideEvent: Handle = async ({ event, resolve }) => {
 
 	try {
 		const response = await resolve(event);
+		const versionHeaders = getVersionHeaders();
+
+		for (const key of Object.keys(versionHeaders)) {
+			response.headers.set(key, versionHeaders[key] ?? '');
+		}
 
 		// Capture response status
 		event.locals.ctx.status = response.status;

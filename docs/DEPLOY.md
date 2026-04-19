@@ -44,17 +44,19 @@ Refinery consists of four services:
 
 Docker images are automatically built and published to GitHub Container Registry (GHCR) on every push to `main`:
 
-- **SvelteKit App**: `ghcr.io/[owner]/refinery/app:latest`
-- **Zero Cache**: `ghcr.io/[owner]/refinery/zero:latest`
+- **SvelteKit App**: `ghcr.io/[owner]/refinery/app:production`
+- **Migration Job**: `ghcr.io/[owner]/refinery/migrate:production`
+- **Zero Cache**: `ghcr.io/[owner]/refinery/zero:production`
 - **Drizzle Studio**: `ghcr.io/[owner]/refinery/drizzle:latest`
 
-The CI workflow (`.github/workflows/docker-build.yml`) builds all three images in parallel and tags them with:
+The CI workflow (`.github/workflows/docker-build.yml`) builds the runtime images in parallel and tags them with:
 
-- `latest` - Latest build from main branch
-- `main-<sha>` - Commit SHA for traceability
-- `v*` - Semantic version tags (e.g., `v1.0.0`)
+- `production` - The currently promoted production image
+- `latest` - Convenience alias for the latest build from `main`
+- `sha-<commit>` - Immutable commit tag for traceability
+- `<package.json version>` - Release alias from the merged app version (for example `1.0.0`)
 
-**To use a specific version**, replace `latest` with the desired tag in Coolify.
+**Recommended production setup**: point long-lived workloads at `:production` and let CI promote that tag after the build and deploy checks succeed.
 
 ### Making Images Accessible
 
@@ -123,7 +125,7 @@ In Coolify, create a new service from Docker image:
 
 **Image Configuration:**
 
-- **Image**: `ghcr.io/[owner]/refinery/zero:latest`
+- **Image**: `ghcr.io/[owner]/refinery/zero:production`
 - **Port**: 4848
 - **Domain**: `zero.yourdomain.com`
 
@@ -166,11 +168,10 @@ ZERO_LOG_LEVEL=info  # Options: debug, info, warn, error
 **Important**: On first startup, the Zero Cache container will:
 
 1. Validate required environment variables
-2. Run Drizzle migrations to create/update database tables
-3. Deploy Zero permissions to PostgreSQL
-4. Start the zero-cache server
+2. Validate that the replica directory is writable
+3. Start the zero-cache server
 
-Check the container logs to confirm migrations and permissions deployed successfully before proceeding.
+Check the container logs to confirm zero-cache starts cleanly before proceeding.
 
 #### Zero Configuration Details
 
@@ -190,11 +191,11 @@ For small to medium deployments, using a single database (ZERO_UPSTREAM_DB) is s
 **Custom Image vs Official Image**:
 Our deployment uses a custom Docker image that:
 
-- Automatically runs Drizzle migrations on startup
-- Deploys Zero permissions before starting zero-cache
-- Simplifies deployment (no external migration orchestration needed)
+- Validates runtime configuration before startup
+- Keeps the zero-cache image decoupled from application code
+- Uses the repo's pinned Zero version without baking in app schema files
 
-This differs from Rocicorp's official `rocicorp/zero` image, which requires separate migration and permission deployment steps.
+This differs from Rocicorp's official `rocicorp/zero` image mainly in packaging and startup validation. Database migrations now happen in a separate one-shot migration job instead of either long-lived app or zero-cache containers.
 
 ### 3. Deploy SvelteKit App
 
@@ -202,7 +203,7 @@ In Coolify, create a new service from Docker image:
 
 **Image Configuration:**
 
-- **Image**: `ghcr.io/[owner]/refinery/app:latest`
+- **Image**: `ghcr.io/[owner]/refinery/app:production`
 - **Port**: 3000
 - **Domain**: `app.yourdomain.com`
 
@@ -246,6 +247,8 @@ Update your GitHub OAuth app settings with this callback URL.
 
 - Endpoint: `/`
 - Expected: HTTP 200
+
+**Important**: The SvelteKit app container now starts the server only. Schema changes are applied by the dedicated `ghcr.io/[owner]/refinery/migrate:production` job, which should use the same `DATABASE_URL` as the app.
 
 ### 5. Deploy Drizzle Studio (Optional)
 
@@ -314,18 +317,23 @@ Checking Zero Cache (admin)... ✓ OK (HTTP 200)
 When you modify the database schema:
 
 ```bash
-# 1. Update src/lib/server/db/schema.ts locally
-# 2. Generate migration
+# 1. Bump package.json version
+# 2. Update src/lib/server/db/schema.ts locally
+# 3. Generate migration
 pnpm db:generate
 
-# 3. Commit migration files
-git add src/lib/server/db/migrations
+# 4. Label the PR with exactly one of: schema:expand, schema:contract
+
+# 5. Commit migration files
+git add drizzle
 git commit -m "feat: add new schema migration"
 
-# 4. Regenerate Zero schema
+# 6. Regenerate Zero schema
 pnpm zero:generate
 
-# 5. Commit and push
+# 7. If the PR is schema:contract, raise minSupportedVersion in src/lib/version-policy.ts
+
+# 8. Commit and push
 git add src/lib/zero/zero-schema.gen.ts
 git commit -m "chore: regenerate zero schema"
 git push
@@ -334,11 +342,15 @@ git push
 The deployment workflow:
 
 1. GitHub Actions builds new Docker images with the migrations included
-2. Coolify pulls and restarts the Zero Cache service
-3. Zero Cache automatically runs migrations and deploys permissions on startup
-4. SvelteKit app is redeployed with the updated Zero schema
+2. The deploy job promotes `app`, `migrate`, and `zero` images to the `production` tag only when those runtimes changed
+3. `schema:expand` runs the migration job before any app rollout
+4. `schema:contract` rolls out app changes first and runs the migration job afterward
+5. zero-cache is restarted only when the zero runtime inputs changed
+6. zero-cache continues replicating schema changes directly from Postgres
 
-**Manual migration (if needed)**: Use `scripts/deploy-permissions.sh` for manual schema deployment without restarting services.
+`schema:contract` PRs must also raise `minSupportedVersion` to the oldest app version that is still safe after the destructive change. That is not necessarily the version introduced by the contract PR itself.
+
+**Manual migration (if needed)**: run the `migrate:production` image as a one-shot job with the same `DATABASE_URL` secret the app uses.
 
 ### Application Updates
 
@@ -352,10 +364,21 @@ git push
 The deployment workflow:
 
 1. GitHub Actions automatically builds new Docker images
-2. Images are pushed to GHCR with `latest` tag
-3. Coolify pulls the new image and redeploys services with zero-downtime rolling updates
+2. The pipeline promotes the changed runtime images to the `production` tag
+3. Only the workloads whose runtime changed are restarted
 
-**Note**: Configure Coolify to watch for new images on GHCR, or manually trigger a redeploy after CI completes.
+**Note**: Keep app and zero workloads pinned to `:production`, not `:latest`, so deploys are explicit promotions instead of every main-branch build.
+
+### Client Version Policy
+
+The app publishes version policy from `src/lib/version-policy.ts` through `/api/version` and response headers:
+
+- `appVersion` comes from `package.json`
+- `minSupportedVersion` is the oldest client allowed to continue running
+- browsers show a soft refresh prompt when a newer version exists but the client is still supported
+- browsers show a blocking refresh screen when the active client drops below `minSupportedVersion`
+
+This is the operational guardrail for delayed contract migrations: raise `minSupportedVersion`, let stale clients drain out, then run the destructive migration.
 
 ## Troubleshooting
 
@@ -391,13 +414,13 @@ The deployment workflow:
 
 **Symptoms:**
 
-- `deploy-permissions.sh` script fails during migration step
+- Migration job fails before the app rollout completes
 
 **Solution:**
 
 1. Check `DATABASE_URL` environment variable is set correctly
-2. Verify network access to PostgreSQL from your local machine
-3. Review migration files in `src/lib/server/db/migrations`
+2. Verify network access to PostgreSQL from the migration job
+3. Review migration files in `drizzle/`
 4. Manually run: `pnpm exec drizzle-kit migrate` for detailed errors
 
 ### Issue: GitHub OAuth fails in production
@@ -426,18 +449,19 @@ The deployment workflow:
 2. Ensure `/data` volume has sufficient space (10GB+ recommended)
 3. Monitor disk usage in Coolify
 
-### Issue: Permission deployment fails
+### Issue: Zero Cache fails after a schema change
 
 **Symptoms:**
 
-- `zero-deploy-permissions` command fails
+- zero-cache does not catch up after an expand migration
+- Clients remain stuck in update-needed / reload loops
 
 **Solution:**
 
-1. Verify `ZERO_UPSTREAM_DB` is accessible
-2. Check that Drizzle migrations ran successfully first
-3. Ensure `src/lib/zero/schema.ts` has valid permission definitions
-4. Run with `--log-level debug` for detailed output
+1. Confirm the expand migration completed successfully in the app logs
+2. Check zero-cache logs for replication lag or publication errors
+3. If you use custom publications, make sure the new tables or columns were added correctly
+4. Wait for replication to catch up before validating the new client behavior
 
 ## Security Considerations
 

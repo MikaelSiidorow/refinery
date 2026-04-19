@@ -1,38 +1,66 @@
-# sv
+# Refinery
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Refinery is a local-first content bank built with SvelteKit, Postgres, Drizzle, and Zero.
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
+## Development
 
 ```sh
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
+pnpm install
+pnpm dev
 ```
 
-## Developing
+Useful scripts:
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+- `pnpm check`
+- `pnpm lint`
+- `pnpm db:generate`
+- `pnpm db:migrate:run`
+- `pnpm zero:generate`
 
-```sh
-npm run dev
+## Release Discipline
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+Every pull request must bump the root `package.json` version. CI rejects PRs that do not move the version forward.
 
-## Building
+The version in `package.json` is the human release version. Production container images published from `main` use three tag styles:
 
-To create a production version of your app:
+- `sha-<commit>` for the exact merged artifact
+- `<package.json version>` for the release alias
+- `production` for the mutable deployment target
 
-```sh
-npm run build
-```
+Deployments follow `:production`. Traceability follows `sha-*`. Human release notes and compatibility decisions follow the package version.
 
-You can preview the production build with `npm run preview`.
+## Client Compatibility Policy
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+`src/lib/version-policy.ts` is the source of truth for client compatibility:
+
+- `appVersion` is injected from `package.json`
+- `minSupportedVersion` is the oldest client version allowed to keep running
+- `/api/version` and response headers expose the active policy to browsers and operators
+
+Client behavior is intentionally split:
+
+- If a newer version exists but the current client is still supported, the app shows a soft refresh prompt.
+- If the current client is below `minSupportedVersion`, the app blocks interaction and requires a refresh.
+
+Zero still keeps its own low-level `onUpdateNeeded` reload path as the safety net if a client reaches an incompatible sync state.
+
+## Schema Changes
+
+When a PR changes `drizzle/*.sql`, it must carry exactly one schema label:
+
+- `schema:expand`
+- `schema:contract`
+
+`schema:contract` PRs must also raise `minSupportedVersion` in `src/lib/version-policy.ts`.
+
+Important: `minSupportedVersion` is the oldest app version that is safe after the contract change. It is not necessarily the version introduced by the current PR.
+
+Typical flow:
+
+1. Bump `package.json` version.
+2. Update schema and generate migration files.
+3. Regenerate Zero schema if needed.
+4. Add the correct schema label.
+5. If the label is `schema:contract`, raise `minSupportedVersion`.
+
+Contract migrations should be rare and delayed. Expand first, ship code that no longer depends on the old schema, wait for clients to refresh, then run the destructive migration.

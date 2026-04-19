@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    tags:
-      - 'v*'
   pull_request:
     branches:
       - main
@@ -13,6 +11,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  K8S_NAMESPACE: refinery
+  HEADSCALE_LOGIN_SERVER: https://hs.miksu.app
 
 jobs:
   build:
@@ -25,23 +25,30 @@ jobs:
         service:
           - name: app
             dockerfile: Dockerfile.app
-            context: .
+            target: app-runtime
+          - name: migrate
+            dockerfile: Dockerfile.app
+            target: migrate-runtime
           - name: zero
             dockerfile: Dockerfile.zero
-            context: .
+            target: ''
           - name: drizzle
             dockerfile: Dockerfile.drizzle
-            context: .
+            target: ''
     name: Build and push ${{ matrix.service.name }} image
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Read package version
+        id: package-version
+        run: echo "value=$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -49,21 +56,38 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service.name }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix={{branch}}-,enable=${{ github.event_name != 'pull_request' }}
+            type=raw,value=sha-${{ github.sha }},enable=${{ github.event_name != 'pull_request' }}
+            type=raw,value=${{ steps.package-version.outputs.value }},enable=${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+      - name: Build and push targeted Docker image
+        if: matrix.service.target != ''
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
-          context: ${{ matrix.service.context }}
+          context: .
+          file: ${{ matrix.service.dockerfile }}
+          target: ${{ matrix.service.target }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+          build-args: |
+            GITHUB_SHA=${{ github.sha }}
+            GITHUB_REF_NAME=${{ github.ref_name }}
+
+      - name: Build and push default Docker image
+        if: matrix.service.target == ''
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
           file: ${{ matrix.service.dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -78,13 +102,343 @@ jobs:
       - name: Image digest
         run: echo "Image pushed with tags:${{ steps.meta.outputs.tags }}"
 
-  deploy:
-    needs: build
+  resolve-deploy-plan:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: MikaelSiidorow/infra/.github/workflows/k8s-rollout.yml@main
-    with:
-      namespace: refinery
-      deployments: refinery-app,refinery-zero
-    secrets:
-      HEADSCALE_AUTH_KEY: ${{ secrets.HEADSCALE_AUTH_KEY }}
-      K8S_DEPLOY_KUBECONFIG: ${{ secrets.K8S_DEPLOY_KUBECONFIG }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      deployments: ${{ steps.resolve.outputs.deployments }}
+      schema_label: ${{ steps.resolve.outputs.schema_label }}
+      pull_number: ${{ steps.resolve.outputs.pull_number }}
+      needs_migration: ${{ steps.resolve.outputs.needs_migration }}
+      migration_phase: ${{ steps.resolve.outputs.migration_phase }}
+      app_changed: ${{ steps.resolve.outputs.app_changed }}
+      zero_changed: ${{ steps.resolve.outputs.zero_changed }}
+      promote_app: ${{ steps.resolve.outputs.promote_app }}
+      promote_migrate: ${{ steps.resolve.outputs.promote_migrate }}
+      promote_zero: ${{ steps.resolve.outputs.promote_zero }}
+    steps:
+      - name: Resolve deploy plan from merged PR
+        id: resolve
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const migrationPattern = /^drizzle\/[^/]+\.sql$/;
+            const schemaLabels = ['schema:expand', 'schema:contract'];
+            const appPatterns = [
+              /^src\//,
+              /^drizzle\//,
+              /^drizzle\.config\.ts$/,
+              /^drizzle-zero\.config\.ts$/,
+              /^package\.json$/,
+              /^pnpm-lock\.yaml$/,
+              /^\.npmrc$/,
+              /^components\.json$/,
+              /^Dockerfile\.app$/,
+              /^scripts\/run-migrations\.js$/
+            ];
+            const zeroPatterns = [
+              /^Dockerfile\.zero$/,
+              /^scripts\/zero-entrypoint\.sh$/,
+              /^pnpm-lock\.yaml$/,
+              /^\.npmrc$/
+            ];
+
+            function matchesAny(filename, patterns) {
+              return patterns.some((pattern) => pattern.test(filename));
+            }
+
+            const prs = await github.paginate(
+              github.rest.repos.listPullRequestsAssociatedWithCommit,
+              {
+                owner,
+                repo,
+                commit_sha: context.sha,
+                per_page: 100,
+              },
+              (response) => response.data
+            );
+
+            const pr =
+              prs.find((candidate) => candidate.base?.ref === 'main' && candidate.merged_at) ??
+              prs.find((candidate) => candidate.base?.ref === 'main') ??
+              null;
+
+            let matchedLabels = [];
+            let changedFiles = [];
+
+            if (pr) {
+              const files = await github.paginate(
+                github.rest.pulls.listFiles,
+                {
+                  owner,
+                  repo,
+                  pull_number: pr.number,
+                  per_page: 100,
+                },
+                (response) => response.data
+              );
+              changedFiles = files.map((file) => file.filename);
+
+              const labels = (pr.labels ?? [])
+                .map((label) => (typeof label === 'string' ? label : label.name))
+                .filter(Boolean);
+              matchedLabels = labels.filter((label) => schemaLabels.includes(label));
+            } else {
+              const before = context.payload.before;
+              if (before && before !== '0000000000000000000000000000000000000000') {
+                const comparison = await github.rest.repos.compareCommitsWithBasehead({
+                  owner,
+                  repo,
+                  basehead: `${before}...${context.sha}`,
+                });
+                changedFiles = (comparison.data.files ?? []).map((file) => file.filename);
+              }
+            }
+
+            const changedMigrationFiles = changedFiles.filter((filename) => migrationPattern.test(filename));
+            const needsMigration = changedMigrationFiles.length > 0;
+
+            if (needsMigration && matchedLabels.length !== 1) {
+              core.setFailed(
+                pr
+                  ? `Pull request #${pr.number} changed migration files (${changedMigrationFiles.join(', ')}) but does not have exactly one schema label. Expected one of: ${schemaLabels.join(', ')}.`
+                  : `Commit ${context.sha} changed migration files (${changedMigrationFiles.join(', ')}) but is not associated with a labeled pull request. Expected exactly one schema label: ${schemaLabels.join(', ')}.`
+              );
+              return;
+            }
+
+            const appChanged = changedFiles.some((filename) => matchesAny(filename, appPatterns));
+            const zeroChanged = changedFiles.some((filename) => matchesAny(filename, zeroPatterns));
+            const deployments = [
+              appChanged ? 'refinery-app' : null,
+              zeroChanged ? 'refinery-zero' : null,
+            ]
+              .filter(Boolean)
+              .join(',');
+
+            const migrationPhase =
+              matchedLabels[0] === 'schema:contract'
+                ? 'after'
+                : needsMigration
+                  ? 'before'
+                  : 'none';
+
+            const promoteApp = appChanged;
+            const promoteMigrate = appChanged || needsMigration;
+            const promoteZero = zeroChanged;
+
+            await core.summary
+              .addHeading('Resolved Deploy Plan')
+              .addRaw(`Commit: ${context.sha}\n\n`)
+              .addRaw(`Pull request: ${pr ? `#${pr.number}` : 'none'}\n\n`)
+              .addRaw(
+                `Changed files: ${changedFiles.length > 0 ? changedFiles.join(', ') : 'none detected'}\n\n`
+              )
+              .addRaw(
+                `Migration files: ${
+                  changedMigrationFiles.length > 0 ? changedMigrationFiles.join(', ') : 'none'
+                }\n\n`
+              )
+              .addRaw(`Schema label: ${matchedLabels[0] ?? 'none'}\n\n`)
+              .addRaw(`Deployments: ${deployments || 'none'}\n\n`)
+              .addRaw(`Migration phase: ${migrationPhase}\n\n`)
+              .addRaw(
+                `Promotions: app=${promoteApp}, migrate=${promoteMigrate}, zero=${promoteZero}\n`
+              )
+              .write();
+
+            core.setOutput('deployments', deployments);
+            core.setOutput('schema_label', matchedLabels[0] ?? 'none');
+            core.setOutput('pull_number', pr ? String(pr.number) : '');
+            core.setOutput('needs_migration', needsMigration ? 'true' : 'false');
+            core.setOutput('migration_phase', migrationPhase);
+            core.setOutput('app_changed', appChanged ? 'true' : 'false');
+            core.setOutput('zero_changed', zeroChanged ? 'true' : 'false');
+            core.setOutput('promote_app', promoteApp ? 'true' : 'false');
+            core.setOutput('promote_migrate', promoteMigrate ? 'true' : 'false');
+            core.setOutput('promote_zero', promoteZero ? 'true' : 'false');
+
+  promote-production:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - resolve-deploy-plan
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Promote production tags
+        env:
+          PROMOTE_APP: ${{ needs.resolve-deploy-plan.outputs.promote_app }}
+          PROMOTE_MIGRATE: ${{ needs.resolve-deploy-plan.outputs.promote_migrate }}
+          PROMOTE_ZERO: ${{ needs.resolve-deploy-plan.outputs.promote_zero }}
+        run: |
+          set -euo pipefail
+
+          repo="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          sha_tag="sha-${GITHUB_SHA}"
+          promoted=0
+
+          promote() {
+            local service="$1"
+            local image="${REGISTRY}/${repo}/${service}"
+            echo "Promoting ${image}:${sha_tag} -> ${image}:production"
+            docker buildx imagetools create \
+              --tag "${image}:production" \
+              "${image}:${sha_tag}"
+            promoted=1
+          }
+
+          if [ "${PROMOTE_APP}" = "true" ]; then
+            promote app
+          fi
+
+          if [ "${PROMOTE_MIGRATE}" = "true" ]; then
+            promote migrate
+          fi
+
+          if [ "${PROMOTE_ZERO}" = "true" ]; then
+            promote zero
+          fi
+
+          if [ "${promoted}" -eq 0 ]; then
+            echo "No production tags to promote for this commit."
+          fi
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.resolve-deploy-plan.outputs.deployments != '' || needs.resolve-deploy-plan.outputs.needs_migration == 'true')
+    runs-on: ubuntu-24.04
+    needs:
+      - promote-production
+      - resolve-deploy-plan
+    steps:
+      - name: Connect to Headscale VPN
+        uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8 # v4.1.2
+        with:
+          authkey: ${{ secrets.HEADSCALE_AUTH_KEY }}
+          version: 1.96.4
+          sha256sum: a1cba18826b1f91cb25ef7f5b8259b5258339b42db7867af9269e21829ea78cc
+          use-cache: 'false'
+          args: --login-server=${{ env.HEADSCALE_LOGIN_SERVER }} --accept-routes
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d # v5.1.0
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.K8S_DEPLOY_KUBECONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Run migrations and rollouts
+        env:
+          DEPLOYMENTS: ${{ needs.resolve-deploy-plan.outputs.deployments }}
+          NEEDS_MIGRATION: ${{ needs.resolve-deploy-plan.outputs.needs_migration }}
+          MIGRATION_PHASE: ${{ needs.resolve-deploy-plan.outputs.migration_phase }}
+          APP_CHANGED: ${{ needs.resolve-deploy-plan.outputs.app_changed }}
+          ZERO_CHANGED: ${{ needs.resolve-deploy-plan.outputs.zero_changed }}
+        run: |
+          set -euo pipefail
+
+          namespace="${K8S_NAMESPACE}"
+          repo="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          migrate_image="${REGISTRY}/${repo}/migrate:production"
+          migration_job="refinery-migrate-${GITHUB_SHA::12}"
+
+          run_migration_job() {
+            echo "Running migration job ${migration_job} with ${migrate_image}"
+            kubectl delete job "${migration_job}" -n "${namespace}" --ignore-not-found=true --wait=true
+            printf '%s\n' \
+              'apiVersion: batch/v1' \
+              'kind: Job' \
+              'metadata:' \
+              "  name: ${migration_job}" \
+              "  namespace: ${namespace}" \
+              '  labels:' \
+              '    app.kubernetes.io/name: refinery-migrate' \
+              '    app.kubernetes.io/component: migrate' \
+              '    app.kubernetes.io/part-of: refinery' \
+              'spec:' \
+              '  backoffLimit: 0' \
+              '  ttlSecondsAfterFinished: 86400' \
+              '  template:' \
+              '    metadata:' \
+              '      labels:' \
+              '        app.kubernetes.io/name: refinery-migrate' \
+              '        app.kubernetes.io/component: migrate' \
+              '        app.kubernetes.io/part-of: refinery' \
+              '    spec:' \
+              '      restartPolicy: Never' \
+              '      containers:' \
+              '        - name: migrate' \
+              "          image: ${migrate_image}" \
+              '          imagePullPolicy: Always' \
+              '          env:' \
+              '            - name: NODE_ENV' \
+              '              value: production' \
+              '            - name: DATABASE_URL' \
+              '              valueFrom:' \
+              '                secretKeyRef:' \
+              '                  name: refinery-secrets' \
+              '                  key: DATABASE_URL' \
+              '          resources:' \
+              '            requests:' \
+              '              memory: 128Mi' \
+              '              cpu: 50m' \
+              '            limits:' \
+              '              memory: 512Mi' \
+              | kubectl apply -f -
+
+            if ! kubectl wait --for=condition=complete --timeout=300s "job/${migration_job}" -n "${namespace}"; then
+              kubectl logs "job/${migration_job}" -n "${namespace}" --all-containers=true || true
+              kubectl describe "job/${migration_job}" -n "${namespace}" || true
+              exit 1
+            fi
+
+            kubectl logs "job/${migration_job}" -n "${namespace}" --all-containers=true
+          }
+
+          rollout_restart() {
+            local deployment="$1"
+            echo "Restarting deployment/${deployment} in ${namespace}..."
+            kubectl rollout restart "deployment/${deployment}" -n "${namespace}"
+            echo "Waiting for deployment/${deployment}..."
+            kubectl rollout status "deployment/${deployment}" -n "${namespace}" --timeout=300s
+          }
+
+          if [ "${NEEDS_MIGRATION}" = "true" ] && [ "${MIGRATION_PHASE}" = "before" ]; then
+            run_migration_job
+          fi
+
+          if [ "${APP_CHANGED}" = "true" ]; then
+            rollout_restart refinery-app
+          fi
+
+          if [ "${ZERO_CHANGED}" = "true" ]; then
+            rollout_restart refinery-zero
+          fi
+
+          if [ "${NEEDS_MIGRATION}" = "true" ] && [ "${MIGRATION_PHASE}" = "after" ]; then
+            run_migration_job
+          fi
+
+          if [ -z "${DEPLOYMENTS}" ] && [ "${NEEDS_MIGRATION}" = "true" ]; then
+            echo "Schema migration applied without app or zero rollout."
+          fi

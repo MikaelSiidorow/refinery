@@ -4,6 +4,13 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import lucidePreprocess from 'vite-plugin-lucide-preprocess';
 import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+
+const packageJson = JSON.parse(
+	readFileSync(new URL('./package.json', import.meta.url), 'utf-8')
+) as {
+	version: string;
+};
 
 function getBuildMetadata() {
 	const env = process.env;
@@ -39,10 +46,12 @@ function getBuildMetadata() {
 }
 
 const meta = getBuildMetadata();
+const appVersion = packageJson.version;
 
 export default defineConfig({
 	plugins: [lucidePreprocess(), tailwindcss(), sveltekit(), devtoolsJson()],
 	define: {
+		__APP_VERSION__: JSON.stringify(appVersion),
 		__BUILD_TIME__: JSON.stringify(meta.buildTime),
 		__COMMIT_SHA__: JSON.stringify(meta.commitSha),
 		__COMMIT_SHORT__: JSON.stringify(meta.commitShort),

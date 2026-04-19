@@ -1,6 +1,7 @@
 import { toast } from 'svelte-sonner';
 
 export const buildInfo = {
+	appVersion: __APP_VERSION__,
 	buildTime: __BUILD_TIME__,
 	commitSha: __COMMIT_SHA__,
 	commitShort: __COMMIT_SHORT__,
@@ -23,6 +24,7 @@ export function formatBuildTime(isoString: string): string {
 export function showBuildInfo() {
 	const dirtyMarker = buildInfo.isDirty ? ' (dirty)' : '';
 	const message = [
+		`Version: ${buildInfo.appVersion}`,
 		`Commit: ${buildInfo.commitShort}${dirtyMarker}`,
 		`Branch: ${buildInfo.branch}`,
 		`Built: ${formatBuildTime(buildInfo.buildTime)}`
