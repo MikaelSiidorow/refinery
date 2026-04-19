@@ -50,6 +50,12 @@ self.addEventListener('fetch', (event) => {
 
 	const url = new URL(event.request.url);
 
+	// Dynamic API endpoints must always bypass the SW cache. In particular,
+	// /api/version needs authoritative network responses for update checks.
+	if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) {
+		return;
+	}
+
 	// Network-first for navigation requests (HTML pages)
 	// This ensures users always get the latest app shell
 	if (event.request.mode === 'navigate') {
