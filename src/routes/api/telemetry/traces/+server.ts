@@ -6,12 +6,20 @@ const OTEL_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localho
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.arrayBuffer();
+		const contentType = request.headers.get('Content-Type') || 'application/x-protobuf';
+		const contentEncoding = request.headers.get('Content-Encoding');
+
+		const headers: Record<string, string> = {
+			'Content-Type': contentType
+		};
+
+		if (contentEncoding) {
+			headers['Content-Encoding'] = contentEncoding;
+		}
 
 		const response = await fetch(`${OTEL_ENDPOINT}/v1/traces`, {
 			method: 'POST',
-			headers: {
-				'Content-Type': request.headers.get('Content-Type') || 'application/json'
-			},
+			headers,
 			body
 		});
 

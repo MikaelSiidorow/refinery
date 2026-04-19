@@ -1,5 +1,5 @@
 import { WebTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-web';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { ZoneContextManager } from '@opentelemetry/context-zone';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch';
@@ -21,7 +21,8 @@ export function initClientTracing(config?: { serviceName?: string }) {
 		[ATTR_SERVICE_VERSION]: __APP_VERSION__
 	});
 
-	// Use same-origin proxy endpoint to avoid CORS and keep collector private
+	// Use same-origin proxy endpoint to avoid CORS and keep collector private.
+	// Export traces as OTLP protobuf to reduce payload size versus JSON.
 	const exporter = new OTLPTraceExporter({
 		url: '/api/telemetry/traces'
 	});
