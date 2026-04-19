@@ -6,7 +6,6 @@ import { eq } from 'drizzle-orm';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { OAuth2Tokens } from 'arctic';
 import { generateId, type UuidV7 } from '$lib/utils';
-import { seedUserData } from '$lib/server/seed-data';
 
 export async function GET(event: RequestEvent): Promise<Response> {
 	const code = event.url.searchParams.get('code');
@@ -27,11 +26,14 @@ export async function GET(event: RequestEvent): Promise<Response> {
 			.from(table.user)
 			.where(eq(table.user.githubId, githubUser.id));
 
+		const now = new Date();
 		let userId: UuidV7;
 		let isNewUser = false;
+		let accessStatus: table.AccessStatus;
 
 		if (existingUser) {
 			userId = existingUser.id;
+			accessStatus = existingUser.accessStatus;
 
 			// Update user info (in case they changed username/avatar)
 			await db
@@ -40,37 +42,35 @@ export async function GET(event: RequestEvent): Promise<Response> {
 					username: githubUser.login,
 					avatarUrl: githubUser.avatar_url,
 					email: githubUser.email,
-					updatedAt: new Date()
+					updatedAt: now
 				})
 				.where(eq(table.user.id, userId));
 		} else {
 			// Create new user
 			userId = generateId();
 			isNewUser = true;
+			accessStatus = 'pending';
 			await db.insert(table.user).values({
 				id: userId,
 				githubId: githubUser.id,
 				username: githubUser.login,
 				email: githubUser.email,
 				avatarUrl: githubUser.avatar_url,
-				createdAt: new Date(),
-				updatedAt: new Date()
+				accessStatus,
+				accessRequestedAt: now,
+				accessReviewedAt: null,
+				accessReviewedBy: null,
+				isSuperAdmin: false,
+				createdAt: now,
+				updatedAt: now
 			});
-
-			// Load example data for new users (non-critical)
-			try {
-				await seedUserData(db, userId);
-			} catch (seedError) {
-				// Add warning to wide event context (non-fatal)
-				event.locals.ctx.seed_error =
-					seedError instanceof Error ? seedError.message : String(seedError);
-			}
 		}
 
 		// Add context for wide event
 		event.locals.ctx.oauth_provider = 'github';
 		event.locals.ctx.is_new_user = isNewUser;
 		event.locals.ctx.github_user_id = githubUser.id;
+		event.locals.ctx.access_status = accessStatus;
 
 		// Create session
 		const sessionToken = generateSessionToken();
@@ -80,7 +80,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		return new Response(null, {
 			status: 302,
 			headers: {
-				Location: '/'
+				Location: accessStatus === 'approved' ? '/' : '/pending-access'
 			}
 		});
 	} catch (e) {

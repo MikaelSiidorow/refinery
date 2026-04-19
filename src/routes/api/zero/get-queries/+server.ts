@@ -3,14 +3,13 @@ import { handleQueryRequest } from '@rocicorp/zero/server';
 import { mustGetQuery } from '@rocicorp/zero';
 import { schema } from '$lib/zero/schema';
 import { queries } from '$lib/zero/queries';
+import { requireApprovedUser } from '$lib/server/access';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	if (!locals.user) {
-		return Response.json({ error: 'Unauthorized' }, { status: 401 });
-	}
+	const user = requireApprovedUser(locals);
 
 	try {
-		const ctx = { userID: locals.user.id };
+		const ctx = { userID: user.id };
 
 		const response = await handleQueryRequest(
 			(name, args) => {

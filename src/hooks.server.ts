@@ -80,12 +80,16 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 		event.locals.ctx.user_id = user.id;
 		event.locals.ctx.username = user.username;
 		event.locals.ctx.session_id = session.id;
+		event.locals.ctx.access_status = user.accessStatus;
+		event.locals.ctx.is_super_admin = user.isSuperAdmin;
 
 		// Add to trace span
 		event.tracing?.root.setAttribute('auth.status', 'authenticated');
 		event.tracing?.root.setAttribute('user.id', user.id);
 		event.tracing?.root.setAttribute('user.username', user.username);
 		event.tracing?.root.setAttribute('session.id', session.id);
+		event.tracing?.root.setAttribute('user.access_status', user.accessStatus);
+		event.tracing?.root.setAttribute('user.is_super_admin', user.isSuperAdmin);
 	} else {
 		event.locals.ctx.auth_status = 'invalid_session';
 		event.tracing?.root.setAttribute('auth.status', 'invalid_session');

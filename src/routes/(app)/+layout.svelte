@@ -125,7 +125,7 @@
 {:else}
 	<LoadingProvider {preloads}>
 		<Sidebar.Provider>
-			<CommandPalette bind:open={commandPaletteOpen} />
+			<CommandPalette bind:open={commandPaletteOpen} isSuperAdmin={data.user.isSuperAdmin} />
 			<AppSidebar user={data.user} />
 			<Sidebar.Inset class="pb-16 md:pb-0">
 				<header

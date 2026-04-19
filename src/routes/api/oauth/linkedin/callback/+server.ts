@@ -7,11 +7,10 @@ import { generateId } from '$lib/utils';
 import { eq, and } from 'drizzle-orm';
 import { OAuth2RequestError } from 'arctic';
 import { encrypt } from '$lib/server/crypto';
+import { requireApprovedUser } from '$lib/server/access';
 
 export const GET: RequestHandler = async ({ url, cookies, locals }) => {
-	if (!locals.user) {
-		return redirect(302, '/sign-in');
-	}
+	const user = requireApprovedUser(locals);
 
 	locals.ctx.oauth_provider = 'linkedin';
 
@@ -52,12 +51,10 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 		const existing = await db
 			.select()
 			.from(connectedAccount)
-			.where(
-				and(eq(connectedAccount.userId, locals.user.id), eq(connectedAccount.provider, 'linkedin'))
-			);
+			.where(and(eq(connectedAccount.userId, user.id), eq(connectedAccount.provider, 'linkedin')));
 
 		const accountData = {
-			userId: locals.user.id,
+			userId: user.id,
 			provider: 'linkedin',
 			providerAccountId: profile.sub,
 			username: profile.email || profile.name,

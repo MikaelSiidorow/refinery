@@ -36,7 +36,11 @@ export async function validateSessionToken(token: string) {
 				id: table.user.id,
 				username: table.user.username,
 				email: table.user.email,
-				avatarUrl: table.user.avatarUrl
+				avatarUrl: table.user.avatarUrl,
+				accessStatus: table.user.accessStatus,
+				accessRequestedAt: table.user.accessRequestedAt,
+				accessReviewedAt: table.user.accessReviewedAt,
+				isSuperAdmin: table.user.isSuperAdmin
 			},
 			session: table.session
 		})

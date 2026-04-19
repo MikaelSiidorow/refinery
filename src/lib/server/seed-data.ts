@@ -29,12 +29,20 @@ export async function seedDemoUser(db: DrizzleDB) {
 			username: 'Otto the Otter',
 			email: 'otto@refinery.local',
 			avatarUrl: '/images/otto.png',
+			accessStatus: 'approved',
+			accessRequestedAt: new Date(now - 30 * 24 * 60 * 60 * 1000),
+			accessReviewedAt: new Date(now - 30 * 24 * 60 * 60 * 1000),
+			accessReviewedBy: null,
+			isSuperAdmin: true,
 			createdAt: new Date(now - 30 * 24 * 60 * 60 * 1000), // 30 days ago
 			updatedAt: new Date(now)
 		})
 		.onConflictDoUpdate({
 			target: table.user.id,
 			set: {
+				accessStatus: 'approved',
+				accessReviewedAt: new Date(now),
+				isSuperAdmin: true,
 				updatedAt: new Date(now)
 			}
 		});

@@ -4,16 +4,12 @@ import { mustGetMutator } from '@rocicorp/zero';
 import { dbProvider } from '$lib/zero/db-provider.server';
 import { mutators } from '$lib/zero/mutators';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
+import { requireApprovedUser } from '$lib/server/access';
 
 const tracer = trace.getTracer('refinery-zero');
 
-export const POST: RequestHandler = async ({ request, locals, tracing }) => {
-	if (!locals.user) {
-		tracing?.current.setAttribute('zero.mutate.unauthorized', true);
-		return Response.json({ error: 'Unauthorized' }, { status: 401 });
-	}
-
-	const user = locals.user;
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const user = requireApprovedUser(locals);
 
 	return tracer.startActiveSpan('zero.mutate', async (span) => {
 		span.setAttribute('user.id', user.id);
