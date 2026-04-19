@@ -2,4 +2,3 @@
 
 - When opening a pull request from this repository, always bump the root `package.json` version.
 - Default to a patch bump. Use a minor or major bump when the scope warrants it.
-- Do not introduce hardcoded application or telemetry version strings. Derive version values from `package.json` or the existing build-time version injection.
