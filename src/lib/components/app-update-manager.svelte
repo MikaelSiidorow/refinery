@@ -9,6 +9,7 @@
 	import type { VersionPayload } from '$lib/version-policy';
 
 	const VERSION_POLL_INTERVAL_MS = 5 * 60 * 1000;
+	const SERVICE_WORKER_UPDATE_TIMEOUT_MS = 4000;
 
 	let registration: ServiceWorkerRegistration | null = $state(null);
 	let blockingVersion: VersionPayload | null = $state(null);
@@ -67,6 +68,75 @@
 				: `Version ${payload.appVersion} is ready. Refresh when convenient.`;
 
 		showRefreshToast(`build:${payload.buildSha}`, description);
+		void registration?.update().catch(() => {
+			// Best-effort. Falling back to a manual reload is still okay.
+		});
+	}
+
+	function waitForControllerChange(timeoutMs = SERVICE_WORKER_UPDATE_TIMEOUT_MS): Promise<boolean> {
+		return new Promise((resolve) => {
+			const handleControllerChange = () => {
+				window.clearTimeout(timer);
+				navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+				resolve(true);
+			};
+
+			const timer = window.setTimeout(() => {
+				navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+				resolve(false);
+			}, timeoutMs);
+
+			navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+		});
+	}
+
+	function waitForWaitingWorker(
+		reg: ServiceWorkerRegistration,
+		timeoutMs = SERVICE_WORKER_UPDATE_TIMEOUT_MS
+	): Promise<ServiceWorker | null> {
+		if (reg.waiting) return Promise.resolve(reg.waiting);
+
+		return new Promise((resolve) => {
+			let installingWorker: ServiceWorker | null = reg.installing;
+
+			const cleanup = () => {
+				window.clearTimeout(timer);
+				reg.removeEventListener('updatefound', handleUpdateFound);
+				installingWorker?.removeEventListener('statechange', handleStateChange);
+			};
+
+			const finish = (worker: ServiceWorker | null) => {
+				cleanup();
+				resolve(worker);
+			};
+
+			const handleStateChange = () => {
+				if (!installingWorker) {
+					finish(reg.waiting ?? null);
+					return;
+				}
+
+				if (installingWorker.state === 'installed') {
+					finish(reg.waiting ?? installingWorker);
+					return;
+				}
+
+				if (installingWorker.state === 'redundant') {
+					finish(reg.waiting ?? null);
+				}
+			};
+
+			const handleUpdateFound = () => {
+				installingWorker?.removeEventListener('statechange', handleStateChange);
+				installingWorker = reg.installing;
+				installingWorker?.addEventListener('statechange', handleStateChange);
+			};
+
+			const timer = window.setTimeout(() => finish(reg.waiting ?? null), timeoutMs);
+
+			reg.addEventListener('updatefound', handleUpdateFound);
+			installingWorker?.addEventListener('statechange', handleStateChange);
+		});
 	}
 
 	async function checkVersionPolicy() {
@@ -97,16 +167,28 @@
 
 		refreshInFlight = true;
 		reloadRequested = true;
+		clearUpdateToast();
 
 		try {
-			await registration?.update();
+			const activeRegistration =
+				registration ?? (await navigator.serviceWorker.getRegistration()) ?? null;
+			registration = activeRegistration;
+
+			await activeRegistration?.update();
+
+			if (activeRegistration) {
+				const waitingWorker = await waitForWaitingWorker(activeRegistration);
+
+				if (waitingWorker) {
+					postToServiceWorker(waitingWorker, { type: 'SKIP_WAITING' });
+
+					if (await waitForControllerChange()) {
+						return;
+					}
+				}
+			}
 		} catch {
 			// Best-effort. Fall back to a full page reload below.
-		}
-
-		if (registration?.waiting) {
-			postToServiceWorker(registration.waiting, { type: 'SKIP_WAITING' });
-			return;
 		}
 
 		window.location.reload();
@@ -145,7 +227,7 @@
 
 				registration = reg;
 
-				if (reg.waiting) {
+				if (reg.waiting && !refreshInFlight && !reloadRequested) {
 					showRefreshToast(
 						'service-worker:waiting',
 						'A new version is ready. Refresh when convenient.'
@@ -157,7 +239,12 @@
 					if (!newWorker) return;
 
 					newWorker.addEventListener('statechange', () => {
-						if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+						if (
+							newWorker.state === 'installed' &&
+							navigator.serviceWorker.controller &&
+							!refreshInFlight &&
+							!reloadRequested
+						) {
 							showRefreshToast(
 								'service-worker:waiting',
 								'A new version is ready. Refresh when convenient.'

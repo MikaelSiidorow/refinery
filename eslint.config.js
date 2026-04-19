@@ -25,9 +25,7 @@ export default defineConfig(
 		languageOptions: {
 			globals: { ...globals.browser, ...globals.node },
 			parserOptions: {
-				projectService: {
-					allowDefaultProject: ['src/service-worker.ts']
-				},
+				projectService: true,
 				extraFileExtensions
 			}
 		},

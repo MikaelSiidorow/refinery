@@ -33,6 +33,8 @@ self.addEventListener('activate', (event) => {
 		for (const key of await caches.keys()) {
 			if (key !== CACHE) await caches.delete(key);
 		}
+
+		await self.clients.claim();
 	}
 
 	event.waitUntil(deleteOldCaches());

@@ -39,7 +39,6 @@
 		"node_modules/**",
 		"src/service-worker.js",
 		"src/service-worker/**/*.js",
-		"src/service-worker.ts",
 		"src/service-worker/**/*.ts",
 		"src/service-worker.d.ts",
 		"src/service-worker/**/*.d.ts"
