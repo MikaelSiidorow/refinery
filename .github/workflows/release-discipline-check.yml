@@ -69,7 +69,7 @@ jobs:
             const canWriteComment = pr.head.repo.full_name === pr.base.repo.full_name;
 
             function parseSemver(version) {
-              const match = /^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:[-+].*)?$/.exec(version);
+              const match = /^v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/.exec(version);
               if (!match) {
                 throw new Error(`Invalid semver version: ${version}`);
               }
