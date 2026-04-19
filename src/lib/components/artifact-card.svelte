@@ -46,10 +46,10 @@
 		published: 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400'
 	};
 
-	const Icon = artifactIcons[artifact.artifactType] || FileText;
+	const Icon = $derived(artifactIcons[artifact.artifactType] || FileText);
 
-	const displayTitle = artifact.title || artifact.artifactType.replace('-', ' ');
-	const status = artifact.status || 'draft';
+	const displayTitle = $derived(artifact.title || artifact.artifactType.replace('-', ' '));
+	const status = $derived(artifact.status || 'draft');
 
 	const plannedDate = $derived(
 		artifact.plannedPublishDate ? new Date(artifact.plannedPublishDate) : null

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { WithChildren } from 'bits-ui';
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { Z } from 'zero-svelte';
 	import { dropAllDatabases } from '@rocicorp/zero';
 	import { trace, SpanStatusCode, type Span } from '@opentelemetry/api';
@@ -16,15 +16,31 @@
 	import LoadingProvider from '$lib/components/loading-provider.svelte';
 	import { setupAppShortcuts } from '$lib/hooks/use-keyboard-shortcuts.svelte';
 	import type { LayoutData } from './$types';
-	import { set_z, get_z } from '$lib/z.svelte';
+	import { set_z } from '$lib/z.svelte';
 	import { queries } from '$lib/zero/queries';
 
 	const tracer = trace.getTracer('refinery-zero-client');
 
 	let { data, children }: WithChildren<{ data: LayoutData }> = $props();
+	const initialUserId = untrack(() => data.user.id);
 
 	let isResettingSync = $state(false);
-	let z: ReturnType<typeof get_z>;
+	const z = set_z(
+		new Z<Schema>({
+			userID: initialUserId,
+			server: env.PUBLIC_SERVER!,
+			queryURL: env.PUBLIC_QUERY_URL!,
+			schema,
+			mutators,
+			context: {
+				userID: initialUserId
+			},
+			onUpdateNeeded: (reason) => {
+				console.warn('[Zero] Update needed:', reason.type);
+				void handleSyncError('update_needed', reason.type);
+			}
+		})
+	);
 
 	async function handleSyncError(errorType: string, reason?: string) {
 		if (isResettingSync) return;
@@ -47,7 +63,7 @@
 				'[Zero] Sync error detected, closing client, clearing databases, and reloading...'
 			);
 			try {
-				await z.current.close();
+				z.close();
 				span.setAttribute('zero.client_closed', true);
 			} catch (error) {
 				span.setAttribute('zero.client_closed', false);
@@ -72,25 +88,7 @@
 		});
 	}
 
-	set_z(
-		new Z<Schema>({
-			userID: data.user.id,
-			server: env.PUBLIC_SERVER!,
-			queryURL: env.PUBLIC_QUERY_URL!,
-			schema,
-			mutators,
-			context: {
-				userID: data.user.id
-			},
-			onUpdateNeeded: (reason) => {
-				console.warn('[Zero] Update needed:', reason.type);
-				void handleSyncError('update_needed', reason.type);
-			}
-		})
-	);
-
 	// Preload core queries and store promises for LoadingProvider
-	z = get_z();
 	const preloads = [
 		z.preload(queries.allIdeas()),
 		z.preload(queries.userSettings()),
