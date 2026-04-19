@@ -345,6 +345,22 @@ jobs:
               )
               .write();
 
+            const logSummary = [
+              `package=${baseVersion}->${headVersion}`,
+              `minSupported=${baseMinimum ?? 'n/a'}->${headMinimum}`,
+              `migrationPhase=${migrationPhase}`,
+              `deployments=${deployments.length > 0 ? deployments.join(',') : 'none'}`,
+              `prComment=${commentStatus}`,
+            ].join(' | ');
+
+            core.notice(`Release Discipline summary: ${logSummary}`);
+
+            if (commentStatus !== 'created sticky PR comment' && commentStatus !== 'updated sticky PR comment') {
+              core.notice(
+                `Release Discipline comment fallback active: ${commentStatus}. See the job summary for the full report.`
+              );
+            }
+
             if (failures.length > 0) {
               core.setFailed(failures.join('\n'));
             }
