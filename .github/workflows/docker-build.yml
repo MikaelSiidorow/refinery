@@ -135,6 +135,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Zero schema
+        if: matrix.task.name != 'format'
+        run: pnpm zero:generate
+
       - name: Run ${{ matrix.task.name }}
         run: ${{ matrix.task.command }}
 
