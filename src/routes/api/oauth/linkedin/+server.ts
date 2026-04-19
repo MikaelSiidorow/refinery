@@ -2,11 +2,10 @@ import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { linkedin } from '$lib/server/oauth';
 import { generateState } from 'arctic';
+import { requireApprovedUser } from '$lib/server/access';
 
 export const GET: RequestHandler = ({ cookies, locals }) => {
-	if (!locals.user) {
-		return new Response('Unauthorized', { status: 401 });
-	}
+	requireApprovedUser(locals);
 
 	const state = generateState();
 	const scopes = ['openid', 'profile', 'email'];

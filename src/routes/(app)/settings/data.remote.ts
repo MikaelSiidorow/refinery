@@ -13,13 +13,11 @@ import {
 } from '$lib/server/bluesky';
 import { generateId, type UuidV7 } from '$lib/utils';
 import { encrypt, decrypt } from '$lib/server/crypto';
+import { requireApprovedUser } from '$lib/server/access';
 
 export const getConnectedAccounts = query(async () => {
 	const { locals } = getRequestEvent();
-
-	if (!locals.user) {
-		error(401, 'Unauthorized');
-	}
+	const user = requireApprovedUser(locals);
 
 	const accounts = await db
 		.select({
@@ -31,7 +29,7 @@ export const getConnectedAccounts = query(async () => {
 			createdAt: connectedAccount.createdAt
 		})
 		.from(connectedAccount)
-		.where(eq(connectedAccount.userId, locals.user.id));
+		.where(eq(connectedAccount.userId, user.id));
 
 	return accounts;
 });
@@ -43,10 +41,7 @@ export const connectBluesky = command(
 	}),
 	async ({ identifier, password }) => {
 		const { locals } = getRequestEvent();
-
-		if (!locals.user) {
-			error(401, 'Unauthorized');
-		}
+		const user = requireApprovedUser(locals);
 
 		const agent = await createBlueskyAgent(identifier, password);
 
@@ -57,12 +52,10 @@ export const connectBluesky = command(
 		const existing = await db
 			.select()
 			.from(connectedAccount)
-			.where(
-				and(eq(connectedAccount.userId, locals.user.id), eq(connectedAccount.provider, 'bluesky'))
-			);
+			.where(and(eq(connectedAccount.userId, user.id), eq(connectedAccount.provider, 'bluesky')));
 
 		const accountData = {
-			userId: locals.user.id,
+			userId: user.id,
 			provider: 'bluesky',
 			providerAccountId: agent.session.did,
 			username: agent.session.handle,
@@ -98,16 +91,11 @@ export const disconnectAccount = command(
 	}),
 	async ({ platform }) => {
 		const { locals } = getRequestEvent();
-
-		if (!locals.user) {
-			error(401, 'Unauthorized');
-		}
+		const user = requireApprovedUser(locals);
 
 		await db
 			.delete(connectedAccount)
-			.where(
-				and(eq(connectedAccount.userId, locals.user.id), eq(connectedAccount.provider, platform))
-			);
+			.where(and(eq(connectedAccount.userId, user.id), eq(connectedAccount.provider, platform)));
 
 		return { success: true };
 	}
@@ -119,15 +107,12 @@ export const importPosts = command(
 	}),
 	async ({ platform }) => {
 		const { locals } = getRequestEvent();
-
-		if (!locals.user) {
-			error(401, 'Unauthorized');
-		}
+		const user = requireApprovedUser(locals);
 
 		if (platform === 'bluesky') {
-			return await importBlueskyPosts(locals.user.id);
+			return await importBlueskyPosts(user.id);
 		} else {
-			return await importLinkedInPosts(locals.user.id);
+			return await importLinkedInPosts(user.id);
 		}
 	}
 );

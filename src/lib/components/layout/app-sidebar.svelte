@@ -2,17 +2,28 @@
 	import HouseIcon from '@lucide/svelte/icons/house';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
+	import UsersIcon from '@lucide/svelte/icons/users';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { resolve } from '$app/paths';
 	import NavUser from './nav-user.svelte';
 	import type { User } from '$lib/server/db/schema';
 	import { PlusIcon } from '@lucide/svelte';
+	import type { Component } from 'svelte';
+	import type { IconProps } from '@lucide/svelte';
 
-	let { user }: { user: Pick<User, 'username' | 'avatarUrl'> } = $props();
+	let { user }: { user: Pick<User, 'username' | 'avatarUrl' | 'isSuperAdmin'> } = $props();
 
 	const sidebar = Sidebar.useSidebar();
 
-	const items = [
+	type SidebarRoute = '/' | '/timeline' | '/settings' | '/admin/users';
+	type SidebarItem = {
+		title: string;
+		url: SidebarRoute;
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- matches exactly lucide icon types
+		icon: Component<IconProps, {}, ''>;
+	};
+
+	const baseItems = [
 		{
 			title: 'Dashboard',
 			url: '/',
@@ -28,7 +39,19 @@
 			url: '/settings',
 			icon: SettingsIcon
 		}
-	] as const;
+	] satisfies ReadonlyArray<SidebarItem>;
+
+	const superAdminItems = [
+		{
+			title: 'Users',
+			url: '/admin/users',
+			icon: UsersIcon
+		}
+	] satisfies ReadonlyArray<SidebarItem>;
+
+	const items = $derived.by(() =>
+		user.isSuperAdmin ? [...baseItems, ...superAdminItems] : baseItems
+	);
 
 	function handleNavClick() {
 		if (sidebar.isMobile && sidebar.openMobile) {

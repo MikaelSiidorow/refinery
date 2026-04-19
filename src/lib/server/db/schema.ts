@@ -1,6 +1,16 @@
 import type { UuidV7 } from '../../utils';
 import { relations } from 'drizzle-orm';
-import { integer, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+	boolean,
+	foreignKey,
+	integer,
+	pgEnum,
+	pgTable,
+	text,
+	timestamp,
+	uuid,
+	varchar
+} from 'drizzle-orm/pg-core';
 import type { Encrypted } from '../crypto';
 import { ARTIFACT_TYPES } from '../../constants/artifact-types';
 import { IDEA_STATUSES } from '../../constants/idea-statuses';
@@ -14,17 +24,34 @@ const timestamps = {
 	updatedAt: timestamp().notNull()
 };
 
-export const user = pgTable('user', {
-	id: uuid().primaryKey().$type<UuidV7>(),
+export const accessStatusEnum = pgEnum('access_status', ['pending', 'approved', 'rejected']);
 
-	// GitHub profile data
-	githubId: integer().unique().notNull(),
-	username: text().notNull(),
-	email: text(),
-	avatarUrl: text(),
+export const user = pgTable(
+	'user',
+	{
+		id: uuid().primaryKey().$type<UuidV7>(),
 
-	...timestamps
-});
+		// GitHub profile data
+		githubId: integer().unique().notNull(),
+		username: text().notNull(),
+		email: text(),
+		avatarUrl: text(),
+		accessStatus: accessStatusEnum().notNull(),
+		accessRequestedAt: timestamp().notNull(),
+		accessReviewedAt: timestamp(),
+		accessReviewedBy: uuid().$type<UuidV7 | null>(),
+		isSuperAdmin: boolean().notNull(),
+
+		...timestamps
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.accessReviewedBy],
+			foreignColumns: [table.id],
+			name: 'user_access_reviewed_by_user_id_fk'
+		}).onDelete('set null')
+	]
+);
 
 export const session = pgTable('session', {
 	id: varchar({ length: 64 }).primaryKey(), // SHA256 hash of token, not UUID
@@ -159,3 +186,4 @@ export type ContentArtifact = typeof contentArtifact.$inferSelect;
 export type { ArtifactType } from '../../constants/artifact-types';
 export type ArtifactStatus = (typeof artifactStatusEnum.enumValues)[number];
 export type IdeaStatus = (typeof ideaStatusEnum.enumValues)[number];
+export type AccessStatus = (typeof accessStatusEnum.enumValues)[number];

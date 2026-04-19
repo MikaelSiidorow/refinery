@@ -3,20 +3,32 @@
 	import { goto } from '$app/navigation';
 	import { cmdOrCtrl } from '$lib/hooks/is-mac.svelte';
 	import { useSidebar } from '$lib/components/ui/sidebar';
-	import { House, CirclePlus, LogOut, PanelLeft, Settings, type IconProps } from '@lucide/svelte';
+	import {
+		House,
+		CirclePlus,
+		LogOut,
+		PanelLeft,
+		Settings,
+		Users,
+		type IconProps
+	} from '@lucide/svelte';
 	import type { Component } from 'svelte';
 	import * as Kbd from '$lib/components/ui/kbd';
 	import { resolve } from '$app/paths';
 
-	let { open = $bindable(false) }: { open?: boolean } = $props();
+	let {
+		open = $bindable(false),
+		isSuperAdmin = false
+	}: { open?: boolean; isSuperAdmin?: boolean } = $props();
 
 	const sidebar = useSidebar();
 
-	type NavItem = {
+	type NavigationRoute = '/' | '/new-idea' | '/settings' | '/admin/users';
+
+	type BaseNavItem = {
 		id: string;
 		title: string;
 		description: string;
-		url: string;
 		// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- matches exactly lucide icon types
 		icon: Component<IconProps, {}, ''>;
 		shortcut?:
@@ -36,10 +48,19 @@
 					type: 'single';
 					key: string;
 			  };
-		isAction: boolean;
 	};
 
-	const navigationItems = [
+	type NavigationItem = BaseNavItem & {
+		url: NavigationRoute;
+		isAction: false;
+	};
+
+	type ActionItem = BaseNavItem & {
+		url: '';
+		isAction: true;
+	};
+
+	const baseNavigationItems = [
 		{
 			id: 'dashboard',
 			title: 'Dashboard',
@@ -75,7 +96,25 @@
 				keys: ['G', 'S']
 			},
 			isAction: false
-		},
+		}
+	] satisfies ReadonlyArray<NavigationItem>;
+
+	const superAdminNavigationItems = [
+		{
+			id: 'admin-users',
+			title: 'Users',
+			description: 'Review access requests and account status',
+			url: '/admin/users',
+			icon: Users,
+			shortcut: {
+				type: 'chain' as const,
+				keys: ['G', 'U']
+			},
+			isAction: false
+		}
+	] satisfies ReadonlyArray<NavigationItem>;
+
+	const actionItems = [
 		{
 			id: 'toggle-sidebar',
 			title: 'Toggle Sidebar',
@@ -92,7 +131,7 @@
 			id: 'sign-out',
 			title: 'Sign Out',
 			description: 'Sign out of your account',
-			url: '/sign-out',
+			url: '',
 			icon: LogOut,
 			shortcut: {
 				type: 'combination',
@@ -100,7 +139,13 @@
 			},
 			isAction: true
 		}
-	] as const satisfies ReadonlyArray<NavItem>;
+	] satisfies ReadonlyArray<ActionItem>;
+
+	const navigationItems = $derived.by(() =>
+		isSuperAdmin
+			? [...baseNavigationItems, ...superAdminNavigationItems, ...actionItems]
+			: [...baseNavigationItems, ...actionItems]
+	);
 
 	let searchQuery = $state('');
 

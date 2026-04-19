@@ -24,6 +24,10 @@
 			return { type: 'new-idea' as const };
 		}
 
+		if (path === '/admin/users') {
+			return { type: 'admin-users' as const };
+		}
+
 		if (params.artifactId) {
 			return {
 				type: 'artifact' as const,
@@ -83,6 +87,14 @@
 		<Breadcrumb.List>
 			<Breadcrumb.Item>
 				<Breadcrumb.Page>New Idea</Breadcrumb.Page>
+			</Breadcrumb.Item>
+		</Breadcrumb.List>
+	</Breadcrumb.Root>
+{:else if routeInfo.type === 'admin-users'}
+	<Breadcrumb.Root>
+		<Breadcrumb.List>
+			<Breadcrumb.Item>
+				<Breadcrumb.Page>Users</Breadcrumb.Page>
 			</Breadcrumb.Item>
 		</Breadcrumb.List>
 	</Breadcrumb.Root>

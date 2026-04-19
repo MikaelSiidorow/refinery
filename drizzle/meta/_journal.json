@@ -29,6 +29,13 @@
       "when": 1776502548144,
       "tag": "0003_melted_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776604147249,
+      "tag": "0004_flashy_vector",
+      "breakpoints": true
     }
   ]
 }
