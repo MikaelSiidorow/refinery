@@ -467,7 +467,7 @@ pnpm db:generate
 # 3. Review migration SQL
 cat drizzle/*.sql
 
-# 4. Apply migration (production: run the one-shot migration job)
+# 4. Apply migration (production: new app pods run it on startup during rollout)
 pnpm db:migrate
 
 # 5. Regenerate Zero schema
@@ -476,7 +476,7 @@ pnpm zero:generate
 # 6. Test locally before deploying
 ```
 
-**Production Note**: Production schema changes run in a dedicated migration job built from the same Dockerfile as the app runtime. The SvelteKit app container starts the server normally, and zero-cache stays decoupled from app code while continuing to replicate schema changes directly from Postgres. See `docs/DEPLOY.md` for rollout details.
+**Production Note**: Production schema changes run from the SvelteKit app startup path under a shared DB advisory lock, while zero-cache stays decoupled from app code and continues to replicate schema changes directly from Postgres. The standalone migrate image remains available for delayed/manual cleanup work. See `docs/DEPLOY.md` for rollout details.
 
 ## Troubleshooting
 
