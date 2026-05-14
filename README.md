@@ -46,21 +46,18 @@ Zero still keeps its own low-level `onUpdateNeeded` reload path as the safety ne
 
 ## Schema Changes
 
-When a PR changes `drizzle/*.sql`, it must carry exactly one schema label:
+When a PR changes `drizzle/*.sql`, the generated migration ships inside the `refinery-app` image and runs during startup of the new app Pods.
 
-- `schema:expand`
-- `schema:contract`
+Deploy-time migrations must stay forward-compatible with both the old and new app versions. Treat them as expand-safe changes only.
 
-`schema:contract` PRs must also raise `minSupportedVersion` in `src/lib/version-policy.ts`.
-
-Important: `minSupportedVersion` is the oldest app version that is safe after the contract change. It is not necessarily the version introduced by the current PR.
+Destructive contract cleanup is a separate delayed/manual operation. If that later cleanup would break older clients, raise `minSupportedVersion` in `src/lib/version-policy.ts` before running it.
 
 Typical flow:
 
 1. Bump `package.json` version.
 2. Update schema and generate migration files.
 3. Regenerate Zero schema if needed.
-4. Add the correct schema label.
-5. If the label is `schema:contract`, raise `minSupportedVersion`.
+4. Make sure the migration is safe to run before old Pods have fully drained.
+5. If a later cleanup will invalidate older clients, stage that cleanup separately and raise `minSupportedVersion` first.
 
-Contract migrations should be rare and delayed. Expand first, ship code that no longer depends on the old schema, wait for clients to refresh, then run the destructive migration.
+Contract cleanups should be rare and delayed. Expand first, ship code that no longer depends on the old schema, wait for clients to refresh, then run the destructive migration as a separate operation.

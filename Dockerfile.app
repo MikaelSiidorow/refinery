@@ -60,6 +60,8 @@ FROM runtime-base AS app-runtime
 
 # Copy built app and production dependencies
 COPY --from=app-builder --chown=nodejs:nodejs /app/build ./build
+COPY --from=source --chown=nodejs:nodejs /app/drizzle ./drizzle
+COPY --from=source --chown=nodejs:nodejs /app/scripts/run-migrations.js ./scripts/run-migrations.js
 COPY --from=prod-deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=prod-deps --chown=nodejs:nodejs /app/package.json ./package.json
 
@@ -67,11 +69,11 @@ COPY --from=prod-deps --chown=nodejs:nodejs /app/package.json ./package.json
 EXPOSE 3000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD node --eval "fetch('http://localhost:3000/').then(r => r.ok || process.exit(1)).catch(() => process.exit(1))"
 
-# Start the application server
-CMD ["node", "build"]
+# Run migrations before starting the application server
+CMD ["sh", "-c", "node scripts/run-migrations.js && exec node build"]
 
 # Stage 6: One-shot migration runtime image
 FROM runtime-base AS migrate-runtime

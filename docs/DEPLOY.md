@@ -45,7 +45,7 @@ Refinery consists of four services:
 Docker images are automatically built and published to GitHub Container Registry (GHCR) on every push to `main`:
 
 - **SvelteKit App**: `ghcr.io/[owner]/refinery/app:production`
-- **Migration Job**: `ghcr.io/[owner]/refinery/migrate:production`
+- **Migration Runner**: `ghcr.io/[owner]/refinery/migrate:production`
 - **Zero Cache**: `ghcr.io/[owner]/refinery/zero:production`
 - **Drizzle Studio**: `ghcr.io/[owner]/refinery/drizzle:latest`
 
@@ -195,7 +195,7 @@ Our deployment uses a custom Docker image that:
 - Keeps the zero-cache image decoupled from application code
 - Uses the repo's pinned Zero version without baking in app schema files
 
-This differs from Rocicorp's official `rocicorp/zero` image mainly in packaging and startup validation. Database migrations now happen in a separate one-shot migration job instead of either long-lived app or zero-cache containers.
+This differs from Rocicorp's official `rocicorp/zero` image mainly in packaging and startup validation. Database migrations now run from the app startup path during rollout, and the standalone `migrate` image is kept for delayed/manual cleanup workflows instead of coupling that work to zero-cache.
 
 ### 3. Deploy SvelteKit App
 
@@ -248,7 +248,7 @@ Update your GitHub OAuth app settings with this callback URL.
 - Endpoint: `/`
 - Expected: HTTP 200
 
-**Important**: The SvelteKit app container now starts the server only. Schema changes are applied by the dedicated `ghcr.io/[owner]/refinery/migrate:production` job, which should use the same `DATABASE_URL` as the app.
+**Important**: The SvelteKit app container acquires a shared DB advisory lock, runs Drizzle migrations, and only then starts the server. Keep deploy-time migrations forward-compatible. The standalone `ghcr.io/[owner]/refinery/migrate:production` image remains available for delayed/manual cleanup work.
 
 ### 5. Deploy Drizzle Studio (Optional)
 
@@ -322,7 +322,7 @@ When you modify the database schema:
 # 3. Generate migration
 pnpm db:generate
 
-# 4. Label the PR with exactly one of: schema:expand, schema:contract
+# 4. Review the SQL and keep it forward-compatible with both old and new app code
 
 # 5. Commit migration files
 git add drizzle
@@ -331,7 +331,7 @@ git commit -m "feat: add new schema migration"
 # 6. Regenerate Zero schema
 pnpm zero:generate
 
-# 7. If the PR is schema:contract, raise minSupportedVersion in src/lib/version-policy.ts
+# 7. If a later cleanup would break older clients, raise minSupportedVersion before that cleanup
 
 # 8. Commit and push
 git add src/lib/zero/zero-schema.gen.ts
@@ -342,15 +342,15 @@ git push
 The deployment workflow:
 
 1. GitHub Actions builds new Docker images with the migrations included
-2. The deploy job promotes `app`, `migrate`, and `zero` images to the `production` tag only when those runtimes changed
-3. `schema:expand` runs the migration job before any app rollout
-4. `schema:contract` rolls out app changes first and runs the migration job afterward
+2. The pipeline promotes `app`, `migrate`, and `zero` images to the `production` tag only when those runtimes changed
+3. The app repo asks the infra repo to restart only the workloads whose runtime changed
+4. Each new `refinery-app` Pod runs migrations at startup under a shared DB advisory lock before it becomes ready
 5. zero-cache is restarted only when the zero runtime inputs changed
 6. zero-cache continues replicating schema changes directly from Postgres
 
-`schema:contract` PRs must also raise `minSupportedVersion` to the oldest app version that is still safe after the destructive change. That is not necessarily the version introduced by the contract PR itself.
+Destructive contract cleanup is not part of the normal deploy path. Stage it separately after clients refresh. If older clients would break after that cleanup, raise `minSupportedVersion` first. That version is the oldest safe client after the cleanup, not necessarily the version introduced by the PR.
 
-**Manual migration (if needed)**: run the `migrate:production` image as a one-shot job with the same `DATABASE_URL` secret the app uses.
+**Manual migration (if needed)**: run the `migrate:production` image as a one-shot job with the same `DATABASE_URL` secret the app uses. This is the path for delayed/destructive cleanup work that should not happen during normal app rollout.
 
 ### Application Updates
 
@@ -365,7 +365,7 @@ The deployment workflow:
 
 1. GitHub Actions automatically builds new Docker images
 2. The pipeline promotes the changed runtime images to the `production` tag
-3. Only the workloads whose runtime changed are restarted
+3. The infra rollout workflow restarts only the workloads whose runtime changed
 
 **Note**: Keep app and zero workloads pinned to `:production`, not `:latest`, so deploys are explicit promotions instead of every main-branch build.
 
@@ -378,7 +378,7 @@ The app publishes version policy from `src/lib/version-policy.ts` through `/api/
 - browsers show a soft refresh prompt when a newer version exists but the client is still supported
 - browsers show a blocking refresh screen when the active client drops below `minSupportedVersion`
 
-This is the operational guardrail for delayed contract migrations: raise `minSupportedVersion`, let stale clients drain out, then run the destructive migration.
+This is the operational guardrail for delayed contract cleanup: raise `minSupportedVersion`, let stale clients drain out, then run the destructive migration.
 
 ## Troubleshooting
 
@@ -414,14 +414,14 @@ This is the operational guardrail for delayed contract migrations: raise `minSup
 
 **Symptoms:**
 
-- Migration job fails before the app rollout completes
+- New app Pods fail before they become ready
 
 **Solution:**
 
 1. Check `DATABASE_URL` environment variable is set correctly
-2. Verify network access to PostgreSQL from the migration job
+2. Verify network access to PostgreSQL from the app container
 3. Review migration files in `drizzle/`
-4. Manually run: `pnpm exec drizzle-kit migrate` for detailed errors
+4. Manually run `ghcr.io/[owner]/refinery/migrate:production` or `pnpm db:migrate:run` for detailed errors
 
 ### Issue: GitHub OAuth fails in production
 
@@ -458,7 +458,7 @@ This is the operational guardrail for delayed contract migrations: raise `minSup
 
 **Solution:**
 
-1. Confirm the expand migration completed successfully in the app logs
+1. Confirm the startup migration completed successfully in the app logs
 2. Check zero-cache logs for replication lag or publication errors
 3. If you use custom publications, make sure the new tables or columns were added correctly
 4. Wait for replication to catch up before validating the new client behavior
