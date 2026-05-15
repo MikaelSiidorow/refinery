@@ -242,9 +242,9 @@
 	</div>
 {:else if idea}
 	<div class="overflow-x-hidden p-4 sm:p-8">
-		<div class="mx-auto max-w-7xl">
+		<div class="mx-auto w-full max-w-4xl">
 			<h1 class="sr-only">{idea.oneLiner || 'Untitled Idea'}</h1>
-			<div class="mb-6 flex max-w-306 border-b pb-6">
+			<div class="mb-6 flex border-b pb-6">
 				<Input
 					bind:value={form.values.oneLiner}
 					placeholder="Idea title..."
@@ -252,7 +252,7 @@
 				/>
 			</div>
 
-			<div class="mb-6 max-w-306">
+			<div class="mb-6">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2 text-sm">
 						<div class="flex items-center gap-2">
@@ -285,7 +285,7 @@
 				</div>
 			</div>
 
-			<div class="mb-6 max-w-306 space-y-2">
+			<div class="mb-6 space-y-2">
 				<label for="tags" class="text-sm font-semibold">Tags</label>
 				<p class="text-xs text-muted-foreground">
 					Organize your ideas with tags (use comma, semicolon, or Enter to add)
@@ -297,7 +297,7 @@
 				/>
 			</div>
 
-			<div class="max-w-306 space-y-2">
+			<div class="space-y-2">
 				<div class="flex items-center justify-between gap-3">
 					<div class="min-w-0 flex-1">
 						<label for="content" class="text-sm font-semibold">Content</label>
@@ -318,7 +318,7 @@
 				/>
 			</div>
 
-			<div class="mt-12 max-w-306 border-t pt-8">
+			<div class="mt-12 border-t pt-8">
 				<div class="mb-6 flex items-center justify-between gap-3">
 					<div class="min-w-0 flex-1">
 						<h2 class="typography-h2">
