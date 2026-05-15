@@ -192,7 +192,7 @@
 		<Button href="/" variant="outline">Back to Dashboard</Button>
 	</div>
 {:else if artifact && idea}
-	<div class="mx-auto max-w-4xl px-4 py-4 sm:p-8">
+	<div class="mx-auto w-full max-w-4xl px-4 py-4 sm:p-8">
 		<div class="mb-6 space-y-4 border-b pb-6">
 			<div class="flex items-center justify-between">
 				<h1 class="typography-h1">Edit Artifact</h1>
