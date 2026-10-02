@@ -348,7 +348,7 @@ jobs:
     needs:
       - promote-production
       - resolve-deploy-plan
-    uses: MikaelSiidorow/infra/.github/workflows/k8s-rollout.yml@main
+    uses: MikaelSiidorow/systems/.github/workflows/k8s-rollout.yml@main
     with:
       namespace: refinery
       deployments: ${{ needs.resolve-deploy-plan.outputs.deployments }}
