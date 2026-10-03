@@ -106,6 +106,11 @@ export const handle: Handle = sequence(handleWideEvent, handleAuth);
  * Logs the full error so it reaches Loki → AlertManager → Telegram.
  */
 export const handleError: HandleServerError = ({ error, event, status, message }) => {
+	// Expected 4xx (e.g. 404s from scanners probing /.env or /wp-json) are
+	// already logged by the request wide event at warn level. Only real server
+	// errors should reach the error alert.
+	if (status < 500) return { message };
+
 	const errorObj = error instanceof Error ? error : new Error(String(error));
 
 	logger.error(
