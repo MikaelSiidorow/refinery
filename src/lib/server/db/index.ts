@@ -19,6 +19,7 @@ export const db = new Proxy({} as DrizzleDB, {
 				dbName: 'refinery'
 			});
 		}
-		return _db[prop as keyof typeof _db];
+		const value: unknown = Reflect.get(_db, prop);
+		return typeof value === 'function' ? (value as () => unknown).bind(_db) : value;
 	}
 });
