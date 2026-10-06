@@ -173,7 +173,7 @@ jobs:
               /^drizzle-zero\.config\.ts$/,
               /^package\.json$/,
               /^pnpm-lock\.yaml$/,
-              /^\.npmrc$/,
+              /^pnpm-workspace\.yaml$/,
               /^components\.json$/,
               /^Dockerfile\.app$/,
               /^scripts\/run-migrations\.js$/
@@ -182,7 +182,7 @@ jobs:
               /^drizzle\//,
               /^package\.json$/,
               /^pnpm-lock\.yaml$/,
-              /^\.npmrc$/,
+              /^pnpm-workspace\.yaml$/,
               /^Dockerfile\.app$/,
               /^scripts\/run-migrations\.js$/
             ];
@@ -190,7 +190,7 @@ jobs:
               /^Dockerfile\.zero$/,
               /^scripts\/zero-entrypoint\.sh$/,
               /^pnpm-lock\.yaml$/,
-              /^\.npmrc$/
+              /^pnpm-workspace\.yaml$/
             ];
 
             function matchesAny(filename, patterns) {

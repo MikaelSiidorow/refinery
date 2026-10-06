@@ -11,7 +11,7 @@ RUN corepack enable
 WORKDIR /app
 
 # Copy dependency files only. zero-cache does not need app code.
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install dependencies from package.json.
 # zero-cache currently comes from @rocicorp/zero in this repo's package manifest.
