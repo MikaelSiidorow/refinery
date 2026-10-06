@@ -95,7 +95,7 @@
 		"@opentelemetry/semantic-conventions": "^1.43.0",
 		"drizzle-orm": "^0.45.3",
 		"import-in-the-middle": "^3.5.2",
-		"pino": "^10.4.0",
+		"pino": "~10.3.1",
 		"postgres": "^3.4.9",
 		"runed": "^0.37.1",
 		"valibot": "^1.5.0"
