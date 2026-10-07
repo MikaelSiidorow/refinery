@@ -11,14 +11,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
 		const ctx = { userID: user.id };
 
-		const response = await handleQueryRequest(
-			(name, args) => {
+		const response = await handleQueryRequest({
+			handler: (name, args) => {
 				const query = mustGetQuery(queries, name);
 				return query.fn({ args, ctx });
 			},
 			schema,
-			request
-		);
+			request,
+			userID: user.id
+		});
 
 		return Response.json(response);
 	} catch (error) {
