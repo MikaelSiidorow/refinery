@@ -1,46 +1,6 @@
-# Dockerfile for Zero Cache Server
-# Runs the production zero-cache service without app-specific build artifacts
-
-FROM node:24-slim
-
-# Enable pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-
-WORKDIR /app
-
-# Copy dependency files only. zero-cache does not need app code.
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-
-# Install dependencies from package.json.
-# zero-cache currently comes from @rocicorp/zero in this repo's package manifest.
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-
-# Create non-root user and writable runtime directories
-RUN groupadd -r zero && useradd -r -g zero -m -d /home/zero zero && \
-  mkdir -p /data /home/zero/.cache /app/.cache && \
-  chown -R zero:zero /data /home/zero /app/.cache
-
-# Copy entrypoint script
-COPY scripts/zero-entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-USER zero
-
-# Set cache directories to writable location
-ENV HOME=/home/zero
-ENV XDG_CACHE_HOME=/home/zero/.cache
-
-# Expose port
-EXPOSE 4848
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD node --eval "fetch('http://localhost:4848/').then(r => r.ok || process.exit(1)).catch(() => process.exit(1))"
-
-# Set environment
-ENV NODE_ENV=production
-
-# Run entrypoint (validation + zero-cache)
-CMD ["/usr/local/bin/entrypoint.sh"]
+# Zero Cache Server
+# Uses the official zero-cache image, which carries Rocicorp's dependency patches
+# and is versioned independently of the app lockfile. Keep the tag in sync with
+# @rocicorp/zero in package.json; upgrade this image before the app/client so
+# zero-cache is never older than the clients talking to it.
+FROM rocicorp/zero:1.9.0@sha256:f80683bf3ddf08be26c68ddd94589fada29a0b8a4597668b090006c09041d4cd
