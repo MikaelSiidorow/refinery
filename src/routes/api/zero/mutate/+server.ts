@@ -17,9 +17,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		try {
 			const ctx = { userID: user.id };
 
-			const result = await handleMutateRequest(
+			const result = await handleMutateRequest({
 				dbProvider,
-				async (transact) => {
+				handler: async (transact) => {
 					return await transact(async (tx, name, args) => {
 						return tracer.startActiveSpan('zero.mutator', async (mutatorSpan) => {
 							mutatorSpan.setAttribute('mutator.name', name);
@@ -46,8 +46,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 						});
 					});
 				},
-				request
-			);
+				request,
+				userID: user.id
+			});
 
 			span.setStatus({ code: SpanStatusCode.OK });
 			span.end();
