@@ -211,21 +211,24 @@ jobs:
               );
             }
 
-            // zero-cache must be at least as new as the clients talking to it, so the
-            // official image is upgraded (and deployed) before @rocicorp/zero.
-            const headDockerfileZero = await fetchText(pr.head.repo, 'Dockerfile.zero', pr.head.sha);
-            const zeroImageMatch = /^FROM rocicorp\/zero:(\S+?)@/m.exec(headDockerfileZero);
-            const zeroClientRange =
-              headPackageJson.devDependencies?.['@rocicorp/zero'] ??
-              headPackageJson.dependencies?.['@rocicorp/zero'];
-            if (!zeroImageMatch || !zeroClientRange) {
-              failures.push('Could not read the zero-cache image tag or the @rocicorp/zero version.');
+            // zero-cache must be at least as new as the clients talking to it. Compare the
+            // client the lockfile resolves to against the image already on main, so a
+            // zero-cache upgrade has to merge and deploy before the client upgrade.
+            const baseDockerfileZero = await fetchText(pr.base.repo, 'Dockerfile.zero', pr.base.sha);
+            const headLockfile = await fetchText(pr.head.repo, 'pnpm-lock.yaml', pr.head.sha);
+            const zeroImageMatch = /^FROM rocicorp\/zero:(\S+?)@/m.exec(baseDockerfileZero);
+            const zeroClientMatch =
+              /^ {6}'@rocicorp\/zero':\n {8}specifier: .*\n {8}version: (\d+\.\d+\.\d+)/m.exec(
+                headLockfile
+              );
+            if (!zeroImageMatch || !zeroClientMatch) {
+              failures.push('Could not read the zero-cache image tag or the resolved @rocicorp/zero version.');
             } else {
               const zeroImageVersion = zeroImageMatch[1];
-              const zeroClientVersion = zeroClientRange.replace(/^[\^~]/, '');
+              const zeroClientVersion = zeroClientMatch[1];
               if (compareSemver(zeroClientVersion, zeroImageVersion) > 0) {
                 failures.push(
-                  `@rocicorp/zero ${zeroClientVersion} is newer than the zero-cache image ${zeroImageVersion}. Upgrade Dockerfile.zero and deploy it first.`
+                  `@rocicorp/zero ${zeroClientVersion} is newer than the zero-cache image on main (${zeroImageVersion}). Merge and deploy the Dockerfile.zero upgrade first.`
                 );
               }
             }
