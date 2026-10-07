@@ -1,7 +1,7 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { sha256 } from '@oslojs/crypto/sha2';
-import { encodeBase64url, encodeHexLowerCase } from '@oslojs/encoding';
+import { createHash } from 'node:crypto';
+import { encodeBase64url } from '@oslojs/encoding';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import type { UuidV7 } from '$lib/utils';
@@ -16,8 +16,12 @@ export function generateSessionToken() {
 	return token;
 }
 
+function hashSessionToken(token: string) {
+	return createHash('sha256').update(token).digest('hex');
+}
+
 export async function createSession(token: string, userId: UuidV7) {
-	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+	const sessionId = hashSessionToken(token);
 	const session: table.Session = {
 		id: sessionId,
 		userId,
@@ -28,7 +32,7 @@ export async function createSession(token: string, userId: UuidV7) {
 }
 
 export async function validateSessionToken(token: string) {
-	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+	const sessionId = hashSessionToken(token);
 	const [result] = await db
 		.select({
 			// Adjust user table here to tweak returned data
