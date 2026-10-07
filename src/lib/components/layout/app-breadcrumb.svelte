@@ -113,7 +113,7 @@
 		<Breadcrumb.List>
 			<Breadcrumb.Item>
 				<Breadcrumb.Link
-					href={resolve(`/idea/${idea.id}`)}
+					href={resolve(`idea/${idea.id}`)}
 					class="max-w-25 truncate sm:max-w-50 md:max-w-75"
 				>
 					{idea.oneLiner}

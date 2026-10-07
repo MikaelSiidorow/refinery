@@ -42,13 +42,8 @@
 	] satisfies ReadonlyArray<SidebarItem>;
 
 	const superAdminItems = [
-		{
-			title: 'Users',
-			url: '/admin/users',
-			icon: UsersIcon
-		}
+		{ title: 'Users', url: '/admin/users', icon: UsersIcon }
 	] satisfies ReadonlyArray<SidebarItem>;
-
 	const items = $derived.by(() =>
 		user.isSuperAdmin ? [...baseItems, ...superAdminItems] : baseItems
 	);
@@ -66,10 +61,9 @@
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton size="lg">
 					{#snippet child({ props })}
-						<a href={resolve('/new-idea')} {...props} onclick={handleNavClick}>
-							<PlusIcon />
-							<span>New Idea</span>
-						</a>
+						<a href={resolve('new-idea')} {...props} onclick={handleNavClick}
+							><PlusIcon /><span>New Idea</span></a
+						>
 					{/snippet}
 				</Sidebar.MenuButton>
 			</Sidebar.MenuItem>
@@ -96,7 +90,6 @@
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 	</Sidebar.Content>
-	<Sidebar.Footer>
-		<NavUser {user} />
-	</Sidebar.Footer>
+
+	<Sidebar.Footer><NavUser {user} /></Sidebar.Footer>
 </Sidebar.Root>

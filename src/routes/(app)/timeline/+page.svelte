@@ -128,7 +128,7 @@
 	}
 
 	function navigateToArtifact(artifact: (typeof artifacts)[number]) {
-		void goto(resolve(`/idea/${artifact.ideaId}/artifact/${artifact.id}`));
+		void goto(resolve(`idea/${artifact.ideaId}/artifact/${artifact.id}`));
 	}
 </script>
 

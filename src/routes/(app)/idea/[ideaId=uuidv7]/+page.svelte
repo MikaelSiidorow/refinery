@@ -120,7 +120,7 @@
 
 	function handleEditArtifact(id: string) {
 		if (!idea) return;
-		void goto(resolve(`/idea/${idea.id}/artifact/${id}`));
+		void goto(resolve(`idea/${idea.id}/artifact/${id}`));
 	}
 
 	async function handleCreateArtifact() {
@@ -138,9 +138,9 @@
 					platform: undefined
 				})
 			);
-			await write.client;
 
-			void goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
+			await write.client;
+			void goto(resolve(`idea/${idea.id}/artifact/${artifactId}`));
 		} catch (error) {
 			console.error('Failed to create artifact:', error);
 		}
@@ -162,9 +162,9 @@
 					platform: undefined
 				})
 			);
-			await write.client;
 
-			void goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
+			await write.client;
+			void goto(resolve(`idea/${idea.id}/artifact/${artifactId}`));
 		} catch (error) {
 			console.error('Failed to create artifact:', error);
 		}
@@ -221,10 +221,10 @@
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
-
-<svelte:head>
-	<title>{idea?.oneLiner || (isLoading ? 'Loading...' : 'Not Found')} - Refinery</title>
-</svelte:head>
+<svelte:head
+	><title>{idea?.oneLiner || (isLoading ? 'Loading...' : 'Not Found')} - Refinery</title
+	></svelte:head
+>
 
 {#if isLoading}
 	<IdeaPageSkeleton />

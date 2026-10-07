@@ -79,7 +79,7 @@
 	};
 
 	function navigateToIdea(id: string) {
-		void goto(resolve(`/idea/${id}`));
+		void goto(resolve(`idea/${id}`));
 	}
 </script>
 
@@ -172,9 +172,7 @@
 									</p>
 								</div>
 								{#if urls.length > 0}
-									<div class="mb-2">
-										<UrlBadges {urls} variant="outline" size="sm" />
-									</div>
+									<div class="mb-2"><UrlBadges {urls} variant="outline" size="sm" /></div>
 								{/if}
 								{#if isNonEmpty(idea.tags)}
 									<div class="mt-1.5 flex flex-wrap gap-1">
@@ -248,9 +246,7 @@
 									</p>
 								</div>
 								{#if urls.length > 0}
-									<div class="mb-2">
-										<UrlBadges {urls} variant="outline" size="sm" />
-									</div>
+									<div class="mb-2"><UrlBadges {urls} variant="outline" size="sm" /></div>
 								{/if}
 								{#if isNonEmpty(idea.tags)}
 									<div class="mt-1.5 flex flex-wrap gap-1">

@@ -11,7 +11,7 @@
 
 		const sharedContent = [title, text, url].filter(Boolean).join(' ').trim();
 
-		const basePath = resolve('/new-idea');
+		const basePath = resolve('new-idea');
 
 		if (sharedContent) {
 			const params = new URLSearchParams({ shared: sharedContent });

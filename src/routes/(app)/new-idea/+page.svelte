@@ -44,7 +44,7 @@
 			const id = lastCreatedIdeaId;
 			lastCreatedIdeaId = null;
 			clearTimeout(lastCreatedIdeaTimeout);
-			void goto(resolve(`/idea/${id}`));
+			void goto(resolve(`idea/${id}`));
 		}
 	}
 
@@ -90,14 +90,9 @@
 			const id = generateId();
 
 			// Create immediately without queue
-			const write = z.mutate(
-				mutators.contentIdea.create({
-					id,
-					oneLiner: trimmed
-				})
-			);
-			await write.client;
+			const write = z.mutate(mutators.contentIdea.create({ id, oneLiner: trimmed }));
 
+			await write.client;
 			setLastCreatedIdea(id);
 
 			const shortcutHint = ` (${cmdOrCtrl}O)`;
@@ -108,14 +103,14 @@
 					description: 'Similar to an existing idea',
 					action: {
 						label: `View${shortcutHint}`,
-						onClick: () => goto(resolve(`/idea/${id}`))
+						onClick: () => goto(resolve(`idea/${id}`))
 					}
 				});
 			} else {
 				toast.success('Idea added to inbox', {
 					action: {
 						label: `View${shortcutHint}`,
-						onClick: () => goto(resolve(`/idea/${id}`))
+						onClick: () => goto(resolve(`idea/${id}`))
 					}
 				});
 			}
@@ -233,13 +228,10 @@
 			saveStatus[id] = 'saving';
 
 			const write = z.mutate(
-				mutators.contentIdea.update({
-					id: id as UuidV7,
-					oneLiner: editValue.trim()
-				})
+				mutators.contentIdea.update({ id: id as UuidV7, oneLiner: editValue.trim() })
 			);
-			await write.client;
 
+			await write.client;
 			saveStatus[id] = 'saved';
 			setTimeout(() => {
 				delete saveStatus[id];
@@ -265,16 +257,13 @@
 		const sharedContent = page.url.searchParams.get('shared');
 		if (sharedContent) {
 			inputValue = sharedContent.slice(0, 256);
-			void goto(resolve('/new-idea'), { replaceState: true });
+			void goto(resolve('new-idea'), { replaceState: true });
 		}
 	});
 </script>
 
 <svelte:window onkeydown={handleGlobalKeydown} />
-
-<svelte:head>
-	<title>Quick Capture - Refinery</title>
-</svelte:head>
+<svelte:head><title>Quick Capture - Refinery</title></svelte:head>
 
 <div
 	class="mx-auto grid grid-cols-1 gap-8 p-4 sm:p-8 lg:grid-cols-[minmax(0,768px)_384px]"
@@ -357,11 +346,9 @@
 							disabled={queuedIdeas.length === 0}
 							variant="outline"
 							size="sm"
-							class="gap-2"
+							class="gap-2"><Trash2 class="h-4 w-4" />Clear</Button
 						>
-							<Trash2 class="h-4 w-4" />
-							Clear
-						</Button>
+
 						<Button onclick={submitAllIdeas} disabled={isSubmitting} class="gap-2">
 							{#if isSubmitting}
 								<LoaderCircle class="h-4 w-4 animate-spin" />
@@ -450,7 +437,7 @@
 							{:else}
 								<div class="flex items-start gap-2">
 									<a
-										href={resolve(`/idea/${idea.id}`)}
+										href={resolve(`idea/${idea.id}`)}
 										class="group/item block min-w-0 flex-1 rounded focus-ring"
 									>
 										<p

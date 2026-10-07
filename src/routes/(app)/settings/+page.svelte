@@ -75,11 +75,11 @@
 	$effect(() => {
 		if (page.url.searchParams.get('linkedin_connected') === 'true') {
 			toast.success('Connected to LinkedIn successfully!');
-			void goto(resolve('/settings'), { replaceState: true });
+			void goto(resolve('settings'), { replaceState: true });
 			void accountsQuery.refresh();
 		} else if (page.url.searchParams.get('linkedin_error') === 'true') {
 			toast.error('Failed to connect to LinkedIn');
-			void goto(resolve('/settings'), { replaceState: true });
+			void goto(resolve('settings'), { replaceState: true });
 		}
 	});
 
@@ -273,9 +273,10 @@
 								</p>
 							</div>
 							<div class="flex gap-2">
-								<Button onclick={async () => await openImportDialog('linkedin')} size="sm">
-									Import All Posts
-								</Button>
+								<Button onclick={async () => await openImportDialog('linkedin')} size="sm"
+									>Import All Posts</Button
+								>
+
 								<Button
 									variant="outline"
 									size="sm"
@@ -417,9 +418,10 @@
 		</div>
 		<Dialog.Footer>
 			<Button variant="outline" onclick={() => (blueskyDialogOpen = false)}>Cancel</Button>
-			<Button onclick={handleConnectBluesky} disabled={blueskyConnecting}>
-				{blueskyConnecting ? 'Connecting...' : 'Connect'}
-			</Button>
+
+			<Button onclick={handleConnectBluesky} disabled={blueskyConnecting}
+				>{blueskyConnecting ? 'Connecting...' : 'Connect'}</Button
+			>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
@@ -455,9 +457,9 @@
 			{/if}
 		</div>
 		{#if !importing}
-			<Dialog.Footer>
-				<Button onclick={() => (importDialogOpen = false)}>Close</Button>
-			</Dialog.Footer>
+			<Dialog.Footer
+				><Button onclick={() => (importDialogOpen = false)}>Close</Button></Dialog.Footer
+			>
 		{/if}
 	</Dialog.Content>
 </Dialog.Root>

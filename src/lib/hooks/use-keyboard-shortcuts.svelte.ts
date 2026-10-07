@@ -50,6 +50,7 @@ export class KeyboardShortcuts {
 	private isInputElement(element: Element | null): boolean {
 		if (!element) return false;
 		const tagName = element.tagName.toLowerCase();
+
 		return (
 			tagName === 'input' ||
 			tagName === 'textarea' ||
@@ -149,7 +150,7 @@ export function setupAppShortcuts() {
 
 	// Single key shortcuts
 	shortcuts.registerSingleKey('c', () => {
-		void goto(resolve('/new-idea'));
+		void goto(resolve('new-idea'));
 	});
 
 	// G+key navigation sequences
@@ -158,11 +159,11 @@ export function setupAppShortcuts() {
 	});
 
 	shortcuts.registerSequence(['g', 'n'], () => {
-		void goto(resolve('/new-idea'));
+		void goto(resolve('new-idea'));
 	});
 
 	shortcuts.registerSequence(['g', 's'], () => {
-		void goto(resolve('/settings'));
+		void goto(resolve('settings'));
 	});
 
 	// Sign out: Alt+Shift+Q

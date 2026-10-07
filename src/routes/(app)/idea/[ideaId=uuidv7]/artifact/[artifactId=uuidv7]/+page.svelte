@@ -172,16 +172,16 @@
 
 	async function goBack() {
 		if (idea) {
-			await goto(resolve(`/idea/${idea.id}`));
+			await goto(resolve(`idea/${idea.id}`));
 		}
 	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
-
-<svelte:head>
-	<title>{artifact?.title || (isLoading ? 'Loading...' : 'Not Found')} - Refinery</title>
-</svelte:head>
+<svelte:head
+	><title>{artifact?.title || (isLoading ? 'Loading...' : 'Not Found')} - Refinery</title
+	></svelte:head
+>
 
 {#if isLoading}
 	<ArtifactPageSkeleton />
