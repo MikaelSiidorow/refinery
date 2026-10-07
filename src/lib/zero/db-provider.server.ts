@@ -1,9 +1,9 @@
 import { zeroDrizzle } from '@rocicorp/zero/server/adapters/drizzle';
 import { schema } from './schema';
-import { zeroDb } from '$lib/server/db';
+import { db } from '$lib/server/db';
 
 /** Database provider for server-side Zero operations */
-export const dbProvider = zeroDrizzle(schema, zeroDb);
+export const dbProvider = zeroDrizzle(schema, db);
 
 declare module '@rocicorp/zero' {
 	interface DefaultTypes {

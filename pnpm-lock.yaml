@@ -182,9 +182,6 @@ importers:
       '@fontsource/geist-mono':
         specifier: ^5.3.0
         version: 5.3.0
-      '@kubiks/otel-drizzle':
-        specifier: ^2.1.0
-        version: 2.1.0(@opentelemetry/api@1.9.1)(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(pg@8.23.1)(postgres@3.4.9))
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
@@ -238,10 +235,13 @@ importers:
         version: 1.43.0
       drizzle-orm:
         specifier: ^0.45.3
-        version: 0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(pg@8.23.1)(postgres@3.4.9)
+        version: 0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(pg@8.23.1)(postgres@3.4.9)
       import-in-the-middle:
         specifier: ^3.5.2
         version: 3.5.2
+      pg:
+        specifier: ^8.23.1
+        version: 8.23.1
       pino:
         specifier: ~10.3.1
         version: 10.3.1
@@ -291,6 +291,9 @@ importers:
       '@types/node':
         specifier: ^25.9.9
         version: 25.9.9
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
       arctic:
         specifier: ^3.7.0
         version: 3.7.0
@@ -305,7 +308,7 @@ importers:
         version: 0.31.11
       drizzle-zero:
         specifier: ^0.20.0
-        version: 0.20.0(@rocicorp/zero@1.9.0(@opentelemetry/core@2.11.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0))(@types/pg@8.15.6)(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(pg@8.23.1)(postgres@3.4.9))(pg@8.23.1)(postgres@3.4.9)(prettier@3.9.9)
+        version: 0.20.0(@rocicorp/zero@1.9.0(@opentelemetry/core@2.11.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0))(@types/pg@8.23.1)(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(pg@8.23.1)(postgres@3.4.9))(pg@8.23.1)(postgres@3.4.9)(prettier@3.9.9)
       eslint:
         specifier: ^10.12.0
         version: 10.12.0(jiti@2.7.0)(supports-color@7.2.0)
@@ -1094,13 +1097,6 @@ packages:
 
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
-
-  '@kubiks/otel-drizzle@2.1.0':
-    resolution: {integrity: sha512-9UHb0od3jwa6zTWMyEYPIZcUq5PDaziCmQLMLakSK2zeqy12SFZ3SAGWXJTgEr8valn/Wa+DKVs+Z3aqKQUpvg==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.9.0 <2.0.0'
-      drizzle-orm: '>=0.28.0'
 
   '@lucide/svelte@0.577.0':
     resolution: {integrity: sha512-0P6mkySd2MapIEgq08tADPmcN4DHndC/02PWwaLkOerXlx5Sv9aT4BxyXLIY+eccr0g/nEyCYiJesqS61YdBZQ==}
@@ -2825,6 +2821,9 @@ packages:
 
   '@types/pg@8.15.6':
     resolution: {integrity: sha512-NoaMtzhxOrubeL/7UZuNTrejB4MPAJ0RpxZqXQf2qXuVlTPuG6Y8p4u9dKRaue4yjmC7ZhzVO2/Yyyn25znrPQ==}
+
+  '@types/pg@8.23.1':
+    resolution: {integrity: sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==}
 
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
@@ -5492,11 +5491,6 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@kubiks/otel-drizzle@2.1.0(@opentelemetry/api@1.9.1)(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(pg@8.23.1)(postgres@3.4.9))':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-      drizzle-orm: 0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(pg@8.23.1)(postgres@3.4.9)
-
   '@lucide/svelte@0.577.0(svelte@5.57.1(@typescript-eslint/types@8.71.1))':
     dependencies:
       svelte: 5.57.1(@typescript-eslint/types@8.71.1)
@@ -7466,6 +7460,12 @@ snapshots:
       pg-protocol: 1.13.0
       pg-types: 2.2.0
 
+  '@types/pg@8.23.1':
+    dependencies:
+      '@types/node': 25.9.9
+      pg-protocol: 1.16.1
+      pg-types: 2.2.0
+
   '@types/resolve@1.20.2': {}
 
   '@types/tedious@4.0.14':
@@ -7866,25 +7866,25 @@ snapshots:
       esbuild: 0.25.10
       tsx: 4.21.0
 
-  drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(pg@8.23.1)(postgres@3.4.9):
+  drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(pg@8.23.1)(postgres@3.4.9):
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
-      '@types/pg': 8.15.6
+      '@types/pg': 8.23.1
       pg: 8.23.1
       postgres: 3.4.9
 
-  drizzle-zero@0.20.0(@rocicorp/zero@1.9.0(@opentelemetry/core@2.11.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0))(@types/pg@8.15.6)(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(pg@8.23.1)(postgres@3.4.9))(pg@8.23.1)(postgres@3.4.9)(prettier@3.9.9):
+  drizzle-zero@0.20.0(@rocicorp/zero@1.9.0(@opentelemetry/core@2.11.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0))(@types/pg@8.23.1)(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(pg@8.23.1)(postgres@3.4.9))(pg@8.23.1)(postgres@3.4.9)(prettier@3.9.9):
     dependencies:
       '@rocicorp/zero': 1.9.0(@opentelemetry/core@2.11.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0)
       camelcase: 9.0.0
       commander: 14.0.3
-      drizzle-orm: 0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(pg@8.23.1)(postgres@3.4.9)
+      drizzle-orm: 0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(pg@8.23.1)(postgres@3.4.9)
       jsonc-parser: 3.3.1
       pluralize: 8.0.0
       ts-morph: 27.0.2
       tsx: 4.23.15
     optionalDependencies:
-      '@types/pg': 8.15.6
+      '@types/pg': 8.23.1
       pg: 8.23.1
       postgres: 3.4.9
       prettier: 3.9.9
