@@ -229,7 +229,7 @@ export const queries = defineQueries({
 Uses shadcn-svelte configured in `components.json`:
 
 - Components live in `#lib/components/ui/`
-- Path aliases configured: `#lib/components`, `$lib/utils`, etc.
+- Path aliases configured: `#lib/components`, `#lib/utils`, etc.
 - TailwindCSS v4 with design tokens in `src/app.css`
 
 **Design System**: See `docs/DESIGN_SYSTEM.md` for:
