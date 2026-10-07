@@ -1,4 +1,4 @@
-import { dev } from '$app/environment';
+import { dev } from '$app/env';
 import { generateSessionToken, createSession, setSessionTokenCookie } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { seedDemoUser, DEMO_USER_ID } from '$lib/server/seed-data';

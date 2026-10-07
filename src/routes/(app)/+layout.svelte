@@ -4,7 +4,7 @@
 	import { Z } from 'zero-svelte';
 	import { dropAllDatabases } from '@rocicorp/zero';
 	import { trace, SpanStatusCode, type Span } from '@opentelemetry/api';
-	import { env } from '$env/dynamic/public';
+	import { PUBLIC_SERVER, PUBLIC_QUERY_URL } from '$app/env/public';
 	import { mutators } from '$lib/zero/mutators';
 	import { schema, type Schema } from '$lib/zero/schema';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -28,8 +28,8 @@
 	const z = set_z(
 		new Z<Schema>({
 			userID: initialUserId,
-			server: env.PUBLIC_SERVER!,
-			queryURL: env.PUBLIC_QUERY_URL!,
+			server: PUBLIC_SERVER!,
+			queryURL: PUBLIC_QUERY_URL!,
 			schema,
 			mutators,
 			context: {

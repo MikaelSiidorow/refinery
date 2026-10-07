@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { GithubIcon } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
-	import { dev } from '$app/environment';
+	import { dev } from '$app/env';
 </script>
 
 <div class="flex min-h-screen items-center justify-center">

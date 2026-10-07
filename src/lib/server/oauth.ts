@@ -2,7 +2,14 @@
 // OAuth 2.0 authorization code flow, adapted from Arctic's replacement examples
 // (github.com/pilcrowonpaper/arctic/tree/main/code) after Arctic was deprecated.
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { env } from '$env/dynamic/private';
+import {
+	GITHUB_CLIENT_ID,
+	GITHUB_CLIENT_SECRET,
+	GITHUB_REDIRECT_URL,
+	LINKEDIN_CLIENT_ID,
+	LINKEDIN_CLIENT_SECRET,
+	LINKEDIN_REDIRECT_URL
+} from '$app/env/private';
 
 interface OAuthProvider {
 	authorizationEndpoint: string;
@@ -32,18 +39,18 @@ export class OAuthTokenRequestError extends Error {
 export const github: OAuthProvider = {
 	authorizationEndpoint: 'https://github.com/login/oauth/authorize',
 	tokenEndpoint: 'https://github.com/login/oauth/access_token',
-	clientId: env.GITHUB_CLIENT_ID!,
-	clientSecret: env.GITHUB_CLIENT_SECRET!,
-	redirectURI: env.GITHUB_REDIRECT_URL!
+	clientId: GITHUB_CLIENT_ID!,
+	clientSecret: GITHUB_CLIENT_SECRET!,
+	redirectURI: GITHUB_REDIRECT_URL!
 };
 
 // LinkedIn only enables PKCE for native apps on request, so it relies on state alone.
 export const linkedin: OAuthProvider = {
 	authorizationEndpoint: 'https://www.linkedin.com/oauth/v2/authorization',
 	tokenEndpoint: 'https://www.linkedin.com/oauth/v2/accessToken',
-	clientId: env.LINKEDIN_CLIENT_ID!,
-	clientSecret: env.LINKEDIN_CLIENT_SECRET!,
-	redirectURI: env.LINKEDIN_REDIRECT_URL!
+	clientId: LINKEDIN_CLIENT_ID!,
+	clientSecret: LINKEDIN_CLIENT_SECRET!,
+	redirectURI: LINKEDIN_REDIRECT_URL!
 };
 
 export function generateState(): string {

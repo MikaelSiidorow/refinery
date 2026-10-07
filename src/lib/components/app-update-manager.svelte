@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Button } from '$lib/components/ui/button';
@@ -172,8 +172,8 @@
 		try {
 			const activeRegistration =
 				registration ?? (await navigator.serviceWorker.getRegistration()) ?? null;
-			registration = activeRegistration;
 
+			registration = activeRegistration;
 			await activeRegistration?.update();
 
 			if (activeRegistration) {
