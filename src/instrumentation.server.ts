@@ -32,7 +32,7 @@ const sdk = new NodeSDK({
 	}),
 	// Explicitly configure W3C Trace Context propagator for distributed tracing
 	textMapPropagator: new W3CTraceContextPropagator(),
-	logRecordProcessors: [new SimpleLogRecordProcessor(logExporter)],
+	logRecordProcessors: [new SimpleLogRecordProcessor({ exporter: logExporter })],
 	instrumentations: [
 		getNodeAutoInstrumentations({
 			'@opentelemetry/instrumentation-fs': {

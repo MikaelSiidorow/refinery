@@ -11,7 +11,7 @@ RUN corepack enable
 WORKDIR /app
 
 # Copy dependency files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY drizzle.config.ts ./
 COPY src/lib/server/db ./src/lib/server/db
 

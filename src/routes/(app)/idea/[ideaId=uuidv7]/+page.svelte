@@ -158,13 +158,7 @@
 					title: undefined,
 					content: '',
 					artifactType: artifactType as
-						| 'blog-post'
-						| 'thread'
-						| 'carousel'
-						| 'newsletter'
-						| 'email'
-						| 'short-post'
-						| 'comment',
+						'blog-post' | 'thread' | 'carousel' | 'newsletter' | 'email' | 'short-post' | 'comment',
 					platform: undefined
 				})
 			);

@@ -11,9 +11,7 @@
  */
 
 export type ServiceWorkerMessage =
-	| { type: 'SKIP_WAITING' }
-	| { type: 'CACHE_URLS'; urls: string[] }
-	| { type: 'CLEAR_CACHE' };
+	{ type: 'SKIP_WAITING' } | { type: 'CACHE_URLS'; urls: string[] } | { type: 'CLEAR_CACHE' };
 
 export type ServiceWorkerMessageType = ServiceWorkerMessage['type'];
 
