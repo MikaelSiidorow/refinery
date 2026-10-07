@@ -211,25 +211,28 @@ jobs:
               );
             }
 
-            // zero-cache must be at least as new as the clients talking to it. Compare the
-            // client the lockfile resolves to against the image already on main, so a
-            // zero-cache upgrade has to merge and deploy before the client upgrade.
-            const baseDockerfileZero = await fetchText(pr.base.repo, 'Dockerfile.zero', pr.base.sha);
+            // zero-cache must be at least as new as the clients talking to it. Check the
+            // client the lockfile resolves to against both the image already on main (so a
+            // zero-cache upgrade merges and deploys first) and the image this PR deploys.
             const headLockfile = await fetchText(pr.head.repo, 'pnpm-lock.yaml', pr.head.sha);
-            const zeroImageMatch = /^FROM rocicorp\/zero:(\S+?)@/m.exec(baseDockerfileZero);
             const zeroClientMatch =
               /^ {6}'@rocicorp\/zero':\n {8}specifier: .*\n {8}version: (\d+\.\d+\.\d+)/m.exec(
                 headLockfile
               );
-            if (!zeroImageMatch || !zeroClientMatch) {
+            const zeroImages = [
+              ['main', await fetchText(pr.base.repo, 'Dockerfile.zero', pr.base.sha)],
+              ['this PR', await fetchText(pr.head.repo, 'Dockerfile.zero', pr.head.sha)],
+            ].map(([label, dockerfile]) => [label, /^FROM rocicorp\/zero:(\S+?)@/m.exec(dockerfile)?.[1]]);
+            if (!zeroClientMatch || zeroImages.some(([, version]) => !version)) {
               failures.push('Could not read the zero-cache image tag or the resolved @rocicorp/zero version.');
             } else {
-              const zeroImageVersion = zeroImageMatch[1];
               const zeroClientVersion = zeroClientMatch[1];
-              if (compareSemver(zeroClientVersion, zeroImageVersion) > 0) {
-                failures.push(
-                  `@rocicorp/zero ${zeroClientVersion} is newer than the zero-cache image on main (${zeroImageVersion}). Merge and deploy the Dockerfile.zero upgrade first.`
-                );
+              for (const [label, zeroImageVersion] of zeroImages) {
+                if (compareSemver(zeroClientVersion, zeroImageVersion) > 0) {
+                  failures.push(
+                    `@rocicorp/zero ${zeroClientVersion} is newer than the zero-cache image in ${label} (${zeroImageVersion}). Merge and deploy the Dockerfile.zero upgrade first.`
+                  );
+                }
               }
             }
 
