@@ -1,6 +1,9 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { v7 as uuidv7 } from 'uuid';
+import type { UuidV7 } from './utils/uuid.js';
+
+export type { UuidV7 };
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -26,8 +29,6 @@ export function must<T>(v: T | undefined | null, msg?: string): T {
 	}
 	return v;
 }
-
-export type UuidV7 = string & { __uuid_v7: true };
 
 export const generateId = (): UuidV7 => {
 	return uuidv7() as UuidV7;

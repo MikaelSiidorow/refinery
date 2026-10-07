@@ -1,5 +1,5 @@
 import { defineParams } from '@sveltejs/kit/params';
-import type { UuidV7 } from '#lib/utils.js';
+import type { UuidV7 } from '#lib/utils/uuid.js';
 import { vUuidV7 } from '#lib/utils/validators.ts';
 import * as v from 'valibot';
 
