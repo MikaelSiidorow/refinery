@@ -1,3 +1,5 @@
+import adapter from '@sveltejs/adapter-node';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import devtoolsJson from 'vite-plugin-devtools-json';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -49,7 +51,29 @@ const meta = getBuildMetadata();
 const appVersion = packageJson.version;
 
 export default defineConfig({
-	plugins: [lucidePreprocess(), tailwindcss(), sveltekit(), devtoolsJson()],
+	plugins: [
+		lucidePreprocess(),
+		tailwindcss(),
+		sveltekit({
+			// Consult https://svelte.dev/docs/kit/integrations
+			// for more information about preprocessors
+			preprocess: vitePreprocess(),
+			compilerOptions: { experimental: { async: true } },
+			adapter: adapter({
+				// Output directory for production build
+				out: 'build',
+
+				// Precompress files using gzip and brotli
+				precompress: true,
+
+				// Environment variable prefix
+				envPrefix: ''
+			}),
+			experimental: { remoteFunctions: true },
+			tracing: { server: true }
+		}),
+		devtoolsJson()
+	],
 	define: {
 		__APP_VERSION__: JSON.stringify(appVersion),
 		__BUILD_TIME__: JSON.stringify(meta.buildTime),
