@@ -1,7 +1,7 @@
 {
 	"name": "refinery",
 	"private": true,
-	"version": "1.1.8",
+	"version": "1.1.9",
 	"devEngines": {
 		"runtime": {
 			"name": "node",
@@ -47,7 +47,6 @@
 		"@tailwindcss/vite": "^4.3.3",
 		"@types/node": "^25.9.9",
 		"@types/pg": "^8.23.1",
-		"arctic": "^3.7.0",
 		"bits-ui": "^2.19.5",
 		"clsx": "^2.1.1",
 		"drizzle-kit": "^0.31.11",
