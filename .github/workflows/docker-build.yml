@@ -185,10 +185,7 @@ jobs:
               /^scripts\/run-migrations\.js$/
             ];
             const zeroPatterns = [
-              /^Dockerfile\.zero$/,
-              /^scripts\/zero-entrypoint\.sh$/,
-              /^pnpm-lock\.yaml$/,
-              /^pnpm-workspace\.yaml$/
+              /^Dockerfile\.zero$/
             ];
 
             function matchesAny(filename, patterns) {

@@ -162,16 +162,10 @@ ZERO_LOG_LEVEL=info  # Options: debug, info, warn, error
 
 **Health Check:**
 
-- Endpoint: `/` (not `/health`)
-- Expected: HTTP 200 with "OK"
+- Endpoint: `/keepalive`
+- Expected: HTTP 200
 
-**Important**: On first startup, the Zero Cache container will:
-
-1. Validate required environment variables
-2. Validate that the replica directory is writable
-3. Start the zero-cache server
-
-Check the container logs to confirm zero-cache starts cleanly before proceeding.
+zero-cache validates its own required configuration on startup. Check the container logs to confirm it starts cleanly before proceeding.
 
 #### Zero Configuration Details
 
@@ -188,14 +182,12 @@ Check the container logs to confirm zero-cache starts cleanly before proceeding.
 
 For small to medium deployments, using a single database (ZERO_UPSTREAM_DB) is sufficient. Separate databases can improve performance for high-scale deployments.
 
-**Custom Image vs Official Image**:
-Our deployment uses a custom Docker image that:
+**Zero Image**:
+`Dockerfile.zero` is a thin wrapper around Rocicorp's official `rocicorp/zero` image, pinned by tag and digest. It is versioned independently of the app lockfile, so keep its tag in sync with `@rocicorp/zero` in `package.json` and upgrade it before the app (zero-cache must not be older than its clients).
 
-- Validates runtime configuration before startup
-- Keeps the zero-cache image decoupled from application code
-- Uses the repo's pinned Zero version without baking in app schema files
+The official image runs as root. Rolling back to an older non-root image requires deleting the replica file first; it is a cache and resyncs from Postgres.
 
-This differs from Rocicorp's official `rocicorp/zero` image mainly in packaging and startup validation. Database migrations now run from the app startup path during rollout, and the standalone `migrate` image is kept for delayed/manual cleanup workflows instead of coupling that work to zero-cache.
+Database migrations now run from the app startup path during rollout, and the standalone `migrate` image is kept for delayed/manual cleanup workflows instead of coupling that work to zero-cache.
 
 ### 3. Deploy SvelteKit App
 
@@ -345,7 +337,7 @@ The deployment workflow:
 2. The pipeline promotes `app`, `migrate`, and `zero` images to the `production` tag only when those runtimes changed
 3. The app repo asks the infra repo to restart only the workloads whose runtime changed
 4. Each new `refinery-app` Pod runs migrations at startup under a shared DB advisory lock before it becomes ready
-5. zero-cache is restarted only when the zero runtime inputs changed
+5. zero-cache is restarted only when `Dockerfile.zero` changed
 6. zero-cache continues replicating schema changes directly from Postgres
 
 Destructive contract cleanup is not part of the normal deploy path. Stage it separately after clients refresh. If older clients would break after that cleanup, raise `minSupportedVersion` first. That version is the oldest safe client after the cleanup, not necessarily the version introduced by the PR.
