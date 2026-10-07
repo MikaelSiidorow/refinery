@@ -7,7 +7,7 @@
 	"dependencyDashboard": true,
 	"prHourlyLimit": 0,
 	"postUpgradeTasks": {
-		"commands": ["node .github/scripts/bump-patch-version.mjs"],
+		"commands": ["node scripts/bump-patch-version.js"],
 		"fileFilters": ["package.json"],
 		"executionMode": "branch"
 	},
