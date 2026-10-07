@@ -1,0 +1,106 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended", "docker:pinDigests"],
+	"timezone": "Europe/Helsinki",
+	"semanticCommits": "enabled",
+	"labels": ["dependencies"],
+	"dependencyDashboard": true,
+	"prHourlyLimit": 0,
+	"postUpgradeTasks": {
+		"commands": ["node .github/scripts/bump-patch-version.mjs"],
+		"fileFilters": ["package.json"],
+		"executionMode": "branch"
+	},
+	"packageRules": [
+		{
+			"description": "Match pnpm's minimumReleaseAge and give bad releases time to be pulled",
+			"matchDatasources": ["npm"],
+			"minimumReleaseAge": "3 days"
+		},
+		{
+			"description": "One weekly PR for low-risk updates; every merge deploys, so batch them. Auto-merged once the required checks pass",
+			"matchDatasources": ["npm"],
+			"matchUpdateTypes": ["patch"],
+			"groupName": "safe updates",
+			"automerge": true
+		},
+		{
+			"description": "Dev tooling minors are covered by the format, lint and check jobs",
+			"matchDatasources": ["npm"],
+			"matchUpdateTypes": ["minor"],
+			"matchPackageNames": [
+				"@eslint/**",
+				"eslint",
+				"eslint-*",
+				"typescript-eslint",
+				"globals",
+				"prettier",
+				"prettier-plugin-*",
+				"svelte-check",
+				"typescript",
+				"@types/**",
+				"playwright"
+			],
+			"matchCurrentVersion": "!/^[\\^~]?0\\./",
+			"groupName": "safe updates",
+			"automerge": true
+		},
+		{
+			"matchManagers": ["github-actions"],
+			"matchUpdateTypes": ["minor", "patch", "digest", "pinDigest"],
+			"groupName": "safe updates",
+			"automerge": true
+		},
+		{
+			"description": "Base image security updates",
+			"matchManagers": ["dockerfile"],
+			"matchUpdateTypes": ["digest", "pinDigest"],
+			"groupName": "safe updates",
+			"automerge": true
+		},
+		{
+			"matchPackageNames": ["@opentelemetry/**", "import-in-the-middle"],
+			"matchUpdateTypes": ["minor", "major"],
+			"groupName": "OpenTelemetry"
+		},
+		{
+			"matchPackageNames": ["@sveltejs/**", "svelte", "vite"],
+			"matchUpdateTypes": ["minor", "major"],
+			"groupName": "SvelteKit and Vite"
+		},
+		{
+			"matchPackageNames": ["tailwindcss", "@tailwindcss/**"],
+			"matchUpdateTypes": ["minor", "major"],
+			"groupName": "Tailwind"
+		},
+		{
+			"matchPackageNames": ["drizzle-orm", "drizzle-kit"],
+			"matchUpdateTypes": ["minor", "major"],
+			"groupName": "Drizzle"
+		},
+		{
+			"description": "Needs a smoke test, and the zero-cache image must be deployed first (enforced by Enforce Version Policy)",
+			"matchPackageNames": ["@rocicorp/zero", "zero-svelte", "drizzle-zero"],
+			"groupName": "Zero",
+			"automerge": false
+		},
+		{
+			"description": "Merge and deploy before the matching Zero npm update",
+			"matchDatasources": ["docker"],
+			"matchPackageNames": ["rocicorp/zero"],
+			"groupName": "zero-cache image",
+			"automerge": false
+		},
+		{
+			"description": "pino 10.4 crashes the Vite SSR dev server when loading pino-pretty (pinojs/pino#2529)",
+			"matchPackageNames": ["pino"],
+			"allowedVersions": "<10.4.0"
+		},
+		{
+			"description": "Lucide is being replaced by Phosphor; skip the major until then",
+			"matchPackageNames": ["@lucide/svelte"],
+			"matchUpdateTypes": ["major"],
+			"enabled": false
+		}
+	]
+}

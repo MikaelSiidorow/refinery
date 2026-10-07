@@ -211,6 +211,25 @@ jobs:
               );
             }
 
+            // zero-cache must be at least as new as the clients talking to it, so the
+            // official image is upgraded (and deployed) before @rocicorp/zero.
+            const headDockerfileZero = await fetchText(pr.head.repo, 'Dockerfile.zero', pr.head.sha);
+            const zeroImageMatch = /^FROM rocicorp\/zero:(\S+?)@/m.exec(headDockerfileZero);
+            const zeroClientRange =
+              headPackageJson.devDependencies?.['@rocicorp/zero'] ??
+              headPackageJson.dependencies?.['@rocicorp/zero'];
+            if (!zeroImageMatch || !zeroClientRange) {
+              failures.push('Could not read the zero-cache image tag or the @rocicorp/zero version.');
+            } else {
+              const zeroImageVersion = zeroImageMatch[1];
+              const zeroClientVersion = zeroClientRange.replace(/^[\^~]/, '');
+              if (compareSemver(zeroClientVersion, zeroImageVersion) > 0) {
+                failures.push(
+                  `@rocicorp/zero ${zeroClientVersion} is newer than the zero-cache image ${zeroImageVersion}. Upgrade Dockerfile.zero and deploy it first.`
+                );
+              }
+            }
+
             if (compareSemver(headMinimum, headVersion) > 0) {
               failures.push(
                 `minSupportedVersion (${headMinimum}) cannot be greater than package.json version (${headVersion}).`
