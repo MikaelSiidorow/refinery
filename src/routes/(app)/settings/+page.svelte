@@ -75,11 +75,11 @@
 	$effect(() => {
 		if (page.url.searchParams.get('linkedin_connected') === 'true') {
 			toast.success('Connected to LinkedIn successfully!');
-			void goto(resolve('settings'), { replaceState: true });
+			void goto(resolve('settings'), { replace: true });
 			void accountsQuery.refresh();
 		} else if (page.url.searchParams.get('linkedin_error') === 'true') {
 			toast.error('Failed to connect to LinkedIn');
-			void goto(resolve('settings'), { replaceState: true });
+			void goto(resolve('settings'), { replace: true });
 		}
 	});
 

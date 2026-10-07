@@ -1,6 +1,6 @@
 import { defineParams } from '@sveltejs/kit/params';
 import type { UuidV7 } from '#lib/utils.js';
-import { vUuidV7 } from '#lib/utils/validators.js';
+import { vUuidV7 } from '#lib/utils/validators.ts';
 import * as v from 'valibot';
 
 function matchUuidv7(value: string): value is UuidV7 {

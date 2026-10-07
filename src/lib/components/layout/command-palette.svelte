@@ -23,7 +23,7 @@
 
 	const sidebar = useSidebar();
 
-	type NavigationRoute = '/' | '/new-idea' | '/settings' | '/admin/users';
+	type NavigationRoute = '' | 'new-idea' | 'settings' | 'admin/users';
 
 	type BaseNavItem = {
 		id: string;
@@ -65,7 +65,7 @@
 			id: 'dashboard',
 			title: 'Dashboard',
 			description: 'View all your content ideas',
-			url: '/',
+			url: '',
 			icon: House,
 			shortcut: {
 				type: 'chain',
@@ -77,7 +77,7 @@
 			id: 'new-idea',
 			title: 'New Idea',
 			description: 'Quick capture a content idea',
-			url: '/new-idea',
+			url: 'new-idea',
 			icon: CirclePlus,
 			shortcut: {
 				type: 'single',
@@ -89,7 +89,7 @@
 			id: 'settings',
 			title: 'Settings',
 			description: 'Configure your content settings',
-			url: '/settings',
+			url: 'settings',
 			icon: Settings,
 			shortcut: {
 				type: 'chain',
@@ -104,7 +104,7 @@
 			id: 'admin-users',
 			title: 'Users',
 			description: 'Review access requests and account status',
-			url: '/admin/users',
+			url: 'admin/users',
 			icon: Users,
 			shortcut: {
 				type: 'chain' as const,

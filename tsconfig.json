@@ -6,8 +6,6 @@
 		"strict": true
 	},
 	"include": [
-		".svelte-kit/ambient.d.ts",
-		".svelte-kit/non-ambient.d.ts",
 		"*.js",
 		"*.ts",
 		"scripts/**/*.ts",
@@ -22,5 +20,5 @@
 		"tests/**/*.ts",
 		"tests/**/*.svelte"
 	],
-	"exclude": ["node_modules/**", "src/service-worker.js", "src/service-worker.d.ts"]
+	"exclude": ["node_modules/**", "src/service-worker"]
 }

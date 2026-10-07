@@ -104,18 +104,25 @@ export const handle: Handle = sequence(handleWideEvent, handleAuth);
  * Catch-all for unexpected server errors.
  * Logs the full error so it reaches Loki → AlertManager → Telegram.
  */
-export const handleError: HandleServerError = ({ error, event, status, message }) => {
+export const handleError: HandleServerError = ({ kind, error, event }) => {
 	// Expected 4xx (e.g. 404s from scanners probing /.env or /wp-json) are
 	// already logged by the request wide event at warn level. Only real server
 	// errors should reach the error alert.
-	if (status < 500) return { message };
+	const status = kind === 'unknown' ? 500 : error.status;
+	if (status < 500) return;
 
-	const errorObj = error instanceof Error ? error : new Error(String(error));
+	const errorObj =
+		kind !== 'unknown'
+			? new Error(error.message)
+			: error instanceof Error
+				? error
+				: new Error(String(error));
 
 	logger.error(
 		{
 			event: 'unhandled_error',
 			err: errorObj,
+			kind,
 			method: event.request.method,
 			path: event.url.pathname,
 			route: event.route.id,
@@ -124,6 +131,4 @@ export const handleError: HandleServerError = ({ error, event, status, message }
 		},
 		`Unhandled server error: ${errorObj.message}`
 	);
-
-	return { message };
 };

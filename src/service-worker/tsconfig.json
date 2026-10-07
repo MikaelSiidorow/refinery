@@ -1,0 +1,8 @@
+{
+	"extends": "$app/tsconfig/service-worker",
+	"compilerOptions": {
+		"noUncheckedIndexedAccess": true,
+		"strict": true
+	},
+	"include": ["./**/*.ts", "../lib/service-worker/**/*.ts"]
+}

@@ -155,7 +155,7 @@ export function setupAppShortcuts() {
 
 	// G+key navigation sequences
 	shortcuts.registerSequence(['g', 'd'], () => {
-		void goto(resolve('/'));
+		void goto(resolve(''));
 	});
 
 	shortcuts.registerSequence(['g', 'n'], () => {

@@ -115,7 +115,7 @@
 	}
 
 	async function goBack() {
-		await goto(resolve('/'));
+		await goto(resolve(''));
 	}
 
 	function handleEditArtifact(id: string) {

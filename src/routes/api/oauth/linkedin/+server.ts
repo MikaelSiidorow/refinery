@@ -19,5 +19,5 @@ export const GET: RequestHandler = ({ cookies, locals }) => {
 		sameSite: 'lax'
 	});
 
-	redirect(302, url.toString());
+	redirect(302, url.toString(), { external: ['https://www.linkedin.com'] });
 };

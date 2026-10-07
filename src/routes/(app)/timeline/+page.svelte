@@ -418,7 +418,7 @@
 					Set planned publish dates on your artifacts to see them here.<br />
 					This helps you plan your content calendar and stay organized.
 				</p>
-				<Button onclick={() => void goto(resolve('/'))}>Go to Dashboard</Button>
+				<Button onclick={() => void goto(resolve(''))}>Go to Dashboard</Button>
 			</div>
 		{/if}
 	</div>

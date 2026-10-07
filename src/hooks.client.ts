@@ -14,7 +14,11 @@ function reportError(payload: Record<string, unknown>) {
  * Catch-all for unexpected client-side errors.
  * Reports to the server so it reaches Loki → AlertManager → Telegram.
  */
-export const handleError: HandleClientError = ({ error, message }) => {
+export const handleError: HandleClientError = ({ kind, error }) => {
+	// SvelteKit 3 also passes expected errors (error(...), 404s) here; only report
+	// unexpected ones, as before.
+	if (kind !== 'unknown') return;
+
 	const errorObj = error instanceof Error ? error : new Error(String(error));
 
 	reportError({
@@ -22,6 +26,4 @@ export const handleError: HandleClientError = ({ error, message }) => {
 		stack: errorObj.stack,
 		url: window.location.href
 	});
-
-	return { message };
 };

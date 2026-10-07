@@ -257,7 +257,7 @@
 		const sharedContent = page.url.searchParams.get('shared');
 		if (sharedContent) {
 			inputValue = sharedContent.slice(0, 256);
-			void goto(resolve('new-idea'), { replaceState: true });
+			void goto(resolve('new-idea'), { replace: true });
 		}
 	});
 </script>

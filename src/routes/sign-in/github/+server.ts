@@ -21,5 +21,5 @@ export function GET(event: RequestEvent): Promise<Response> {
 	event.cookies.set('github_oauth_state', state, cookieOptions);
 	event.cookies.set('github_code_verifier', codeVerifier, cookieOptions);
 
-	redirect(302, url.toString());
+	redirect(302, url.toString(), { external: ['https://github.com'] });
 }

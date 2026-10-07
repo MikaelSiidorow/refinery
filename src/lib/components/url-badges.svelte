@@ -1,5 +1,4 @@
 <script lang="ts">
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { ExternalLink } from '@lucide/svelte';
 	import { extractDomain } from '#lib/utils/url.js';

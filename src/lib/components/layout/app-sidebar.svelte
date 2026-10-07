@@ -15,7 +15,7 @@
 
 	const sidebar = Sidebar.useSidebar();
 
-	type SidebarRoute = '/' | '/timeline' | '/settings' | '/admin/users';
+	type SidebarRoute = '' | 'timeline' | 'settings' | 'admin/users';
 	type SidebarItem = {
 		title: string;
 		url: SidebarRoute;
@@ -26,23 +26,23 @@
 	const baseItems = [
 		{
 			title: 'Dashboard',
-			url: '/',
+			url: '',
 			icon: HouseIcon
 		},
 		{
 			title: 'Timeline',
-			url: '/timeline',
+			url: 'timeline',
 			icon: CalendarIcon
 		},
 		{
 			title: 'Settings',
-			url: '/settings',
+			url: 'settings',
 			icon: SettingsIcon
 		}
 	] satisfies ReadonlyArray<SidebarItem>;
 
 	const superAdminItems = [
-		{ title: 'Users', url: '/admin/users', icon: UsersIcon }
+		{ title: 'Users', url: 'admin/users', icon: UsersIcon }
 	] satisfies ReadonlyArray<SidebarItem>;
 	const items = $derived.by(() =>
 		user.isSuperAdmin ? [...baseItems, ...superAdminItems] : baseItems
