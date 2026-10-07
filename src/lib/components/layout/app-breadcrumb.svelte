@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
+	import { get_z } from '#lib/z.svelte.js';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
-	import { type UuidV7 } from '$lib/utils';
-	import { queries } from '$lib/zero/queries';
+	import * as Breadcrumb from '#lib/components/ui/breadcrumb/index.js';
+	import { type UuidV7 } from '#lib/utils.js';
+	import { queries } from '#lib/zero/queries.js';
 
 	const z = get_z();
 

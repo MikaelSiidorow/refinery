@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { getVersionHeaders, getVersionPayload } from '$lib/version-policy';
+import { getVersionHeaders, getVersionPayload } from '#lib/version-policy.js';
 
 export const GET: RequestHandler = () => {
 	const payload = getVersionPayload();

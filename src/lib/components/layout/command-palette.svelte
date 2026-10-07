@@ -1,8 +1,8 @@
 <script lang="ts">
-	import * as Command from '$lib/components/ui/command';
+	import * as Command from '#lib/components/ui/command/index.js';
 	import { goto } from '$app/navigation';
-	import { cmdOrCtrl } from '$lib/hooks/is-mac.svelte';
-	import { useSidebar } from '$lib/components/ui/sidebar';
+	import { cmdOrCtrl } from '#lib/hooks/is-mac.svelte.js';
+	import { useSidebar } from '#lib/components/ui/sidebar/index.js';
 	import {
 		House,
 		CirclePlus,
@@ -13,7 +13,7 @@
 		type IconProps
 	} from '@lucide/svelte';
 	import type { Component } from 'svelte';
-	import * as Kbd from '$lib/components/ui/kbd';
+	import * as Kbd from '#lib/components/ui/kbd/index.js';
 	import { resolve } from '$app/paths';
 
 	let {

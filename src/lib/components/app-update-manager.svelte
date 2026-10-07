@@ -2,11 +2,11 @@
 	import { browser } from '$app/env';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Button } from '$lib/components/ui/button';
-	import { postToServiceWorker } from '$lib/service-worker/messages';
-	import { buildInfo } from '$lib/utils/build-info';
-	import { compareSemver } from '$lib/utils/semver';
-	import type { VersionPayload } from '$lib/version-policy';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { postToServiceWorker } from '#lib/service-worker/messages.js';
+	import { buildInfo } from '#lib/utils/build-info.js';
+	import { compareSemver } from '#lib/utils/semver.js';
+	import type { VersionPayload } from '#lib/version-policy.js';
 
 	const VERSION_POLL_INTERVAL_MS = 5 * 60 * 1000;
 	const SERVICE_WORKER_UPDATE_TIMEOUT_MS = 4000;

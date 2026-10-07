@@ -5,13 +5,13 @@ import {
 	linkedin,
 	OAuthTokenRequestError,
 	statesMatch
-} from '$lib/server/oauth';
-import { db } from '$lib/server/db';
-import { connectedAccount } from '$lib/server/db/schema';
-import { generateId } from '$lib/utils';
+} from '#lib/server/oauth.js';
+import { db } from '#lib/server/db/index.js';
+import { connectedAccount } from '#lib/server/db/schema.js';
+import { generateId } from '#lib/utils.js';
 import { eq, and } from 'drizzle-orm';
-import { encrypt } from '$lib/server/crypto';
-import { requireApprovedUser } from '$lib/server/access';
+import { encrypt } from '#lib/server/crypto.js';
+import { requireApprovedUser } from '#lib/server/access.js';
 
 export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 	const user = requireApprovedUser(locals);

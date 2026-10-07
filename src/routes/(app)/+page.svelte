@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
+	import { get_z } from '#lib/z.svelte.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Badge } from '$lib/components/ui/badge';
-	import { formatRelativeTime } from '$lib/utils/date';
-	import { getTagColor } from '$lib/utils/tag-colors';
-	import { extractUrls, removeUrls } from '$lib/utils/url';
-	import UrlBadges from '$lib/components/url-badges.svelte';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { formatRelativeTime } from '#lib/utils/date.js';
+	import { getTagColor } from '#lib/utils/tag-colors.js';
+	import { extractUrls, removeUrls } from '#lib/utils/url.js';
+	import UrlBadges from '#lib/components/url-badges.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { isNonEmpty } from '$lib/utils';
-	import { queries } from '$lib/zero/queries';
-	import { isQueryLoading } from '$lib/zero/query-helpers';
-	import { DashboardSkeleton } from '$lib/components/skeletons';
+	import { isNonEmpty } from '#lib/utils.js';
+	import { queries } from '#lib/zero/queries.js';
+	import { isQueryLoading } from '#lib/zero/query-helpers.js';
+	import { DashboardSkeleton } from '#lib/components/skeletons/index.js';
 	import { PersistedState } from 'runed';
 
 	const z = get_z();

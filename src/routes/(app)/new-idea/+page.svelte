@@ -1,23 +1,23 @@
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import * as Kbd from '$lib/components/ui/kbd';
+	import { get_z } from '#lib/z.svelte.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as Kbd from '#lib/components/ui/kbd/index.js';
 	import { ideaSchema } from './schema';
-	import { generateId, isNonEmpty } from '$lib/utils';
+	import { generateId, isNonEmpty } from '#lib/utils.js';
 	import Fuse from 'fuse.js';
 	import { CircleCheck, CircleAlert, X, LoaderCircle, Copy, Trash2, Pencil } from '@lucide/svelte';
-	import type { UuidV7 } from '$lib/utils';
-	import { formatRelativeTime } from '$lib/utils/date';
+	import type { UuidV7 } from '#lib/utils.js';
+	import { formatRelativeTime } from '#lib/utils/date.js';
 	import * as v from 'valibot';
-	import { queries } from '$lib/zero/queries';
-	import { mutators } from '$lib/zero/mutators';
+	import { queries } from '#lib/zero/queries.js';
+	import { mutators } from '#lib/zero/mutators.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { toast } from 'svelte-sonner';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
-	import { cmdOrCtrl } from '$lib/hooks/is-mac.svelte';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import { cmdOrCtrl } from '#lib/hooks/is-mac.svelte.js';
 
 	const z = get_z();
 

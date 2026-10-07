@@ -110,5 +110,9 @@
 		"postgres": "^3.4.9",
 		"runed": "^0.37.1",
 		"valibot": "^1.5.0"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
 	}
 }

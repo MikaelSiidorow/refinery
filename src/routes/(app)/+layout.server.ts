@@ -1,5 +1,5 @@
 import type { LayoutServerLoad } from './$types';
-import { enforceAppAccess } from '$lib/server/access';
+import { enforceAppAccess } from '#lib/server/access.js';
 
 export const ssr = false;
 

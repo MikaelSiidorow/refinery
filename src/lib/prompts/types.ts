@@ -1,5 +1,5 @@
 import type { Row } from '@rocicorp/zero';
-import type { ArtifactType } from '$lib/server/db/schema';
+import type { ArtifactType } from '#lib/server/db/schema.js';
 
 export type PromptCategory = 'structure' | 'adapt' | 'engage' | 'analyze' | 'refine';
 

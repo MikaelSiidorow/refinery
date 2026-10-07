@@ -1,20 +1,20 @@
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
+	import { get_z } from '#lib/z.svelte.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import * as Select from '$lib/components/ui/select';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
+	import * as Select from '#lib/components/ui/select/index.js';
 	import { CircleCheck, Sparkles } from '@lucide/svelte';
-	import { queries } from '$lib/zero/queries';
-	import { mutators } from '$lib/zero/mutators';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
-	import PromptSelector from '$lib/components/prompt-selector.svelte';
-	import { createAutosaveForm } from '$lib/autosave-form.svelte';
-	import type { UuidV7 } from '$lib/utils';
-	import { isQueryLoading, shouldShow404 } from '$lib/zero/query-helpers';
-	import { ArtifactPageSkeleton } from '$lib/components/skeletons';
+	import { queries } from '#lib/zero/queries.js';
+	import { mutators } from '#lib/zero/mutators.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import PromptSelector from '#lib/components/prompt-selector.svelte';
+	import { createAutosaveForm } from '#lib/autosave-form.svelte.js';
+	import type { UuidV7 } from '#lib/utils.js';
+	import { isQueryLoading, shouldShow404 } from '#lib/zero/query-helpers.js';
+	import { ArtifactPageSkeleton } from '#lib/components/skeletons/index.js';
 
 	const z = get_z();
 

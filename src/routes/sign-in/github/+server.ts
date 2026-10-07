@@ -4,7 +4,7 @@ import {
 	generateCodeVerifier,
 	generateState,
 	github
-} from '$lib/server/oauth';
+} from '#lib/server/oauth.js';
 import type { RequestEvent } from '@sveltejs/kit';
 
 export function GET(event: RequestEvent): Promise<Response> {

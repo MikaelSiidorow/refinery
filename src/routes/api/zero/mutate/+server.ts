@@ -1,10 +1,10 @@
 import type { RequestHandler } from './$types';
 import { handleMutateRequest } from '@rocicorp/zero/server';
 import { mustGetMutator } from '@rocicorp/zero';
-import { dbProvider } from '$lib/zero/db-provider.server';
-import { mutators } from '$lib/zero/mutators';
+import { dbProvider } from '#lib/zero/db-provider.server.js';
+import { mutators } from '#lib/zero/mutators.js';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
-import { requireApprovedUser } from '$lib/server/access';
+import { requireApprovedUser } from '#lib/server/access.js';
 
 const tracer = trace.getTracer('refinery-zero');
 

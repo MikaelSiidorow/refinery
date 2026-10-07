@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as Card from '$lib/components/ui/card';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import { get_z } from '#lib/z.svelte.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
 	import { CircleCheck, Link2, Unlink } from '@lucide/svelte';
-	import { queries } from '$lib/zero/queries';
-	import { mutators } from '$lib/zero/mutators';
+	import { queries } from '#lib/zero/queries.js';
+	import { mutators } from '#lib/zero/mutators.js';
 	import { toast } from 'svelte-sonner';
-	import { createAutosaveForm } from '$lib/autosave-form.svelte';
+	import { createAutosaveForm } from '#lib/autosave-form.svelte.js';
 	import {
 		getConnectedAccounts,
 		connectBluesky,

@@ -3,10 +3,10 @@
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
 	import UsersIcon from '@lucide/svelte/icons/users';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import { resolve } from '$app/paths';
 	import NavUser from './nav-user.svelte';
-	import type { User } from '$lib/server/db/schema';
+	import type { User } from '#lib/server/db/schema.js';
 	import { PlusIcon } from '@lucide/svelte';
 	import type { Component } from 'svelte';
 	import type { IconProps } from '@lucide/svelte';

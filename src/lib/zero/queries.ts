@@ -1,8 +1,8 @@
 import { defineQueries, defineQuery } from '@rocicorp/zero';
 import * as v from 'valibot';
 import { zql } from './schema';
-import { vUuidV7 } from '$lib/utils/validators';
-import { ARTIFACT_TYPES } from '$lib/constants/artifact-types';
+import { vUuidV7 } from '#lib/utils/validators.js';
+import { ARTIFACT_TYPES } from '#lib/constants/artifact-types.js';
 
 export const queries = defineQueries({
 	/** All content ideas for a user */
