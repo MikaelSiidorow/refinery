@@ -1,5 +1,4 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit';
-import { sequence } from '@sveltejs/kit/hooks';
+import { sequence, type Handle, type HandleServerError } from '@sveltejs/kit/hooks';
 import * as auth from '$lib/server/auth';
 import { logger, emitWideEvent } from '$lib/server/logger';
 import { getVersionHeaders } from '$lib/version-policy';

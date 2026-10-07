@@ -1,4 +1,4 @@
-import type { HandleClientError } from '@sveltejs/kit';
+import type { HandleClientError } from '@sveltejs/kit/hooks';
 
 function reportError(payload: Record<string, unknown>) {
 	void fetch('/api/telemetry/errors', {
