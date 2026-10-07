@@ -2,7 +2,18 @@
 	"name": "refinery",
 	"private": true,
 	"version": "1.1.4",
-	"packageManager": "pnpm@12.9.1",
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": "^24.0.0",
+			"onFail": "error"
+		},
+		"packageManager": {
+			"name": "pnpm",
+			"version": "12.9.1",
+			"onFail": "download"
+		}
+	},
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
