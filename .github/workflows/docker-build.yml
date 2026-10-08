@@ -140,6 +140,100 @@ jobs:
       - name: Run ${{ matrix.task.name }}
         run: ${{ matrix.task.command }}
 
+  smoke:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Smoke test
+    env:
+      DATABASE_URL: postgres://root:mysecretpassword@localhost:5432/local
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      # Same images and cache as the build job, loaded locally instead of pushed.
+      - name: Build app image
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          file: Dockerfile.app
+          target: app-runtime
+          load: true
+          tags: refinery-app:smoke
+          cache-from: type=gha
+          platforms: linux/amd64
+
+      - name: Build zero image
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          file: Dockerfile.zero
+          load: true
+          tags: refinery-zero:smoke
+          platforms: linux/amd64
+
+      - name: Start Postgres
+        run: |
+          docker compose -p refinery-smoke up -d db
+          timeout 60 sh -c 'until docker compose -p refinery-smoke exec -T db pg_isready -U root -d local; do sleep 1; done'
+
+      # The app runs migrations on startup, so zero-cache starts once it is up.
+      - name: Start app
+        run: |
+          docker run -d --name app --network host \
+            -e NODE_ENV=production -e PORT=3000 \
+            -e DATABASE_URL -e ENCRYPTION_KEY="$(openssl rand -hex 32)" \
+            -e PUBLIC_SERVER=http://localhost:4848 \
+            refinery-app:smoke
+          timeout 90 sh -c 'until curl -fs http://localhost:3000/api/version; do sleep 1; done'
+
+      - name: Start zero-cache
+        run: |
+          docker run -d --name zero --network host \
+            -e ZERO_APP_ID=refinery -e ZERO_NUM_SYNC_WORKERS=1 \
+            -e ZERO_UPSTREAM_DB="$DATABASE_URL" -e ZERO_REPLICA_FILE=/tmp/sync-replica.db \
+            -e ZERO_QUERY_URL=http://localhost:3000/api/zero/get-queries -e ZERO_QUERY_FORWARD_COOKIES=true \
+            -e ZERO_MUTATE_URL=http://localhost:3000/api/zero/mutate -e ZERO_MUTATE_FORWARD_COOKIES=true \
+            -e ZERO_ADMIN_PASSWORD=smoke \
+            refinery-zero:smoke
+          timeout 90 sh -c 'until curl -fs http://localhost:4848/keepalive; do sleep 1; done'
+
+      - name: Run smoke test
+        run: node scripts/smoke.ts
+
+      - name: Show container logs
+        if: failure()
+        run: |
+          docker logs app 2>&1 | tail -100
+          docker logs zero 2>&1 | tail -100
+
+      - name: Upload failure screenshot
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: smoke-failure
+          path: smoke-failure.png
+          if-no-files-found: ignore
+
   resolve-deploy-plan:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

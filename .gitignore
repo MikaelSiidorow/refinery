@@ -30,3 +30,6 @@ docs/*
 !docs/ARCHITECTURE.md
 !docs/DEPLOY.md
 !docs/DESIGN_SYSTEM.md
+
+# Smoke test failure screenshot (scripts/smoke.ts)
+smoke-failure.png
