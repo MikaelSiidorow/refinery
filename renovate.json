@@ -25,22 +25,9 @@
 			"automerge": true
 		},
 		{
-			"description": "Dev tooling minors are covered by the format, lint and check jobs",
+			"description": "Minors join the batch too, now that the smoke test runs every PR. Packages with their own group below keep it but still auto-merge; 0.x minors can break, so they stay manual",
 			"matchDatasources": ["npm"],
 			"matchUpdateTypes": ["minor"],
-			"matchPackageNames": [
-				"@eslint/**",
-				"eslint",
-				"eslint-*",
-				"typescript-eslint",
-				"globals",
-				"prettier",
-				"prettier-plugin-*",
-				"svelte-check",
-				"typescript",
-				"@types/**",
-				"playwright"
-			],
 			"matchCurrentVersion": "!/^[\\^~]?0\\./",
 			"groupName": "safe updates",
 			"automerge": true
@@ -79,7 +66,7 @@
 			"groupName": "Drizzle"
 		},
 		{
-			"description": "Needs a smoke test, and the zero-cache image must be deployed first (enforced by Enforce Version Policy)",
+			"description": "The zero-cache image must be deployed first (enforced by Enforce Version Policy)",
 			"matchPackageNames": ["@rocicorp/zero", "zero-svelte", "drizzle-zero"],
 			"groupName": "Zero",
 			"automerge": false
