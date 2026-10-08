@@ -191,10 +191,15 @@ jobs:
           tags: refinery-zero:smoke
           platforms: linux/amd64
 
+      # Production runs Postgres 18. Probe over TCP: during first-run init the
+      # image briefly serves a socket-only server before the real one starts.
       - name: Start Postgres
         run: |
-          docker compose -p refinery-smoke up -d db
-          timeout 60 sh -c 'until docker compose -p refinery-smoke exec -T db pg_isready -U root -d local; do sleep 1; done'
+          docker run -d --name db --network host \
+            -e POSTGRES_USER=root -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=local \
+            postgres:18@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336 \
+            -c wal_level=logical
+          timeout 60 sh -c 'until docker exec db pg_isready -h 127.0.0.1 -U root -d local; do sleep 1; done'
 
       # The app runs migrations on startup, so zero-cache starts once it is up.
       - name: Start app
@@ -223,6 +228,7 @@ jobs:
       - name: Show container logs
         if: failure()
         run: |
+          docker logs db 2>&1 | tail -50
           docker logs app 2>&1 | tail -100
           docker logs zero 2>&1 | tail -100
 

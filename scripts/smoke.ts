@@ -28,12 +28,17 @@ await client.query(`INSERT INTO session (id, user_id, expires_at) VALUES ($1, $2
 ]);
 
 const browser = await chromium.launch();
-const context = await browser.newContext();
-await context.addCookies([{ name: 'auth-session', value: token, url: appURL }]);
-const page = await context.newPage();
-
 const pageErrors: string[] = [];
-page.on('pageerror', (err) => pageErrors.push(err.message));
+
+async function signedInPage() {
+	const context = await browser.newContext();
+	await context.addCookies([{ name: 'auth-session', value: token, url: appURL }]);
+	const page = await context.newPage();
+	page.on('pageerror', (err) => pageErrors.push(err.message));
+	return page;
+}
+
+let page = await signedInPage();
 
 try {
 	const oneLiner = `Smoke test idea ${randomUUID()}`;
@@ -57,9 +62,11 @@ try {
 	}
 	console.log('Mutation reached Postgres');
 
+	// A fresh context has no local Zero store, so the idea can only come from zero-cache.
+	page = await signedInPage();
 	await page.goto(appURL);
 	await page.getByText(oneLiner).filter({ visible: true }).first().waitFor({ timeout: 30_000 });
-	console.log('Synced query served the idea after a reload');
+	console.log('Synced query served the idea to a new client');
 
 	if (pageErrors.length > 0) {
 		throw new Error(`Uncaught page errors:\n${pageErrors.join('\n')}`);
