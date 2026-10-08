@@ -1,6 +1,6 @@
-import type { UuidV7 } from '$lib/utils';
-import type { DrizzleDB } from '$lib/server/db';
-import * as table from '$lib/server/db/schema';
+import type { UuidV7 } from '#lib/utils.js';
+import type { DrizzleDB } from '#lib/server/db/index.js';
+import * as table from '#lib/server/db/schema.js';
 import { eq } from 'drizzle-orm';
 
 // Demo user ID - fixed for development

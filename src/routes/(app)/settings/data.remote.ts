@@ -2,18 +2,18 @@ import { query, command } from '$app/server';
 import { getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
-import { db } from '$lib/server/db';
-import { connectedAccount, contentIdea, contentArtifact } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.js';
+import { connectedAccount, contentIdea, contentArtifact } from '#lib/server/db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import {
 	createBlueskyAgent,
 	createBlueskyAgentWithToken,
 	fetchBlueskyPosts,
 	groupPostsIntoThreads
-} from '$lib/server/bluesky';
-import { generateId, type UuidV7 } from '$lib/utils';
-import { encrypt, decrypt } from '$lib/server/crypto';
-import { requireApprovedUser } from '$lib/server/access';
+} from '#lib/server/bluesky.js';
+import { generateId, type UuidV7 } from '#lib/utils.js';
+import { encrypt, decrypt } from '#lib/server/crypto.js';
+import { requireApprovedUser } from '#lib/server/access.js';
 
 export const getConnectedAccounts = query(async () => {
 	const { locals } = getRequestEvent();

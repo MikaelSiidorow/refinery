@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { logger } from '$lib/server/logger';
+import { logger } from '#lib/server/logger.js';
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {

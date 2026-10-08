@@ -1,10 +1,10 @@
-import { generateSessionToken, createSession, setSessionTokenCookie } from '$lib/server/auth';
-import { exchangeAuthorizationCode, github, statesMatch } from '$lib/server/oauth';
-import { db } from '$lib/server/db';
-import * as table from '$lib/server/db/schema';
+import { generateSessionToken, createSession, setSessionTokenCookie } from '#lib/server/auth.js';
+import { exchangeAuthorizationCode, github, statesMatch } from '#lib/server/oauth.js';
+import { db } from '#lib/server/db/index.js';
+import * as table from '#lib/server/db/schema.js';
 import { eq } from 'drizzle-orm';
 import type { RequestEvent } from '@sveltejs/kit';
-import { generateId, type UuidV7 } from '$lib/utils';
+import { generateId, type UuidV7 } from '#lib/utils.js';
 
 export async function GET(event: RequestEvent): Promise<Response> {
 	const code = event.url.searchParams.get('code');

@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js';
 import type { Row } from '@rocicorp/zero';
-import type { ArtifactType } from '$lib/server/db/schema';
+import type { ArtifactType } from '#lib/server/db/schema.js';
 
 /**
  * Find the most relevant past ideas based on tags, content, and topic similarity

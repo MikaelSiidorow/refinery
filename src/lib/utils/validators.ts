@@ -1,4 +1,4 @@
-import type { UuidV7 } from '$lib/utils';
+import type { UuidV7 } from '#lib/utils/uuid.js';
 import * as v from 'valibot';
 
 export const vUuidV7 = () =>

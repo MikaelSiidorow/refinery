@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { GithubIcon } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
-	import { dev } from '$app/environment';
+	import { dev } from '$app/env';
 </script>
 
 <div class="flex min-h-screen items-center justify-center">
@@ -13,7 +13,7 @@
 		</div>
 
 		<div class="mt-8 space-y-4">
-			<a href={resolve('/sign-in/github')}>
+			<a href={resolve('sign-in/github')}>
 				<Button class="w-full" size="lg">
 					<GithubIcon class="mr-2 h-5 w-5" />
 					Sign in with GitHub
@@ -21,11 +21,10 @@
 			</a>
 
 			{#if dev}
-				<a href={resolve('/sign-in/demo')}>
-					<Button class="w-full" size="lg" variant="outline">
-						<span class="mr-2">🦦</span>
-						Sign in as Demo
-					</Button>
+				<a href={resolve('sign-in/demo')}>
+					<Button class="w-full" size="lg" variant="outline"
+						><span class="mr-2">🦦</span>Sign in as Demo</Button
+					>
 				</a>
 			{/if}
 		</div>

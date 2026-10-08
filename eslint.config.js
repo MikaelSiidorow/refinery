@@ -5,7 +5,17 @@ import svelte from 'eslint-plugin-svelte';
 import { defineConfig, includeIgnoreFile } from 'eslint/config';
 import globals from 'globals';
 import ts from 'typescript-eslint';
-import svelteConfig from './svelte.config.js';
+import { loadConfig } from '@sveltejs/load-config';
+
+const loadedSvelteConfig = await loadConfig('./', { traverse: false });
+if (!loadedSvelteConfig || 'error' in loadedSvelteConfig) {
+	throw new Error('Could not load the Svelte config from vite.config.ts', {
+		cause: loadedSvelteConfig?.error
+	});
+}
+// Only compilerOptions matter to the parser, and the full config holds functions
+// that ESLint's cache can't serialize.
+const svelteConfig = { compilerOptions: loadedSvelteConfig.config.compilerOptions };
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 

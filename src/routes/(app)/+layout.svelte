@@ -4,20 +4,20 @@
 	import { Z } from 'zero-svelte';
 	import { dropAllDatabases } from '@rocicorp/zero';
 	import { trace, SpanStatusCode, type Span } from '@opentelemetry/api';
-	import { env } from '$env/dynamic/public';
-	import { mutators } from '$lib/zero/mutators';
-	import { schema, type Schema } from '$lib/zero/schema';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { Separator } from '$lib/components/ui/separator';
-	import AppSidebar from '$lib/components/layout/app-sidebar.svelte';
-	import AppBreadcrumb from '$lib/components/layout/app-breadcrumb.svelte';
-	import CommandPalette from '$lib/components/layout/command-palette.svelte';
-	import BottomNav from '$lib/components/layout/bottom-nav.svelte';
-	import LoadingProvider from '$lib/components/loading-provider.svelte';
-	import { setupAppShortcuts } from '$lib/hooks/use-keyboard-shortcuts.svelte';
+	import { PUBLIC_SERVER, PUBLIC_QUERY_URL } from '$app/env/public';
+	import { mutators } from '#lib/zero/mutators.js';
+	import { schema, type Schema } from '#lib/zero/schema.js';
+	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import AppSidebar from '#lib/components/layout/app-sidebar.svelte';
+	import AppBreadcrumb from '#lib/components/layout/app-breadcrumb.svelte';
+	import CommandPalette from '#lib/components/layout/command-palette.svelte';
+	import BottomNav from '#lib/components/layout/bottom-nav.svelte';
+	import LoadingProvider from '#lib/components/loading-provider.svelte';
+	import { setupAppShortcuts } from '#lib/hooks/use-keyboard-shortcuts.svelte.js';
 	import type { LayoutData } from './$types';
-	import { set_z } from '$lib/z.svelte';
-	import { queries } from '$lib/zero/queries';
+	import { set_z } from '#lib/z.svelte.js';
+	import { queries } from '#lib/zero/queries.js';
 
 	const tracer = trace.getTracer('refinery-zero-client');
 
@@ -28,8 +28,8 @@
 	const z = set_z(
 		new Z<Schema>({
 			userID: initialUserId,
-			server: env.PUBLIC_SERVER!,
-			queryURL: env.PUBLIC_QUERY_URL!,
+			server: PUBLIC_SERVER!,
+			queryURL: PUBLIC_QUERY_URL!,
 			schema,
 			mutators,
 			context: {

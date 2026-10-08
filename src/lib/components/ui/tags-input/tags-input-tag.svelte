@@ -1,6 +1,6 @@
 <script lang="ts">
 	import XIcon from '@lucide/svelte/icons/x';
-	import { getTagColor } from '$lib/utils/tag-colors';
+	import { getTagColor } from '#lib/utils/tag-colors.js';
 
 	type Props = {
 		value: string;

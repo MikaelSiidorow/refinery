@@ -254,7 +254,7 @@ All queries use Zero's synced query system with `defineQueries`/`defineQuery`:
 ```typescript
 import { defineQueries, defineQuery } from '@rocicorp/zero';
 import { zql } from './schema';
-import { zUuidV7 } from '$lib/utils/validators';
+import { zUuidV7 } from '#lib/utils/validators.js';
 
 export const queries = defineQueries({
 	// Query without parameters
@@ -273,8 +273,8 @@ export const queries = defineQueries({
 
 ```svelte
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
-	import { queries } from '$lib/zero/queries';
+	import { get_z } from '#lib/z.svelte.js';
+	import { queries } from '#lib/zero/queries.js';
 
 	const z = get_z();
 
@@ -371,7 +371,7 @@ UUIDs use branded type to prevent mixing with regular strings:
 
 ```typescript
 // UuidV7 is a branded type
-import type { UuidV7 } from '$lib/utils';
+import type { UuidV7 } from '#lib/utils.js';
 
 // Generated with validation
 const id = generateId(); // Returns UuidV7

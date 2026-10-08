@@ -1,11 +1,11 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { asc, eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
-import { requireSuperAdmin } from '$lib/server/access';
-import { db } from '$lib/server/db';
-import { contentArtifact, contentIdea, contentSettings, user } from '$lib/server/db/schema';
-import { seedUserData } from '$lib/server/seed-data';
-import type { UuidV7 } from '$lib/utils';
+import { requireSuperAdmin } from '#lib/server/access.js';
+import { db } from '#lib/server/db/index.js';
+import { contentArtifact, contentIdea, contentSettings, user } from '#lib/server/db/schema.js';
+import { seedUserData } from '#lib/server/seed-data.js';
+import type { UuidV7 } from '#lib/utils.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const currentUser = requireSuperAdmin(locals);

@@ -2,11 +2,11 @@
  * Type-safe messaging between service worker and main thread.
  *
  * Usage in main thread:
- *   import { postToServiceWorker } from '$lib/service-worker/messages';
+ *   import { postToServiceWorker } from '#lib/service-worker/messages.js';
  *   postToServiceWorker(registration.waiting, { type: 'SKIP_WAITING' });
  *
  * Usage in service worker:
- *   import { isServiceWorkerMessage } from '$lib/service-worker/messages';
+ *   import { isServiceWorkerMessage } from '#lib/service-worker/messages.js';
  *   if (isServiceWorkerMessage(event.data, 'SKIP_WAITING')) { ... }
  */
 

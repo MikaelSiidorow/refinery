@@ -3,10 +3,10 @@
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
 	import UsersIcon from '@lucide/svelte/icons/users';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import { resolve } from '$app/paths';
 	import NavUser from './nav-user.svelte';
-	import type { User } from '$lib/server/db/schema';
+	import type { User } from '#lib/server/db/schema.js';
 	import { PlusIcon } from '@lucide/svelte';
 	import type { Component } from 'svelte';
 	import type { IconProps } from '@lucide/svelte';
@@ -15,7 +15,7 @@
 
 	const sidebar = Sidebar.useSidebar();
 
-	type SidebarRoute = '/' | '/timeline' | '/settings' | '/admin/users';
+	type SidebarRoute = '' | 'timeline' | 'settings' | 'admin/users';
 	type SidebarItem = {
 		title: string;
 		url: SidebarRoute;
@@ -26,29 +26,24 @@
 	const baseItems = [
 		{
 			title: 'Dashboard',
-			url: '/',
+			url: '',
 			icon: HouseIcon
 		},
 		{
 			title: 'Timeline',
-			url: '/timeline',
+			url: 'timeline',
 			icon: CalendarIcon
 		},
 		{
 			title: 'Settings',
-			url: '/settings',
+			url: 'settings',
 			icon: SettingsIcon
 		}
 	] satisfies ReadonlyArray<SidebarItem>;
 
 	const superAdminItems = [
-		{
-			title: 'Users',
-			url: '/admin/users',
-			icon: UsersIcon
-		}
+		{ title: 'Users', url: 'admin/users', icon: UsersIcon }
 	] satisfies ReadonlyArray<SidebarItem>;
-
 	const items = $derived.by(() =>
 		user.isSuperAdmin ? [...baseItems, ...superAdminItems] : baseItems
 	);
@@ -66,10 +61,9 @@
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton size="lg">
 					{#snippet child({ props })}
-						<a href={resolve('/new-idea')} {...props} onclick={handleNavClick}>
-							<PlusIcon />
-							<span>New Idea</span>
-						</a>
+						<a href={resolve('new-idea')} {...props} onclick={handleNavClick}
+							><PlusIcon /><span>New Idea</span></a
+						>
 					{/snippet}
 				</Sidebar.MenuButton>
 			</Sidebar.MenuItem>
@@ -96,7 +90,6 @@
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 	</Sidebar.Content>
-	<Sidebar.Footer>
-		<NavUser {user} />
-	</Sidebar.Footer>
+
+	<Sidebar.Footer><NavUser {user} /></Sidebar.Footer>
 </Sidebar.Root>

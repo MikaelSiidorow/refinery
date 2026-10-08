@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
-import { env } from '$env/dynamic/private';
+import { ENCRYPTION_KEY } from '$app/env/private';
 
 export type Encrypted = string & { readonly __encrypted: unique symbol };
 
@@ -7,7 +7,7 @@ const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
 
 function getEncryptionKey(): Buffer {
-	const key = env.ENCRYPTION_KEY;
+	const key = ENCRYPTION_KEY;
 
 	if (!key) {
 		throw new Error(

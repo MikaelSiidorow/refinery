@@ -1,7 +1,7 @@
-import { dev } from '$app/environment';
-import { generateSessionToken, createSession, setSessionTokenCookie } from '$lib/server/auth';
-import { db } from '$lib/server/db';
-import { seedDemoUser, DEMO_USER_ID } from '$lib/server/seed-data';
+import { dev } from '$app/env';
+import { generateSessionToken, createSession, setSessionTokenCookie } from '#lib/server/auth.js';
+import { db } from '#lib/server/db/index.js';
+import { seedDemoUser, DEMO_USER_ID } from '#lib/server/seed-data.js';
 import type { RequestEvent } from '@sveltejs/kit';
 import { error, redirect } from '@sveltejs/kit';
 

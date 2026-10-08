@@ -1,12 +1,12 @@
 import { assertIsOwner } from './context';
 import { zql } from './schema';
-import { isNonEmpty, type UuidV7 } from '$lib/utils';
+import { isNonEmpty, type UuidV7 } from '#lib/utils.js';
 import * as v from 'valibot';
 import { defineMutator, defineMutators } from '@rocicorp/zero';
-import { vShortString, vUuidV7 } from '$lib/utils/validators';
-import { IDEA_STATUSES } from '$lib/constants/idea-statuses';
-import { ARTIFACT_TYPES } from '$lib/constants/artifact-types';
-import { ARTIFACT_STATUSES } from '$lib/constants/artifact-statuses';
+import { vShortString, vUuidV7 } from '#lib/utils/validators.js';
+import { IDEA_STATUSES } from '#lib/constants/idea-statuses.js';
+import { ARTIFACT_TYPES } from '#lib/constants/artifact-types.js';
+import { ARTIFACT_STATUSES } from '#lib/constants/artifact-statuses.js';
 
 const createContentIdeaSchema = v.object({
 	id: vUuidV7(),

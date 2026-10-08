@@ -6,9 +6,9 @@
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
 
 	const navItems = [
-		{ title: 'Home', url: '/', icon: HouseIcon },
-		{ title: 'New', url: '/new-idea', icon: PlusIcon },
-		{ title: 'Timeline', url: '/timeline', icon: CalendarIcon }
+		{ title: 'Home', url: '', icon: HouseIcon },
+		{ title: 'New', url: 'new-idea', icon: PlusIcon },
+		{ title: 'Timeline', url: 'timeline', icon: CalendarIcon }
 	] as const;
 </script>
 
@@ -18,7 +18,7 @@
 	aria-label="Primary navigation"
 >
 	{#each navItems as item (item.title)}
-		{@const active = page.url.pathname === item.url}
+		{@const active = page.url.pathname === resolve(item.url)}
 		<a
 			href={resolve(item.url)}
 			class="flex h-full min-w-16 flex-1 flex-col items-center justify-center gap-1 px-2 text-muted-foreground transition-colors duration-150 ease-out hover:bg-accent/15 active:scale-95"

@@ -1,6 +1,6 @@
 import { zeroDrizzle } from '@rocicorp/zero/server/adapters/drizzle';
 import { schema } from './schema';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.js';
 
 /** Database provider for server-side Zero operations */
 export const dbProvider = zeroDrizzle(schema, db);

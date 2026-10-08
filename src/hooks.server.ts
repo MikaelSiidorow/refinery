@@ -1,8 +1,7 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit';
-import { sequence } from '@sveltejs/kit/hooks';
-import * as auth from '$lib/server/auth';
-import { logger, emitWideEvent } from '$lib/server/logger';
-import { getVersionHeaders } from '$lib/version-policy';
+import { sequence, type Handle, type HandleServerError } from '@sveltejs/kit/hooks';
+import * as auth from '#lib/server/auth.js';
+import { logger, emitWideEvent } from '#lib/server/logger.js';
+import { getVersionHeaders } from '#lib/version-policy.js';
 
 /**
  * Wide event logging - emits one canonical log line per request at completion.
@@ -105,18 +104,25 @@ export const handle: Handle = sequence(handleWideEvent, handleAuth);
  * Catch-all for unexpected server errors.
  * Logs the full error so it reaches Loki → AlertManager → Telegram.
  */
-export const handleError: HandleServerError = ({ error, event, status, message }) => {
+export const handleError: HandleServerError = ({ kind, error, event }) => {
 	// Expected 4xx (e.g. 404s from scanners probing /.env or /wp-json) are
 	// already logged by the request wide event at warn level. Only real server
 	// errors should reach the error alert.
-	if (status < 500) return { message };
+	const status = kind === 'unknown' ? 500 : error.status;
+	if (status < 500) return;
 
-	const errorObj = error instanceof Error ? error : new Error(String(error));
+	const errorObj =
+		kind !== 'unknown'
+			? new Error(error.message)
+			: error instanceof Error
+				? error
+				: new Error(String(error));
 
 	logger.error(
 		{
 			event: 'unhandled_error',
 			err: errorObj,
+			kind,
 			method: event.request.method,
 			path: event.url.pathname,
 			route: event.route.id,
@@ -125,6 +131,4 @@ export const handleError: HandleServerError = ({ error, event, status, message }
 		},
 		`Unhandled server error: ${errorObj.message}`
 	);
-
-	return { message };
 };

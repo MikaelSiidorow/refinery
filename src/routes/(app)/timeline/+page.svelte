@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
+	import { get_z } from '#lib/z.svelte.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as Select from '$lib/components/ui/select';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Select from '#lib/components/ui/select/index.js';
 	import {
 		FileText,
 		MessageSquare,
@@ -17,8 +17,8 @@
 		Funnel
 	} from '@lucide/svelte';
 	import { SvelteDate } from 'svelte/reactivity';
-	import { isNonEmpty } from '$lib/utils';
-	import { queries } from '$lib/zero/queries';
+	import { isNonEmpty } from '#lib/utils.js';
+	import { queries } from '#lib/zero/queries.js';
 
 	const z = get_z();
 
@@ -128,7 +128,7 @@
 	}
 
 	function navigateToArtifact(artifact: (typeof artifacts)[number]) {
-		void goto(resolve(`/idea/${artifact.ideaId}/artifact/${artifact.id}`));
+		void goto(resolve(`idea/${artifact.ideaId}/artifact/${artifact.id}`));
 	}
 </script>
 
@@ -418,7 +418,7 @@
 					Set planned publish dates on your artifacts to see them here.<br />
 					This helps you plan your content calendar and stay organized.
 				</p>
-				<Button onclick={() => void goto(resolve('/'))}>Go to Dashboard</Button>
+				<Button onclick={() => void goto(resolve(''))}>Go to Dashboard</Button>
 			</div>
 		{/if}
 	</div>

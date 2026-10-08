@@ -158,7 +158,7 @@ The application uses **synced queries** for all data fetching:
 ```typescript
 import { defineQueries, defineQuery } from '@rocicorp/zero';
 import { zql } from './schema';
-import { zUuidV7 } from '$lib/utils/validators';
+import { zUuidV7 } from '#lib/utils/validators.js';
 
 export const queries = defineQueries({
 	// Query without parameters (uses ctx.userID automatically)
@@ -177,8 +177,8 @@ export const queries = defineQueries({
 
 ```svelte
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
-	import { queries } from '$lib/zero/queries';
+	import { get_z } from '#lib/z.svelte.js';
+	import { queries } from '#lib/zero/queries.js';
 
 	const z = get_z();
 
@@ -196,8 +196,8 @@ export const queries = defineQueries({
 
 ```svelte
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
-	import { mutators } from '$lib/zero/mutators';
+	import { get_z } from '#lib/z.svelte.js';
+	import { mutators } from '#lib/zero/mutators.js';
 
 	const z = get_z();
 
@@ -228,8 +228,8 @@ export const queries = defineQueries({
 
 Uses shadcn-svelte configured in `components.json`:
 
-- Components live in `$lib/components/ui/`
-- Path aliases configured: `$lib/components`, `$lib/utils`, etc.
+- Components live in `#lib/components/ui/`
+- Path aliases configured: `#lib/components`, `#lib/utils`, etc.
 - TailwindCSS v4 with design tokens in `src/app.css`
 
 **Design System**: See `docs/DESIGN_SYSTEM.md` for:
@@ -384,7 +384,7 @@ ${pastExamples ? '\n**IMPORTANT**: Match your natural style from the examples ab
 - Database schema uses snake_case via `casing: 'snake_case'` in Drizzle config
 - Svelte 5 runes syntax (`$props`, `$state`, etc.)
 - Common timestamp pattern defined in schema as reusable object with `createdAt`/`updatedAt`
-- UUIDs use v7 format via branded `UuidV7` type, generated with `generateId()` from `$lib/utils`
+- UUIDs use v7 format via branded `UuidV7` type, generated with `generateId()` from `#lib/utils.js`
 - Type-safe utilities: Use `isNonEmpty(arr)` instead of `arr.length > 0`, `must()` for non-null assertions, `assert()` for runtime checks
 - Derive types from Drizzle/Zero schemas using `$inferSelect` and `$inferInsert` rather than defining separate types
 - Use modern Drizzle syntax without explicit column names

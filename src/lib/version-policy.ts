@@ -1,4 +1,4 @@
-import { compareSemver } from '$lib/utils/semver';
+import { compareSemver } from '#lib/utils/semver.js';
 
 export const versionHeaderNames = {
 	appVersion: 'X-App-Version',

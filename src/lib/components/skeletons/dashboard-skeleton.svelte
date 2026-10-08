@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 
 	const tagFilters = [0, 1, 2, 3];
 	const columns = [0, 1, 2, 3];

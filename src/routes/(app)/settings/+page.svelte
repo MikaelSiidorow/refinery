@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as Card from '$lib/components/ui/card';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import { get_z } from '#lib/z.svelte.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
 	import { CircleCheck, Link2, Unlink } from '@lucide/svelte';
-	import { queries } from '$lib/zero/queries';
-	import { mutators } from '$lib/zero/mutators';
+	import { queries } from '#lib/zero/queries.js';
+	import { mutators } from '#lib/zero/mutators.js';
 	import { toast } from 'svelte-sonner';
-	import { createAutosaveForm } from '$lib/autosave-form.svelte';
+	import { createAutosaveForm } from '#lib/autosave-form.svelte.js';
 	import {
 		getConnectedAccounts,
 		connectBluesky,
@@ -75,11 +75,11 @@
 	$effect(() => {
 		if (page.url.searchParams.get('linkedin_connected') === 'true') {
 			toast.success('Connected to LinkedIn successfully!');
-			void goto(resolve('/settings'), { replaceState: true });
+			void goto(resolve('settings'), { replace: true });
 			void accountsQuery.refresh();
 		} else if (page.url.searchParams.get('linkedin_error') === 'true') {
 			toast.error('Failed to connect to LinkedIn');
-			void goto(resolve('/settings'), { replaceState: true });
+			void goto(resolve('settings'), { replace: true });
 		}
 	});
 
@@ -273,9 +273,10 @@
 								</p>
 							</div>
 							<div class="flex gap-2">
-								<Button onclick={async () => await openImportDialog('linkedin')} size="sm">
-									Import All Posts
-								</Button>
+								<Button onclick={async () => await openImportDialog('linkedin')} size="sm"
+									>Import All Posts</Button
+								>
+
 								<Button
 									variant="outline"
 									size="sm"
@@ -417,9 +418,10 @@
 		</div>
 		<Dialog.Footer>
 			<Button variant="outline" onclick={() => (blueskyDialogOpen = false)}>Cancel</Button>
-			<Button onclick={handleConnectBluesky} disabled={blueskyConnecting}>
-				{blueskyConnecting ? 'Connecting...' : 'Connect'}
-			</Button>
+
+			<Button onclick={handleConnectBluesky} disabled={blueskyConnecting}
+				>{blueskyConnecting ? 'Connecting...' : 'Connect'}</Button
+			>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
@@ -455,9 +457,9 @@
 			{/if}
 		</div>
 		{#if !importing}
-			<Dialog.Footer>
-				<Button onclick={() => (importDialogOpen = false)}>Close</Button>
-			</Dialog.Footer>
+			<Dialog.Footer
+				><Button onclick={() => (importDialogOpen = false)}>Close</Button></Dialog.Footer
+			>
 		{/if}
 	</Dialog.Content>
 </Dialog.Root>

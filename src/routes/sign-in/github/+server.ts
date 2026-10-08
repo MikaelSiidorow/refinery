@@ -4,7 +4,7 @@ import {
 	generateCodeVerifier,
 	generateState,
 	github
-} from '$lib/server/oauth';
+} from '#lib/server/oauth.js';
 import type { RequestEvent } from '@sveltejs/kit';
 
 export function GET(event: RequestEvent): Promise<Response> {
@@ -21,5 +21,5 @@ export function GET(event: RequestEvent): Promise<Response> {
 	event.cookies.set('github_oauth_state', state, cookieOptions);
 	event.cookies.set('github_code_verifier', codeVerifier, cookieOptions);
 
-	redirect(302, url.toString());
+	redirect(302, url.toString(), { external: ['https://github.com'] });
 }

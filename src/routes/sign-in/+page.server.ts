@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { hasApprovedAccess } from '$lib/server/access';
+import { hasApprovedAccess } from '#lib/server/access.js';
 
 export const load: PageServerLoad = ({ locals }) => {
 	if (!locals.user) {

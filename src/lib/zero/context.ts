@@ -1,4 +1,4 @@
-import { assert, type UuidV7 } from '$lib/utils';
+import { assert, type UuidV7 } from '#lib/utils.js';
 
 /** Context passed to queries and mutators via endpoints /api/zero/get-queries and /api/zero/mutate */
 export type ZeroContext = {

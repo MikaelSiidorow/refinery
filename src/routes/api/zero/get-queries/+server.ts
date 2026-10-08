@@ -1,9 +1,9 @@
 import type { RequestHandler } from './$types';
 import { handleQueryRequest } from '@rocicorp/zero/server';
 import { mustGetQuery } from '@rocicorp/zero';
-import { schema } from '$lib/zero/schema';
-import { queries } from '$lib/zero/queries';
-import { requireApprovedUser } from '$lib/server/access';
+import { schema } from '#lib/zero/schema.js';
+import { queries } from '#lib/zero/queries.js';
+import { requireApprovedUser } from '#lib/server/access.js';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = requireApprovedUser(locals);

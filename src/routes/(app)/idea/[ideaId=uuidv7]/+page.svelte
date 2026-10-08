@@ -1,25 +1,25 @@
 <script lang="ts">
-	import { get_z } from '$lib/z.svelte';
+	import { get_z } from '#lib/z.svelte.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import * as Select from '$lib/components/ui/select';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
+	import * as Select from '#lib/components/ui/select/index.js';
 	import { Copy, CircleCheck, Plus } from '@lucide/svelte';
-	import { formatRelativeTime } from '$lib/utils/date';
-	import type { UuidV7 } from '$lib/utils';
-	import { generateId } from '$lib/utils';
-	import PromptSelector from '$lib/components/prompt-selector.svelte';
-	import ArtifactCard from '$lib/components/artifact-card.svelte';
-	import { TagsInput } from '$lib/components/ui/tags-input';
-	import { queries } from '$lib/zero/queries';
-	import { mutators } from '$lib/zero/mutators';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import { formatRelativeTime } from '#lib/utils/date.js';
+	import type { UuidV7 } from '#lib/utils.js';
+	import { generateId } from '#lib/utils.js';
+	import PromptSelector from '#lib/components/prompt-selector.svelte';
+	import ArtifactCard from '#lib/components/artifact-card.svelte';
+	import { TagsInput } from '#lib/components/ui/tags-input/index.js';
+	import { queries } from '#lib/zero/queries.js';
+	import { mutators } from '#lib/zero/mutators.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
 	import { toast } from 'svelte-sonner';
-	import { createAutosaveForm } from '$lib/autosave-form.svelte';
-	import { isQueryLoading, shouldShow404 } from '$lib/zero/query-helpers';
-	import { IdeaPageSkeleton } from '$lib/components/skeletons';
+	import { createAutosaveForm } from '#lib/autosave-form.svelte.js';
+	import { isQueryLoading, shouldShow404 } from '#lib/zero/query-helpers.js';
+	import { IdeaPageSkeleton } from '#lib/components/skeletons/index.js';
 
 	const z = get_z();
 
@@ -115,12 +115,12 @@
 	}
 
 	async function goBack() {
-		await goto(resolve('/'));
+		await goto(resolve(''));
 	}
 
 	function handleEditArtifact(id: string) {
 		if (!idea) return;
-		void goto(resolve(`/idea/${idea.id}/artifact/${id}`));
+		void goto(resolve(`idea/${idea.id}/artifact/${id}`));
 	}
 
 	async function handleCreateArtifact() {
@@ -138,9 +138,9 @@
 					platform: undefined
 				})
 			);
-			await write.client;
 
-			void goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
+			await write.client;
+			void goto(resolve(`idea/${idea.id}/artifact/${artifactId}`));
 		} catch (error) {
 			console.error('Failed to create artifact:', error);
 		}
@@ -162,9 +162,9 @@
 					platform: undefined
 				})
 			);
-			await write.client;
 
-			void goto(resolve(`/idea/${idea.id}/artifact/${artifactId}`));
+			await write.client;
+			void goto(resolve(`idea/${idea.id}/artifact/${artifactId}`));
 		} catch (error) {
 			console.error('Failed to create artifact:', error);
 		}
@@ -221,10 +221,10 @@
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
-
-<svelte:head>
-	<title>{idea?.oneLiner || (isLoading ? 'Loading...' : 'Not Found')} - Refinery</title>
-</svelte:head>
+<svelte:head
+	><title>{idea?.oneLiner || (isLoading ? 'Loading...' : 'Not Found')} - Refinery</title
+	></svelte:head
+>
 
 {#if isLoading}
 	<IdeaPageSkeleton />

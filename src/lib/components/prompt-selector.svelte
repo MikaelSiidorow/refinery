@@ -1,14 +1,14 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import { promptStrategies } from '$lib/prompts/strategies';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { promptStrategies } from '#lib/prompts/strategies.js';
 	import type { Row } from '@rocicorp/zero';
-	import type { ExampleContent } from '$lib/prompts/types';
+	import type { ExampleContent } from '#lib/prompts/types.js';
 	import { Copy, Check } from '@lucide/svelte';
-	import { get_z } from '$lib/z.svelte';
-	import { queries } from '$lib/zero/queries';
-	import { findRelevantIdeas, findRelevantArtifacts } from '$lib/prompts/example-matcher';
+	import { get_z } from '#lib/z.svelte.js';
+	import { queries } from '#lib/zero/queries.js';
+	import { findRelevantIdeas, findRelevantArtifacts } from '#lib/prompts/example-matcher.js';
 
 	let {
 		open = $bindable(false),

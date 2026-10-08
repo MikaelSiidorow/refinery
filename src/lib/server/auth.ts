@@ -2,9 +2,9 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { createHash } from 'node:crypto';
 import { encodeBase64url } from '@oslojs/encoding';
-import { db } from '$lib/server/db';
-import * as table from '$lib/server/db/schema';
-import type { UuidV7 } from '$lib/utils';
+import { db } from '#lib/server/db/index.js';
+import * as table from '#lib/server/db/schema.js';
+import type { UuidV7 } from '#lib/utils.js';
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 

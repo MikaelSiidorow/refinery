@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import type { Row } from '@rocicorp/zero';
-	import { formatRelativeTime } from '$lib/utils/date';
-	import { extractUrls, removeUrls } from '$lib/utils/url';
-	import UrlBadges from '$lib/components/url-badges.svelte';
+	import { formatRelativeTime } from '#lib/utils/date.js';
+	import { extractUrls, removeUrls } from '#lib/utils/url.js';
+	import UrlBadges from '#lib/components/url-badges.svelte';
 	import {
 		FileText,
 		MessageSquare,
