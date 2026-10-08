@@ -1,11 +1,15 @@
 import { redirect, isRedirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { linkedin } from '$lib/server/oauth';
+import {
+	exchangeAuthorizationCode,
+	linkedin,
+	OAuthTokenRequestError,
+	statesMatch
+} from '$lib/server/oauth';
 import { db } from '$lib/server/db';
 import { connectedAccount } from '$lib/server/db/schema';
 import { generateId } from '$lib/utils';
 import { eq, and } from 'drizzle-orm';
-import { OAuth2RequestError } from 'arctic';
 import { encrypt } from '$lib/server/crypto';
 import { requireApprovedUser } from '$lib/server/access';
 
@@ -18,21 +22,16 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 	const state = url.searchParams.get('state');
 	const storedState = cookies.get('linkedin_oauth_state');
 
-	if (!code || !state || !storedState || state !== storedState) {
+	if (!code || !state || !storedState || !statesMatch(storedState, state)) {
 		return new Response('Invalid OAuth state', { status: 400 });
 	}
 
 	try {
-		const tokens = await linkedin.validateAuthorizationCode(code);
-		const accessToken = tokens.accessToken();
-		const expiresAt = tokens.accessTokenExpiresAt();
-
-		let refreshToken: string | null = null;
-		try {
-			refreshToken = tokens.refreshToken();
-		} catch {
-			// OpenID Connect flows may not return refresh tokens
-		}
+		const {
+			accessToken,
+			accessTokenExpiresAt: expiresAt,
+			refreshToken
+		} = await exchangeAuthorizationCode(linkedin, code);
 
 		const profileResponse = await fetch('https://api.linkedin.com/v2/userinfo', {
 			headers: { Authorization: `Bearer ${accessToken}` }
@@ -90,7 +89,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals }) => {
 		locals.ctx.error = error instanceof Error ? error.message : String(error);
 		locals.ctx.error_type = error instanceof Error ? error.constructor.name : typeof error;
 
-		if (error instanceof OAuth2RequestError) {
+		if (error instanceof OAuthTokenRequestError) {
 			return new Response('Invalid authorization code', { status: 400 });
 		}
 

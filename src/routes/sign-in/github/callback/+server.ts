@@ -1,24 +1,27 @@
 import { generateSessionToken, createSession, setSessionTokenCookie } from '$lib/server/auth';
-import { github } from '$lib/server/oauth';
+import { exchangeAuthorizationCode, github, statesMatch } from '$lib/server/oauth';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { RequestEvent } from '@sveltejs/kit';
-import type { OAuth2Tokens } from 'arctic';
 import { generateId, type UuidV7 } from '$lib/utils';
 
 export async function GET(event: RequestEvent): Promise<Response> {
 	const code = event.url.searchParams.get('code');
 	const state = event.url.searchParams.get('state');
 	const storedState = event.cookies.get('github_oauth_state');
+	const codeVerifier = event.cookies.get('github_code_verifier');
 
-	if (!code || !state || !storedState || state !== storedState) {
+	if (!code || !state || !storedState || !codeVerifier || !statesMatch(storedState, state)) {
 		return new Response(null, { status: 400 });
 	}
 
+	event.cookies.delete('github_oauth_state', { path: '/' });
+	event.cookies.delete('github_code_verifier', { path: '/' });
+
 	try {
-		const tokens: OAuth2Tokens = await github.validateAuthorizationCode(code);
-		const githubUser = await getGitHubUser(tokens.accessToken());
+		const tokens = await exchangeAuthorizationCode(github, code, codeVerifier);
+		const githubUser = await getGitHubUser(tokens.accessToken);
 
 		// Check if user exists
 		const [existingUser] = await db

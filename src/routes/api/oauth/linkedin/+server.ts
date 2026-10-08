@@ -1,7 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { linkedin } from '$lib/server/oauth';
-import { generateState } from 'arctic';
+import { createAuthorizationURL, generateState, linkedin } from '$lib/server/oauth';
 import { requireApprovedUser } from '$lib/server/access';
 
 export const GET: RequestHandler = ({ cookies, locals }) => {
@@ -10,7 +9,7 @@ export const GET: RequestHandler = ({ cookies, locals }) => {
 	const state = generateState();
 	const scopes = ['openid', 'profile', 'email'];
 
-	const url = linkedin.createAuthorizationURL(state, scopes);
+	const url = createAuthorizationURL(linkedin, { state, scopes });
 
 	cookies.set('linkedin_oauth_state', state, {
 		path: '/',
