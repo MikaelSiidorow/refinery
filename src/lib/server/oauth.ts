@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion -- this depends on type-gen which might not be there in build */
 // OAuth 2.0 authorization code flow, adapted from Arctic's replacement examples
 // (github.com/pilcrowonpaper/arctic/tree/main/code) after Arctic was deprecated.
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
