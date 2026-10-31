@@ -249,8 +249,8 @@ importers:
         specifier: ^3.4.9
         version: 3.4.9
       runed:
-        specifier: ^0.37.1
-        version: 0.37.1(@sveltejs/kit@3.1.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.71.1))(vite@8.3.2(@types/node@25.9.9)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.3)))(svelte@5.57.1(@typescript-eslint/types@8.71.1))(typescript@6.0.3)(vite@8.3.2(@types/node@25.9.9)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.3)))(svelte@5.57.1(@typescript-eslint/types@8.71.1))(zod@4.6.5)
+        specifier: ^0.38.0
+        version: 0.38.0(@sveltejs/kit@3.1.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.71.1))(vite@8.3.2(@types/node@25.9.9)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.3)))(svelte@5.57.1(@typescript-eslint/types@8.71.1))(typescript@6.0.3)(vite@8.3.2(@types/node@25.9.9)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.3)))(svelte@5.57.1(@typescript-eslint/types@8.71.1))(zod@4.6.5)
       valibot:
         specifier: ^1.5.0
         version: 1.5.0(typescript@6.0.3)
@@ -4355,10 +4355,10 @@ packages:
       '@sveltejs/kit':
         optional: true
 
-  runed@0.37.1:
-    resolution: {integrity: sha512-MeFY73xBW8IueWBm012nNFIGy19WUGPLtknavyUPMpnyt350M47PhGSGrGoSLbidwn+Zlt/O0cp8/OZE3LASWA==}
+  runed@0.38.0:
+    resolution: {integrity: sha512-FHFj57uf23ORgObMisLloEsFSqP2TMzu7aGmbZSpX9NgVw1+HGoOnKTPuS4vZJ3Rk2QuFoLjt3osXAQdbMfgOw==}
     peerDependencies:
-      '@sveltejs/kit': ^2.21.0
+      '@sveltejs/kit': ^3.0.0
       svelte: ^5.7.0
       zod: ^4.1.0
     peerDependenciesMeta:
@@ -8842,7 +8842,7 @@ snapshots:
     optionalDependencies:
       '@sveltejs/kit': 3.1.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.71.1))(vite@8.3.2(@types/node@25.9.9)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.3)))(svelte@5.57.1(@typescript-eslint/types@8.71.1))(typescript@6.0.3)(vite@8.3.2(@types/node@25.9.9)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.3))
 
-  runed@0.37.1(@sveltejs/kit@3.1.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.71.1))(vite@8.3.2(@types/node@25.9.9)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.3)))(svelte@5.57.1(@typescript-eslint/types@8.71.1))(typescript@6.0.3)(vite@8.3.2(@types/node@25.9.9)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.3)))(svelte@5.57.1(@typescript-eslint/types@8.71.1))(zod@4.6.5):
+  runed@0.38.0(@sveltejs/kit@3.1.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1(@typescript-eslint/types@8.71.1))(vite@8.3.2(@types/node@25.9.9)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.3)))(svelte@5.57.1(@typescript-eslint/types@8.71.1))(typescript@6.0.3)(vite@8.3.2(@types/node@25.9.9)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.3)))(svelte@5.57.1(@typescript-eslint/types@8.71.1))(zod@4.6.5):
     dependencies:
       dequal: 2.0.3
       esm-env: 1.2.2
