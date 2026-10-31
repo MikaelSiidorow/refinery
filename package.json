@@ -1,7 +1,7 @@
 {
 	"name": "refinery",
 	"private": true,
-	"version": "1.2.5",
+	"version": "1.2.6",
 	"devEngines": {
 		"runtime": {
 			"name": "node",
@@ -89,8 +89,8 @@
 		"@opentelemetry/api": "^1.9.1",
 		"@opentelemetry/api-logs": "^0.222.0",
 		"@opentelemetry/auto-instrumentations-node": "^0.80.0",
-		"@opentelemetry/context-zone": "^2.11.0",
-		"@opentelemetry/core": "^2.11.0",
+		"@opentelemetry/context-zone": "^3.0.0",
+		"@opentelemetry/core": "^3.0.0",
 		"@opentelemetry/exporter-logs-otlp-proto": "^0.222.0",
 		"@opentelemetry/exporter-trace-otlp-http": "^0.222.0",
 		"@opentelemetry/exporter-trace-otlp-proto": "^0.222.0",
@@ -98,8 +98,8 @@
 		"@opentelemetry/instrumentation-document-load": "^0.67.0",
 		"@opentelemetry/instrumentation-fetch": "^0.222.0",
 		"@opentelemetry/instrumentation-pino": "^0.68.0",
-		"@opentelemetry/resources": "^2.11.0",
-		"@opentelemetry/sdk-logs": "^0.222.0",
+		"@opentelemetry/resources": "^3.0.0",
+		"@opentelemetry/sdk-logs": "^3.0.0",
 		"@opentelemetry/sdk-node": "^0.222.0",
 		"@opentelemetry/sdk-trace-web": "^2.11.0",
 		"@opentelemetry/semantic-conventions": "^1.43.0",
