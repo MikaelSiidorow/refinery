@@ -1,11 +1,11 @@
 {
 	"name": "refinery",
 	"private": true,
-	"version": "1.2.5",
+	"version": "1.2.6",
 	"devEngines": {
 		"runtime": {
 			"name": "node",
-			"version": "^24.0.0",
+			"version": "^26.0.0",
 			"onFail": "error"
 		},
 		"packageManager": {
@@ -46,7 +46,7 @@
 		"@sveltejs/load-config": "^0.2.2",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@tailwindcss/vite": "^4.3.3",
-		"@types/node": "^25.9.9",
+		"@types/node": "^26.0.0",
 		"@types/pg": "^8.23.1",
 		"bits-ui": "^2.19.5",
 		"clsx": "^2.1.1",

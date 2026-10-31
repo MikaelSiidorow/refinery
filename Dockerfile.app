@@ -2,7 +2,7 @@
 # Multi-stage build for optimized production image
 
 # Shared Node + pnpm setup
-FROM node:24-slim AS base
+FROM node:26-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39 AS base
 
 # Enable pnpm
 ENV PNPM_HOME="/pnpm"
@@ -44,7 +44,7 @@ FROM deps AS prod-deps
 RUN pnpm prune --prod
 
 # Shared runtime base for app and migration images
-FROM node:24-slim AS runtime-base
+FROM node:26-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39 AS runtime-base
 
 WORKDIR /app
 
