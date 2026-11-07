@@ -3,4 +3,4 @@
 # and is versioned independently of the app lockfile. Keep the tag in sync with
 # @rocicorp/zero in package.json; upgrade this image before the app/client so
 # zero-cache is never older than the clients talking to it.
-FROM rocicorp/zero:1.9.0@sha256:f80683bf3ddf08be26c68ddd94589fada29a0b8a4597668b090006c09041d4cd
+FROM rocicorp/zero:1.11.4@sha256:da55baa417adf670d07dd882ec90b9d9591f274a13347205cd2f71956433c057
