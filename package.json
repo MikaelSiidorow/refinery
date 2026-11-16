@@ -1,7 +1,7 @@
 {
 	"name": "refinery",
 	"private": true,
-	"version": "1.2.5",
+	"version": "1.2.6",
 	"devEngines": {
 		"runtime": {
 			"name": "node",
@@ -51,7 +51,7 @@
 		"bits-ui": "^2.19.5",
 		"clsx": "^2.1.1",
 		"drizzle-kit": "^0.31.11",
-		"drizzle-zero": "^0.20.0",
+		"drizzle-zero": "^0.21.0",
 		"eslint": "^10.12.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.23.0",
